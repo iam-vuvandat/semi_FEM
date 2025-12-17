@@ -11,6 +11,7 @@ class Output:
 
 def create_magnetic_potential_equation(reluctance_network,
                                        first_time=False,
+                                       load_factor = 1.0,
                                        debug=True):
     if first_time:
         reluctance_network.set_reluctance_at_zero()
@@ -70,7 +71,7 @@ def create_magnetic_potential_equation(reluctance_network,
         row_indices.append(i_th)
         col_indices.append(i_th)
         values.append(diag_val)
-        J[i_th] = j_val
+        J[i_th] = j_val * load_factor
 
     G = sp.csr_matrix((values, (row_indices, col_indices)), shape=(matrix_size, matrix_size))
 

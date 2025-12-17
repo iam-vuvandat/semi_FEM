@@ -44,21 +44,25 @@ class ReluctanceNetwork:
         set_reluctance_at_zero(reluctance_network = self)
 
     def create_magnetic_potential_equation(self,
-                                           first_time = False):
+                                           first_time = False,
+                                           load_factor = 1.0):
         return create_magnetic_potential_equation(reluctance_network= self,
-                                                  first_time= first_time)
+                                                  first_time= first_time,
+                                                  load_factor= load_factor)
 
     def solve_magnetic_equation(self,
                                 max_iteration =5,
                                 max_relative_residual = 0.0,
                                 damping_factor = 0.02,
                                 first_step_damping_factor = 0.1,
+                                load_step = 5,
                                 debug = True):
         solve_magnetic_equation(reluctance_network = self,
                                 max_iteration = max_iteration,
                                 max_relative_residual = max_relative_residual,
                                 first_step_damping_factor = first_step_damping_factor,
                                 damping_factor = damping_factor,
+                                load_step = load_step,
                                 debug = debug)
 
 
