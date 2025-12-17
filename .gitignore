@@ -1,0 +1,6 @@
+storage/core/workspace.pkl
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.ini

@@ -1,0 +1,18 @@
+{
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/*.pyo": true,
+        "**/*.pyd": true,
+        "**/*.ini": true
+    },
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,   
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestOnTriggerCharacters": true,
+    "python.languageServer": "Pylance",
+    "python.analysis.autoImportCompletions": true,
+    "explorer.compactFolders": false,
+    "workbench.colorTheme": "Default Dark Modern",
+    //"workbench.colorTheme": "Default Light Modern"
+}   
