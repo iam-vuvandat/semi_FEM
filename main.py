@@ -2,13 +2,14 @@ from system.core import libraries_require
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace
 
-re_create_motor = True
+re_create_motor = False
 
 if re_create_motor == False:
     aft = workspace.load("aft1")
 
 else:
-    aft = AxialFluxMotorType1(magnet_length= 4*1e-3)
+    aft = AxialFluxMotorType1(magnet_length= 4*1e-3,
+                            airgap= 1 * 1e-3)
     aft.create_geometry()
     aft.create_adaptive_mesh()
     aft.create_reluctance_network()
@@ -17,10 +18,9 @@ else:
 workspace.save(aft1 = aft)
 workspace.save(aft_0_1mm = aft)
 
-aft.reluctance_network.solve_magnetic_equation(max_iteration =4,
+aft.reluctance_network.solve_magnetic_equation(max_iteration =8,
                                                     max_relative_residual = 1 * 1e-4,
-                                                    damping_factor = 0.4,
-                                                    first_step_damping_factor = 1.0,
+                                                    adaptive_damping_factor = (0.5,0.2),
                                                     load_step= 5,
                                                     debug = True)
 aft.reluctance_network.show() 

@@ -23,6 +23,13 @@ def create_adaptive_mesh(motor,
                          use_symmetry_factor=True,
                          periodic_boundary=True):
     
+    # initial check
+    if motor.magnet_embed_depth == 0:
+        n_r_3 = -1
+
+    if motor.rotor_lam_dia / 2 - motor.magnet_embed_depth - motor.magnet_depth == motor.shaft_hole_diameter:
+        n_r_1 = - 1 
+
     r_segments = []
     
     r_min = motor.shaft_hole_diameter/2 if motor.stator_bore_dia > motor.shaft_hole_diameter else motor.stator_bore_dia/2

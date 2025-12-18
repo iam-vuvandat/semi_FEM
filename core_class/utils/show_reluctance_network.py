@@ -107,7 +107,7 @@ def show_reluctance_network(reluctance_network):
                     active_mesh, 
                     scalars="FluxB", 
                     cmap="jet", 
-                    clim=[0, 2.0],
+                    clim=[0, 1.5],
                     opacity=solid_opacity,  # <--- Đã sửa: dùng biến thay vì số cứng 0.5
                     show_edges=False,
                     scalar_bar_args={'title': "Flux Density (T)", 'color': 'white'}

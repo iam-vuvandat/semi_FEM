@@ -53,15 +53,13 @@ class ReluctanceNetwork:
     def solve_magnetic_equation(self,
                                 max_iteration =5,
                                 max_relative_residual = 0.0,
-                                damping_factor = 0.02,
-                                first_step_damping_factor = 0.1,
+                                adaptive_damping_factor = (0.6,0.06),
                                 load_step = 5,
                                 debug = True):
         solve_magnetic_equation(reluctance_network = self,
                                 max_iteration = max_iteration,
                                 max_relative_residual = max_relative_residual,
-                                first_step_damping_factor = first_step_damping_factor,
-                                damping_factor = damping_factor,
+                                adaptive_damping_factor = adaptive_damping_factor,
                                 load_step = load_step,
                                 debug = debug)
 
