@@ -34,11 +34,11 @@ class AxialFluxMotorType1:
                  slot_corner_radius = 0, # deg
                  tooth_tip_depth = 2 * 1e-3,
                  tooth_tip_angle = 30, # deg
-                 stator_length = 27 * 1e-3,
+                 stator_length = 30 * 1e-3,
                  # linear_rotor_parameter 
                  airgap = 2 * 1e-3,
                  magnet_length = 4 * 1e-3,    
-                 rotor_length = 8 * 1e-3,    
+                 rotor_length = 10 * 1e-3,    
                  # winding  
                  phase = 3,
                  turns = 50,

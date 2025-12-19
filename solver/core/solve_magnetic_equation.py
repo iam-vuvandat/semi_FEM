@@ -7,40 +7,27 @@ import warnings
 def solve_magnetic_equation(reluctance_network, 
                             max_iteration=50, 
                             max_relative_residual=1e-4, 
-                            adaptive_damping_factor = (0.6,0.06),
+                            adaptive_damping_factor = (1.0,0.1),
                             load_step=5, 
                             debug=True):
     
-    # 1. Chuẩn bị dữ liệu
     magnetic_potential_shape = reluctance_network.magnetic_potential.data.shape
     current_magnetic_potential = reluctance_network.magnetic_potential.data.copy()
     
-    # Tạo mảng các mức tải: [0.2, 0.4, ..., 1.0]
     load_factors = np.linspace(0, 1, load_step+1)[1:]
-    
-    # [TỐI ƯU] Tính trước mảng Damping cho từng mức tải ngay từ đầu
-    # Thay vì tính lại 250 lần trong hàm con
-    adaptive_dampings = np.linspace(adaptive_damping_factor[0], adaptive_damping_factor[1], load_step + 1)[1:]
-    print(adaptive_dampings)
     residual_history = []
 
-    # 2. Bắt đầu vòng lặp tải
     for i in range(load_step):
         current_load = load_factors[i]
-        target_damping = adaptive_dampings[i] # Damping mục tiêu cho mức tải này
         
-        if debug:
-            print(f"--- Load Step: {current_load:.2f} | Target Damping: {target_damping:.3f} ---")
-
-        # 3. Vòng lặp giải (Solver Loop)
         for j in range(max_iteration):
             # Logic Adaptive Damping:
             # Bước đầu của mỗi tải (j=0) luôn đi nhẹ (first_step) để tránh sốc
             # Các bước sau (j>0) dùng damping đã tính trước
             if j == 0:
-                current_damping = 1.0 # gán cứng, đúng logic 
+                current_damping = adaptive_damping_factor[0]
             else:
-                current_damping = target_damping * 0.8 * j
+                current_damping = adaptive_damping_factor[1]
 
             # Logic Warm Start: Chỉ reset ở giây phút đầu tiên của toàn bộ quá trình
             if i == 0 and j == 0:
@@ -91,6 +78,9 @@ def solve_magnetic_equation(reluctance_network,
             current_magnetic_potential = next_magnetic_potential
             reluctance_network.magnetic_potential.data = next_magnetic_potential
             reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
+
+    # Xử lý logic: Sai số ở bước 0 là o xác định, nên nội suy từ bước 2 và bước 3
+    residual_history[0] = 2* residual_history[1] - residual_history[2]
 
     # 4. Vẽ đồ thị
     if debug:
