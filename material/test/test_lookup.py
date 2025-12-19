@@ -1,5 +1,6 @@
 import sys
 import os
+import paths
 
 def test():
     from material.core.lookup_BH_curve import lookup_BH_curve
@@ -16,6 +17,7 @@ def test():
     print(f"dMu_r/dB   : {data_out.dmu_r_dB}")
 
 if __name__ == "__main__":
+    
     current_file = os.path.abspath(__file__)
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 

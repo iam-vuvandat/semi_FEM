@@ -1,6 +1,6 @@
-import numpy as np
 import math
-from scipy.interpolate import CubicSpline, PchipInterpolator
+import numpy as np
+from scipy.interpolate import PchipInterpolator, UnivariateSpline
 
 PI = math.pi
 
@@ -8,7 +8,6 @@ class Air:
     def __init__(self, name="default"):
         self.name = name
         self.relative_permeance = 1.
-
 
 class Magnet:
     def __init__(self, name: str):
@@ -18,10 +17,6 @@ class Magnet:
             self.coercivity = 852000.0
         else:
             raise ValueError(f"Magnet '{name}' not found")
-
-
-import numpy as np
-from scipy.interpolate import PchipInterpolator
 
 class Iron:
     def __init__(self, name: str):
@@ -45,16 +40,61 @@ class Iron:
         self.smooth_BH_curve()
 
     def smooth_BH_curve(self, num_points=3000):
-        B_orig = self.B_H_curve["B_data"]
-        H_orig = self.B_H_curve["H_data"]
+        mu_0 = 4 * PI * 1e-7
         
-        B_smooth = np.linspace(B_orig.min(), B_orig.max(), num_points)
-        interpolator = PchipInterpolator(B_orig, H_orig)
-        H_smooth = interpolator(B_smooth)
+        B_raw = self.B_H_curve["B_data"]
+        H_raw = self.B_H_curve["H_data"]
         
-        self.B_H_curve["B_data"] = B_smooth
-        self.B_H_curve["H_data"] = H_smooth
+        # --- BƯỚC 1: TÍNH TOÁN MU_R CƠ BẢN ---
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mu_r_raw = B_raw / (mu_0 * H_raw)
+        
+        # Xử lý điểm 0 (L'Hopital - xấp xỉ tuyến tính đoạn đầu)
+        initial_mu = (B_raw[1] / H_raw[1]) / mu_0
+        mu_r_raw[0] = initial_mu
 
+        # --- BƯỚC 2: TẠO ĐƯỜNG CONG DẪN ĐƯỜNG (GUIDE CURVE) ---
+        # Dùng Pchip để nội suy ra dữ liệu thô nhưng dày đặc
+        pchip_fit = PchipInterpolator(B_raw, mu_r_raw)
+        
+        # --- BƯỚC 3: GIẢM SỐ ĐIỂM (DOWNSAMPLING) ---
+        # GIẢM SỐ ĐIỂM: Chỉ dùng 30 điểm để định hình đường cong.
+        # 30 điểm là đủ để mô tả hình quả chuông (Bell shape) của Mu_r
+        # mà không đủ "độ phân giải" để sao chép các nhiễu đo lường.
+        num_control_points = 30 
+        B_coarse = np.linspace(B_raw.min(), B_raw.max(), num_control_points)
+        mu_coarse = pchip_fit(B_coarse)
+        
+        # --- BƯỚC 4: CHUẨN BỊ DỮ LIỆU LOGARIT ---
+        # Chuyển sang miền Log để làm phẳng đỉnh và tuyến tính hóa các sườn dốc
+        log_mu_coarse = np.log(mu_coarse)
+
+        # Phản chiếu dữ liệu (Mirroring) để đảm bảo đạo hàm tại 0 bằng 0 tuyệt đối
+        B_mirror = np.concatenate((-B_coarse[1:][::-1], B_coarse))
+        log_mu_mirror = np.concatenate((log_mu_coarse[1:][::-1], log_mu_coarse))
+
+        # --- BƯỚC 5: LÀM MƯỢT LẦN 2 (SPLINE FITTING) ---
+        # Fit spline lên lưới thưa. 
+        # s=0.01 là đủ nhẹ để làm trơn các gãy khúc nhỏ còn sót lại trên lưới thưa.
+        spline_final = UnivariateSpline(B_mirror, log_mu_mirror, k=3, s=0.01)
+
+        # --- BƯỚC 6: TÁI TẠO LƯỚI DÀY ĐẶC ---
+        B_final = np.linspace(B_raw.min(), B_raw.max(), num_points)
+        
+        log_mu_final = spline_final(B_final)
+        mu_r_final = np.exp(log_mu_final)
+        
+        # Đảm bảo điểm 0 phẳng (đạo hàm = 0)
+        # Lấy giá trị spline tại 0 thay vì gán bằng điểm bên cạnh để chính xác hơn về mặt toán học
+        mu_r_final[0] = np.exp(spline_final(0))
+
+        # Tính lại H từ Mu_r đã làm mượt
+        H_final = np.zeros_like(B_final)
+        H_final[1:] = B_final[1:] / (mu_0 * mu_r_final[1:])
+        H_final[0] = 0
+
+        self.B_H_curve["B_data"] = B_final
+        self.B_H_curve["H_data"] = H_final
 
 class MaterialDataBase:
     def __init__(self, air="default", magnet_type="N30UH", iron_type="M350-50A"):
