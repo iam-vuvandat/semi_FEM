@@ -70,6 +70,7 @@ class Element:
         self.flux_density_direct = None
         self.flux_density_average = None
         self.relative_permeability = None
+        self.d_relative_permeability_d_B = None
         self.neighbor_elements_position = get_neighbor_elements_position(element=self).neighbor_elements_position
         self.own_magnetic_potential = None
 
@@ -89,7 +90,9 @@ class Element:
             self.flux_density_direct = flux_density.flux_density_direct
             self.flux_density_average = flux_density.flux_density_average
             
-            self.relative_permeability = find_relative_permeability(element=self).relative_permeability
+            permeability_data = find_relative_permeability(element=self)
+            self.relative_permeability = permeability_data.relative_permeability
+            self.d_relative_permeability_d_B = permeability_data.d_relative_permeability_d_B
             
             self.reluctance = find_reluctance_updated(element=self).reluctance
             
