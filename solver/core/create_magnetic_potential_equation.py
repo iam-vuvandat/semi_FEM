@@ -26,8 +26,7 @@ def create_magnetic_potential_equation(reluctance_network,
     Ja = [[], [], []]
     G = [[], [], []]
 
-    
-    
+
     J = np.zeros(matrix_size)
 
     iterator = range(matrix_size)
@@ -35,8 +34,6 @@ def create_magnetic_potential_equation(reluctance_network,
         iterator = tqdm(iterator, desc="Creating Matrix Equation")
 
     for i_th in iterator:
-
-        neighbor_elements_available = []
 
         i, j, k = reluctance_network.magnetic_potential.get_3D_index(position=i_th).three_dimension_index
         element_center = elements[i, j, k]
@@ -62,8 +59,6 @@ def create_magnetic_potential_equation(reluctance_network,
                 
                 if element_nei is not None:
 
-                    neighbor_elements_available.append(element_nei)
-
                     f = element_nei.magnetic_source[nei_face, n] + element_center.magnetic_source[my_face, n]
                     r = element_nei.reluctance[nei_face, n] + element_center.reluctance[my_face, n]
                     
@@ -76,6 +71,9 @@ def create_magnetic_potential_equation(reluctance_network,
                         G[0].append(i_th)
                         G[1].append(element_nei.flat_position)
                         G[2].append(-conductance)
+                        
+                        # Jacobian
+                        
 
         G[0].append(i_th)
         G[1].append(i_th)
