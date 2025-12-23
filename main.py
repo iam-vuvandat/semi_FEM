@@ -1,6 +1,6 @@
 from system.core import libraries_require
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
-from storage.core import workspace
+from storage.core import workspace  
 
 re_create_motor = False
 
@@ -20,7 +20,7 @@ else:
 workspace.save(aft1 = aft)
 workspace.save(aft_0_1mm = aft)
 
-method_test = ["preconditioned_steepest_descent"]
+method_test = ["conjugate_gradient"]
 figure = []
 
 max_iteration = 5

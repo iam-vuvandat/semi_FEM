@@ -53,7 +53,7 @@ class ReluctanceNetwork:
                                                   debug = debug)
 
     def solve_magnetic_equation(self,
-                                method = "fixed_point_iteration",
+                                method = "preconditioned_steepest_descent",
                                 max_iteration =5,
                                 max_relative_residual = 0.0,
                                 adaptive_damping_factor = (0.6,0.06),

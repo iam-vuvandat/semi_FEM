@@ -12,7 +12,7 @@ class SolverResult:
     figure: Any
 
 def solve_magnetic_equation(reluctance_network, 
-                            method="preconditioned_steepest_descent",
+                            method="conjugate_gradient",
                             max_iteration=50, 
                             max_relative_residual=1e-4, 
                             adaptive_damping_factor=(1.0, 0.1),
@@ -28,8 +28,15 @@ def solve_magnetic_equation(reluctance_network,
     residual_history = []
     load_step_indices = []
 
+    prev_direction = None
+    prev_z = None
+    prev_res = None
+
     for i in range(load_step):
         current_load = load_factors[i]
+        prev_direction = None
+        prev_z = None
+        prev_res = None
         
         for j in range(max_iteration):
             if j == 0 and i > 0:
@@ -62,6 +69,23 @@ def solve_magnetic_equation(reluctance_network,
                 step = spsolve(G, res)
                 next_p = np.append(P_active + current_damping * step, 0.0).reshape(magnetic_potential_shape, order='F')
 
+            elif method == "conjugate_gradient":
+                res = J - G.dot(P_active)
+                current_res = np.linalg.norm(res) / (np.linalg.norm(J) + 1e-12)
+                z = spsolve(G, res)
+                
+                if prev_direction is None:
+                    direction = z
+                else:
+                    beta = np.dot(z, res - prev_res) / (np.dot(prev_z, prev_res) + 1e-15)
+                    beta = max(0, beta)
+                    direction = z + beta * prev_direction
+                
+                prev_direction = direction
+                prev_z = z
+                prev_res = res.copy()
+                next_p = np.append(P_active + current_damping * direction, 0.0).reshape(magnetic_potential_shape, order='F')
+
             residual_history.append(current_res)
             current_magnetic_potential = next_p
             reluctance_network.magnetic_potential.data = current_magnetic_potential
@@ -75,13 +99,12 @@ def solve_magnetic_equation(reluctance_network,
         residual_history[0] = 2 * residual_history[1] - residual_history[2]
 
     ax.plot(residual_history, label=f"Method: {method}", marker='o', markersize=3)
-    
     for idx in load_step_indices:
         ax.axvline(x=idx, color='r', linestyle='--', alpha=0.5)
 
     ax.set_yscale('log')
     ax.set_xlabel("Total Cumulative Iterations")
-    ax.set_ylabel("Relative Residual (Log scale)")
+    ax.set_ylabel("Relative Residual")
     ax.set_title(f"Convergence History: {method}")
     ax.grid(True, which="both", alpha=0.3)
     ax.legend()
