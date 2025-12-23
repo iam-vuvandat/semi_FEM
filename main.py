@@ -19,10 +19,11 @@ workspace.save(aft1 = aft)
 workspace.save(aft_0_1mm = aft)
 
 aft.reluctance_network.solve_magnetic_equation(max_iteration =5,
-                                                    max_relative_residual = 1 * 1e-4,
-                                                    adaptive_damping_factor = (0.5,0.1),
-                                                    load_step= 10,
-                                                    debug = True)
+                                               method="fixed_point_iteration",
+                                               max_relative_residual = 1 * 1e-4,
+                                               adaptive_damping_factor = (0.5,0.1),
+                                               load_step= 10,
+                                               debug = True)
 aft.reluctance_network.show() 
 
 
