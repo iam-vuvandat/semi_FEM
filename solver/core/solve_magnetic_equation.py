@@ -12,7 +12,7 @@ class SolverResult:
     figure: Any
 
 def solve_magnetic_equation(reluctance_network, 
-                            method="fixed_point_iteration",
+                            method="preconditioned_steepest_descent",
                             max_iteration=50, 
                             max_relative_residual=1e-4, 
                             adaptive_damping_factor=(1.0, 0.1),
@@ -56,7 +56,7 @@ def solve_magnetic_equation(reluctance_network,
                 current_res = np.linalg.norm(p_full - current_magnetic_potential) / (np.linalg.norm(p_full) + 1e-12)
                 next_p = (current_magnetic_potential * (1 - current_damping) + p_full * current_damping)
 
-            elif method == "direct_optimization":
+            elif method == "preconditioned_steepest_descent":
                 res = J - G.dot(P_active)
                 current_res = np.linalg.norm(res) / (np.linalg.norm(J) + 1e-12)
                 step = spsolve(G, res)

@@ -20,9 +20,7 @@ else:
 workspace.save(aft1 = aft)
 workspace.save(aft_0_1mm = aft)
 
-method_test = [
-    "direct_optimization", 
-]
+method_test = ["preconditioned_steepest_descent"]
 figure = []
 
 max_iteration = 5
