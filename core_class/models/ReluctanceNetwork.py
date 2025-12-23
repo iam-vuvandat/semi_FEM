@@ -59,7 +59,7 @@ class ReluctanceNetwork:
                                 adaptive_damping_factor = (0.6,0.06),
                                 load_step = 5,
                                 debug = True):
-        solve_magnetic_equation(reluctance_network = self,
+        return solve_magnetic_equation(reluctance_network = self,
                                 method = method,
                                 max_iteration = max_iteration,
                                 max_relative_residual = max_relative_residual,
