@@ -17,6 +17,7 @@ class ReluctanceNetwork:
                  magnetic_potential = None,
                  winding_current = None,):
         
+        self.symmetry_factor = motor.symmetry_factor
         self.material_database = motor.material_database
         self.geometry = geometry
         self.mesh = mesh
@@ -67,40 +68,8 @@ class ReluctanceNetwork:
                                 load_step = load_step,
                                 debug = debug)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def show(self):
-        show_reluctance_network(reluctance_network=self)
+    def show(self,
+             use_symmetry_factor = True):
+        show_reluctance_network(reluctance_network=self,
+                                use_symmetry_factor = use_symmetry_factor)
     

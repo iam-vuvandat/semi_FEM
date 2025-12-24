@@ -2,7 +2,7 @@ from system.core import libraries_require
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace  
 
-re_create_motor = False
+re_create_motor = True
 
 if re_create_motor == False:
     print("loading aft")
@@ -18,15 +18,15 @@ else:
     aft.reluctance_network.update_reluctance_network(magnetic_potential= aft.reluctance_network.magnetic_potential)
     
 workspace.save(aft1 = aft)
-workspace.save(aft_0_1mm = aft)
+
 
 method_test = ["conjugate_gradient"]
 figure = []
 
-max_iteration = 5
+max_iteration = 10
 max_relative_residual = 1 * 1e-4
-adaptive_damping_factor = (0.2,0.1)
-load_step= 5
+adaptive_damping_factor = (0.1,0.1)
+load_step= 1
 debug = True
 
 for method in method_test:
@@ -38,4 +38,5 @@ for method in method_test:
                                                    load_step=load_step,
                                                    debug = debug)
     aft.reluctance_network.show()
+
     
