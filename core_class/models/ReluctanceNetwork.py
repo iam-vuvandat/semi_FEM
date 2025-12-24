@@ -5,9 +5,11 @@ from core_class.utils.create_magnetic_potential import create_magnetic_potential
 from core_class.utils.create_winding_current import create_winding_current
 from core_class.utils.update_reluctance_network import update_reluctance_network
 from core_class.utils.set_minimum_reluctance import set_minimum_reluctance
+from core_class.utils.rotate_reluctance_network import rotate_reluctance_network
 from core_class.utils.set_reluctance_at_zero import set_reluctance_at_zero
 from solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
 from solver.core.solve_magnetic_equation import solve_magnetic_equation
+
 
 class ReluctanceNetwork:
     def __init__(self,
@@ -67,6 +69,12 @@ class ReluctanceNetwork:
                                 adaptive_damping_factor = adaptive_damping_factor,
                                 load_step = load_step,
                                 debug = debug)
+    def rotate(self,
+               z_indices = [0,1,2],
+               n_step = 1):
+        rotate_reluctance_network(reluctance_network = self,
+                              z_indices = z_indices,
+                              n_step = n_step)
 
     def show(self,
              use_symmetry_factor = True):
