@@ -1,5 +1,6 @@
 from core_class.utils.find_geometry_dimension_in_mesh import find_geometry_dimension_in_mesh
 from core_class.utils.create_elements import create_elements
+from core_class.utils.add_elements_lite import add_elements_lite
 from core_class.utils.show_reluctance_network import show_reluctance_network
 from core_class.utils.create_magnetic_potential import create_magnetic_potential
 from core_class.utils.create_winding_current import create_winding_current
@@ -31,6 +32,10 @@ class ReluctanceNetwork:
         self.winding_current = create_winding_current(reluctance_network=self)
         self.magnetic_potential = create_magnetic_potential(reluctance_network= self)
         self.elements = create_elements(self)
+        self.list_elements_lite = None
+
+    def add_elements_lite(self):
+        add_elements_lite(reluctance_network = self)
     
     def update_reluctance_network(self,
                                   magnetic_potential = None,

@@ -142,6 +142,8 @@ def solve_magnetic_equation(reluctance_network,
     else:
         plt.close(fig)
 
+    reluctance_network.add_elements_lite()
+
     return SolverResult(potential=current_magnetic_potential, 
                         residual_history=residual_history, 
                         figure=fig)
