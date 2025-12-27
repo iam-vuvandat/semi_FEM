@@ -18,7 +18,11 @@ def solve_magnetic_equation(reluctance_network,
                             adaptive_damping_factor=(1.0, 0.1),
                             load_step=5, 
                             debug=True):
-    
+
+    # Reset reluctance network 
+    reluctance_network.magnetic_potential.data *= 0 
+    reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
+
     if isinstance(max_iteration, tuple):
         max_iteration = max_iteration[0]
 
