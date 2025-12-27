@@ -7,6 +7,7 @@ re_create_motor = False
 if re_create_motor == False:
     print("loading aft")
     aft = workspace.load("aft1")
+    aft.reluctance_network.list_elements_lite = None
     print("load aft successfully")
 
 else:

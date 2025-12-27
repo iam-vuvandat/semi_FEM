@@ -9,6 +9,7 @@ if re_create_motor == False:
     print("loading aft")
     aft = workspace.load("aft1")
     print("load aft successfully")
+    aft.reluctance_network.list_elements_lite = None
 
 else:
     aft = AxialFluxMotorType1(magnet_length= 4.0 *1e-3,
