@@ -1,8 +1,11 @@
+from typing import Any
 from core_class.models.CylindricalMesh import CylindricalMesh
+from dataclasses import dataclass
 import numpy as np
 import math
 
 pi = math.pi
+
 
 def create_adaptive_mesh(motor,
                          n_r_in=3,
@@ -23,6 +26,16 @@ def create_adaptive_mesh(motor,
                          use_symmetry_factor=True,
                          periodic_boundary=True):
     
+    # Trích xuất thông tin sử dụng sau:
+    detail_parameter = [
+        n_r_in, n_r_1, n_r_2, n_r_3, n_r_out,
+        n_theta,
+        n_z_in_air, n_z_rotor_yoke, n_z_magnet, n_z_airgap,
+        n_z_tooth_tip_1, n_z_tooth_tip_2, n_z_tooth_body,
+        n_z_stator_yoke, n_z_out_air,
+        use_symmetry_factor, periodic_boundary
+    ]
+
     # initial check
     if motor.magnet_embed_depth == 0:
         n_r_3 = -1
@@ -171,4 +184,5 @@ def create_adaptive_mesh(motor,
     return CylindricalMesh(r_nodes=r_cordinate,
                            theta_nodes=theta_cordinate,
                            z_nodes=z_cordinate,
-                           periodic_boundary=periodic_boundary)
+                           periodic_boundary=periodic_boundary,
+                           detail_parameter= detail_parameter)

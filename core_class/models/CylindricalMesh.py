@@ -1,8 +1,9 @@
 import numpy as np
 import pyvista as pv
 
+
 class CylindricalMesh:
-    def __init__(self, r_nodes=None, theta_nodes=None, z_nodes=None, periodic_boundary=True):
+    def __init__(self, r_nodes=None, theta_nodes=None, z_nodes=None, periodic_boundary=True,detail_parameter = None):
         """
         Khởi tạo lưới tọa độ trụ với 3 mảng đầu vào riêng biệt.
 
@@ -45,6 +46,10 @@ class CylindricalMesh:
         # 6. Chuyển đổi sang tọa độ Descartes
         self.X = self.R * np.cos(self.Theta)
         self.Y = self.R * np.sin(self.Theta)
+
+        # Lưu trữ mảng số chứa thông tin mesh
+        self.detail_parameter = detail_parameter
+
 
     def get_cell_centers(self):
         """Trả về tọa độ tâm (r, theta, z) của các phần tử."""

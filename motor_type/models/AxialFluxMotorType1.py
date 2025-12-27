@@ -3,6 +3,7 @@ from motor_type.utils.for_axial_flux_motor_type_1.find_winding_matrix import fin
 from material.models.MaterialDataBase import MaterialDataBase
 from motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
 from core_class.models.ReluctanceNetwork import ReluctanceNetwork
+from motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
 from motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 import pyvista as pv
 import math
@@ -110,6 +111,7 @@ class AxialFluxMotorType1:
         self.mesh     = None
         self.reluctance_network = None
 
+    
     def create_geometry(self,
                         rotor_angle_offset = 0,
                         stator_angle_offset = 0,
@@ -179,6 +181,10 @@ class AxialFluxMotorType1:
         
         return self.reluctance_network
     
+    def rotate_rotor(self,n_step):
+        rotate_rotor(motor = self,
+                     n_step= n_step)
+
     def show(self, show_geometry=True, show_mesh=True):
         """
         Hiển thị toàn bộ mô hình động cơ (Geometry + Mesh).

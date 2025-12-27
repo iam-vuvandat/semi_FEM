@@ -17,5 +17,15 @@ else:
     aft.create_adaptive_mesh()
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential= aft.reluctance_network.magnetic_potential)
+    
+n_step_rotate = 10
+
+for i in range(aft.mesh.detail_parameter[5]// n_step_rotate):
+    print(i,"  ",aft.mesh.detail_parameter[5],"  ",n_step_rotate)
+    aft.reluctance_network.solve_magnetic_equation()
+    aft.rotate_rotor(n_step = n_step_rotate)
 
 workspace.save(aft1 = aft)
+aft.reluctance_network.show()
+
+    
