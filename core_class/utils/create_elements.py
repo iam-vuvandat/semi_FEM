@@ -14,7 +14,7 @@ def create_elements(motor, debug=True):
     if debug:
         print(f"[INFO] Initializing {total_elements} elements...")
 
-    with tqdm(total=total_elements, desc="Creating Objects", disable=not debug) as pbar:
+    with tqdm(total=total_elements, desc="Creating Elements", disable=not debug) as pbar:
         for i_z in range(nz):
             for i_t in range(nt):
                 for i_r in range(nr):
