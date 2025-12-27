@@ -130,19 +130,18 @@ def solve_magnetic_equation(reluctance_network,
     if len(residual_history) > 2:
         residual_history[0] = 2 * residual_history[1] - residual_history[2]
 
-    ax.plot(residual_history, label=f"Method: {method}", marker='o', markersize=3)
-    for idx in load_step_indices:
-        ax.axvline(x=idx, color='r', linestyle='--', alpha=0.5)
-
-    ax.set_yscale('log')
-    ax.set_xlabel("Total Cumulative Iterations")
-    ax.set_ylabel("Relative Residual (Log scale)")
-    ax.set_title(f"Convergence History: {method}")
-    ax.grid(True, which="both", alpha=0.3)
-    ax.legend()
-    
-    if debug:
+    if debug: 
+        ax.plot(residual_history, label=f"Method: {method}", marker='o', markersize=3)
+        for idx in load_step_indices:
+            ax.axvline(x=idx, color='r', linestyle='--', alpha=0.5)
+        ax.set_yscale('log')
+        ax.set_xlabel("Total Cumulative Iterations")
+        ax.set_ylabel("Relative Residual (Log scale)")
+        ax.set_title(f"Convergence History: {method}")
+        ax.grid(True, which="both", alpha=0.3)
+        ax.legend()
         plt.show()
+        pass
     else:
         plt.close(fig)
 

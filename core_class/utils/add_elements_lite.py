@@ -2,12 +2,9 @@ from core_class.models.ElementLite import ElementLite
 import numpy as np 
 from tqdm import tqdm
 
-def add_elements_lite(reluctance_network):
-
+def add_elements_lite(reluctance_network, debug=False):
     if reluctance_network.list_elements_lite is None:
         reluctance_network.list_elements_lite = []
-    else:
-        pass
 
     elements = reluctance_network.elements
     nr, nt, nz = elements.shape
@@ -16,7 +13,7 @@ def add_elements_lite(reluctance_network):
     elements_lite = np.empty(elements.shape, dtype=object, order=current_order)
 
     total_elements = nr * nt * nz
-    with tqdm(total=total_elements, desc="Creating ElementLite History") as pbar:
+    with tqdm(total=total_elements, desc="Creating ElementLite History", disable=not debug) as pbar:
         for z in range(nz):
             for t in range(nt):
                 for r in range(nr):
