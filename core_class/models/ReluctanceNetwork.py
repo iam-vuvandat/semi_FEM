@@ -61,12 +61,13 @@ class ReluctanceNetwork:
                                                   debug = debug)
 
     def solve_magnetic_equation(self,
-                                method = "preconditioned_steepest_descent",
-                                max_iteration =5,
-                                max_relative_residual = 0.0,
-                                adaptive_damping_factor = (0.6,0.06),
-                                load_step = 5,
+                                method = "conjugate_gradient",
+                                max_iteration =10,
+                                max_relative_residual = 1 * 1e-1,
+                                adaptive_damping_factor = (0.1,0.1),
+                                load_step = 1,
                                 debug = True):
+        
         return solve_magnetic_equation(reluctance_network = self,
                                 method = method,
                                 max_iteration = max_iteration,

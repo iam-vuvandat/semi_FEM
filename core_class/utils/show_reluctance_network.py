@@ -1,8 +1,7 @@
 import numpy as np
 import pyvista as pv
 from pyvistaqt import BackgroundPlotter
-from PyQt5.QtWidgets import QDockWidget, QTextEdit, QVBoxLayout, QWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QTimer
 import ctypes
 
 try:
@@ -14,172 +13,166 @@ except Exception:
         pass
 
 def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
+    # Lấy danh sách lịch sử ElementLite
+    history = reluctance_network.list_elements_lite
+    if not history:
+        print("[Error] No ElementLite history found.")
+        return
+
     mesh_obj = reluctance_network.mesh
-    elements_matrix = reluctance_network.elements
-    nr, nt, nz = elements_matrix.shape
-    
     grid_pv = mesh_obj.to_pyvista_grid()
     n_cells_sector = grid_pv.n_cells
-    flat_elements = elements_matrix.flatten(order='F')
     
-    mat_ids = np.zeros(n_cells_sector, dtype=int)
-    b_values = np.zeros(n_cells_sector, dtype=float)
+    # Cấu hình Plotter
+    pl = BackgroundPlotter(title="Reluctance Network Animation", window_size=(1600, 900))
+    pl.set_background("#050505")
+    pl.add_axes()
 
-    for idx, el in enumerate(flat_elements):
-        if el is None: 
-            continue
-        mat_name = str(el.material).lower()
-        if "iron" in mat_name or "steel" in mat_name:
-            mat_ids[idx] = 1
-        elif "magnet" in mat_name:
-            vec = getattr(el, 'magnetization_direction', None)
-            z_val = vec[-1] if (vec is not None and len(vec) > 0) else 0
-            mat_ids[idx] = 2 if z_val >= 0 else 4
-        elif "coil" in mat_name or "winding" in mat_name:
-            mat_ids[idx] = 3
-        else:
-            mat_ids[idx] = 0
-        try:
-            flux_avg = getattr(el, 'flux_density_average', None)
-            b_values[idx] = flux_avg[-1] if (flux_avg is not None and len(flux_avg) > 0) else 0.0
-        except:
-            b_values[idx] = 0.0
+    # Định nghĩa màu sắc vật liệu
+    colors = {0: "#444444", 1: "#E0E0E0", 2: "#FF3333", 3: "#FF9900", 4: "#3366FF"}
 
+    sargs = dict(
+        title="Flux Density (T)", title_font_size=20, label_font_size=16,
+        n_labels=6, fmt="%.2f", vertical=True, position_x=0.92, position_y=0.15,
+        height=0.7, width=0.04, color='white', shadow=False
+    )
+
+    class ViewerState:
+        def __init__(self):
+            self.current_frame = 0
+            self.total_frames = len(history)
+            self.bmap_mode = False
+            self.solid_mode = False
+            self.is_playing = False
+            self.current_actors = []
+            
+            # Timer cho chế độ Play
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.next_frame)
+
+        def get_current_data(self):
+            # Lấy mảng ElementLite 3D tại frame hiện tại và làm phẳng
+            elements_lite = history[self.current_frame].flatten(order='F')
+            
+            mat_ids = np.zeros(n_cells_sector, dtype=int)
+            b_values = np.zeros(n_cells_sector, dtype=float)
+
+            for idx, el in enumerate(elements_lite):
+                if el is None: continue
+                # Phân loại vật liệu
+                m_name = el.material.lower()
+                if "iron" in m_name or "steel" in m_name: mat_ids[idx] = 1
+                elif "magnet" in m_name:
+                    z_val = el.magnetization_direction[-1] if el.magnetization_direction is not None else 0
+                    mat_ids[idx] = 2 if z_val >= 0 else 4
+                elif "coil" in m_name or "winding" in m_name: mat_ids[idx] = 3
+                
+                # Lấy FluxB
+                if el.flux_density_average is not None:
+                    b_values[idx] = el.flux_density_average[-1]
+
+            # Xử lý đối xứng nếu có
+            if use_symmetry_factor and hasattr(reluctance_network, 'symmetry_factor'):
+                sym = int(reluctance_network.symmetry_factor)
+                if sym > 1:
+                    mat_ids = np.tile(mat_ids, sym)
+                    b_values = np.tile(b_values, sym)
+            
+            return mat_ids, b_values
+
+        def render(self):
+            for actor in self.current_actors:
+                pl.remove_actor(actor)
+            self.current_actors.clear()
+            
+            if hasattr(pl, 'scalar_bars'):
+                pl.scalar_bars.clear()
+
+            mat_ids, b_values = self.get_current_data()
+            grid_pv.cell_data["MatID"] = mat_ids
+            grid_pv.cell_data["FluxB"] = b_values
+            
+            # Xử lý Symmetry Hình học (chỉ merge một lần đầu hoặc nếu grid thay đổi)
+            non_air_mask = grid_pv.threshold(0.1, scalars="MatID", preference="cell")
+            
+            opacity_val = 1.0 if self.solid_mode else 0.4
+            
+            if self.bmap_mode:
+                if non_air_mask.n_cells > 0:
+                    actor = pl.add_mesh(non_air_mask, scalars="FluxB", cmap="jet", clim=[0, 1.8],
+                                       opacity=opacity_val, show_edges=False, lighting=False,
+                                       scalar_bar_args=sargs, show_scalar_bar=True)
+                    self.current_actors.append(actor)
+            else:
+                for mid, color in colors.items():
+                    sub = grid_pv.threshold([mid, mid], scalars="MatID", preference="cell")
+                    if sub.n_cells > 0:
+                        op = 0.05 if mid == 0 else opacity_val
+                        actor = pl.add_mesh(sub, color=color, opacity=op, lighting=False,
+                                          show_edges=self.solid_mode, edge_color="#222222")
+                        self.current_actors.append(actor)
+            
+            # Hiển thị số Frame hiện tại lên màn hình
+            pl.add_text(f"Frame: {self.current_frame}/{self.total_frames-1}", 
+                        position="upper_left", font_size=10, color='white', name="frame_info")
+
+        def toggle_bmap(self, state):
+            self.bmap_mode = state
+            self.render()
+
+        def toggle_solid(self, state):
+            self.solid_mode = state
+            self.render()
+
+        def next_frame(self):
+            self.current_frame = (self.current_frame + 1) % self.total_frames
+            self.render()
+
+        def pre_frame(self):
+            self.current_frame = (self.current_frame - 1) % self.total_frames
+            self.render()
+
+        def toggle_play(self, state):
+            self.is_playing = state
+            if self.is_playing:
+                self.timer.start(100) # Chạy mỗi 100ms
+            else:
+                self.timer.stop()
+
+    state = ViewerState()
+    
+    # Thiết lập Symmetry Hình học một lần duy nhất để tối ưu
     if use_symmetry_factor and hasattr(reluctance_network, 'symmetry_factor'):
         sym_factor = int(reluctance_network.symmetry_factor)
         if sym_factor > 1:
             angle_step = 360.0 / sym_factor
-            segments = []
-            for i in range(sym_factor):
-                segments.append(grid_pv.rotate_z(i * angle_step))
-            
-            merged_grid = segments[0].merge(segments[1:])
-            grid_pv = merged_grid.clean(tolerance=1e-5, remove_unused_points=True)
-            
-            mat_ids = np.tile(mat_ids, sym_factor)
-            b_values = np.tile(b_values, sym_factor)
-            grid_pv.cell_data["OrigID"] = np.tile(np.arange(n_cells_sector), sym_factor)
-        else:
-            grid_pv.cell_data["OrigID"] = np.arange(n_cells_sector)
-    else:
-        grid_pv.cell_data["OrigID"] = np.arange(n_cells_sector)
+            segments = [grid_pv.rotate_z(i * angle_step) for i in range(sym_factor)]
+            grid_pv = segments[0].merge(segments[1:]).clean(tolerance=1e-5)
 
-    grid_pv.cell_data["MatID"] = mat_ids
-    grid_pv.cell_data["FluxB"] = b_values
+    state.render()
 
-    pl = BackgroundPlotter(title="Reluctance Network Viewer", window_size=(1600, 900))
-    pl.set_background("#050505")
-    pl.add_axes()
-
-    dock = QDockWidget("Element Info", pl.app_window)
-    dock_widget = QWidget()
-    layout = QVBoxLayout()
-    text_info = QTextEdit()
-    text_info.setReadOnly(True)
-    text_info.setStyleSheet("background-color: #1E1E1E; color: white; font-family: Consolas; font-size: 14px;")
-    layout.addWidget(text_info)
-    dock_widget.setLayout(layout)
-    dock.setWidget(dock_widget)
-    pl.app_window.addDockWidget(Qt.RightDockWidgetArea, dock)
-
-    styles = {
-        0: ("Air", "#AAAAAA"),
-        1: ("Iron", "#F0F0F0"),
-        2: ("Magnet N", "#FF0000"),
-        3: ("Coil", "#FFAA00"),
-        4: ("Magnet S", "#0000FF")
-    }
-
-    current_actors = []
+    # Hệ thống nút bấm
+    btn_size, gap = 80, 10
+    x_start, y = 20, pl.window_size[1] - 120
     
-    def render_view(is_bmap_mode, is_trans_checked):
-        for actor in current_actors:
-            pl.remove_actor(actor)
-        current_actors.clear()
-        solid_opacity = 1.0 if is_trans_checked else 0.5
-        air_opacity = 0.3
+    # Nút chức năng hiển thị
+    pl.add_checkbox_button_widget(state.toggle_solid, position=(x_start, y), size=btn_size, color_on='cyan', color_off='grey')
+    pl.add_text("Solid", position=(x_start + 25, y + 35), font_size=8, color='white')
+    
+    pl.add_checkbox_button_widget(state.toggle_bmap, position=(x_start + btn_size + gap, y), size=btn_size, color_on='red', color_off='grey')
+    pl.add_text("B", position=(x_start + btn_size + gap + 35, y + 35), font_size=8, color='white')
 
-        if is_bmap_mode:
-            active_mesh = grid_pv.threshold(0.1, scalars="MatID", preference="cell")
-            if active_mesh.n_cells > 0:
-                actor_active = pl.add_mesh(active_mesh, scalars="FluxB", cmap="jet", clim=[0, 1.5],
-                                         opacity=solid_opacity, show_edges=False, smooth_shading=True,
-                                         scalar_bar_args={'title': "Flux Density (T)", 'color': 'white'})
-                current_actors.append(actor_active)
-            air_mesh = grid_pv.threshold([0, 0], scalars="MatID", preference="cell")
-            if air_mesh.n_cells > 0:
-                actor_air = pl.add_mesh(air_mesh, scalars="FluxB", cmap="jet", clim=[0, 2.0],
-                                      opacity=air_opacity, show_edges=False, show_scalar_bar=False)
-                current_actors.append(actor_air)
-        else:
-            for mat_id, (label, color) in styles.items():
-                sub_mesh = grid_pv.threshold([mat_id, mat_id], scalars="MatID", preference="cell")
-                if sub_mesh.n_cells > 0:
-                    current_opacity = air_opacity if mat_id == 0 else solid_opacity
-                    show_edges = True if (mat_id != 0 and is_trans_checked) else False
-                    actor = pl.add_mesh(sub_mesh, color=color, opacity=current_opacity, 
-                                      show_edges=show_edges, edge_color="#333333", 
-                                      smooth_shading=True, label=label, pickable=True)
-                    current_actors.append(actor)
-            pl.add_legend(bcolor='#1A1A1A', border=True, size=(0.12, 0.15), loc='lower right')
+    # Nút điều khiển Animation (Next, Pre, Play)
+    x_ctrl = x_start + (btn_size + gap) * 2 + 50
+    
+    pl.add_checkbox_button_widget(lambda v: state.pre_frame(), position=(x_ctrl, y), size=btn_size, color_on='grey', color_off='grey')
+    pl.add_text("Pre", position=(x_ctrl + 30, y + 35), font_size=8, color='white')
 
-    class ViewerState:
-        def __init__(self):
-            self.selected_idx = (0, 0, 0)
-            self.highlight_actor = None 
-            self.bmap_mode = False
-            self.trans_checked = False
-        def toggle_mode(self, state):
-            self.bmap_mode = state
-            render_view(self.bmap_mode, self.trans_checked)
-            self.update_selection(*self.selected_idx)
-        def toggle_transparency(self, state):
-            self.trans_checked = state
-            render_view(self.bmap_mode, self.trans_checked)
-            self.update_selection(*self.selected_idx)
-        def update_selection(self, ir, it, iz):
-            self.selected_idx = (ir, it, iz)
-            flat_id = ir + it * nr + iz * (nr * nt)
-            if self.highlight_actor:
-                pl.remove_actor(self.highlight_actor)
-            try:
-                target_cells = np.where(grid_pv.cell_data["OrigID"] == flat_id)[0]
-                cell_geo = grid_pv.extract_cells(target_cells)
-                self.highlight_actor = pl.add_mesh(cell_geo, style='wireframe', color='#00FFFF', 
-                                                   line_width=5, render=False, name="highlight", lighting=False)
-            except: pass
-            el = elements_matrix[ir, it, iz]
-            info_str = f"=== SELECTED ELEMENT ===\nIndex: [{ir}, {it}, {iz}]\nFlat ID: {flat_id}\n"
-            info_str += f"Material: {styles[mat_ids[flat_id % n_cells_sector]][0]}\n"
-            info_str += f"Flux B: {b_values[flat_id % n_cells_sector]:.4f} T\n" + "="*30 + "\n"
-            if el is not None:
-                for key, val in vars(el).items():
-                    if key.startswith("__"): continue
-                    info_str += f"\n[ {key} ]\n{val}\n"
-            text_info.setText(info_str)
-        def move_cursor(self, dr, dt, dz):
-            r, t, z = self.selected_idx
-            r, t, z = (r + dr) % nr, (t + dt) % nt, (z + dz) % nz
-            self.update_selection(r, t, z)
+    pl.add_checkbox_button_widget(state.toggle_play, position=(x_ctrl + btn_size + gap, y), size=btn_size, color_on='green', color_off='grey')
+    pl.add_text("Play", position=(x_ctrl + btn_size + gap + 30, y + 35), font_size=8, color='white')
 
-    state = ViewerState()
-    render_view(False, False)
-    def on_cell_picked(picked_mesh):
-        if picked_mesh is None or "OrigID" not in picked_mesh.cell_data: return
-        oid = picked_mesh.cell_data["OrigID"][0]
-        state.update_selection(oid % nr, (oid % (nr * nt)) // nr, oid // (nr * nt))
+    pl.add_checkbox_button_widget(lambda v: state.next_frame(), position=(x_ctrl + (btn_size + gap)*2, y), size=btn_size, color_on='grey', color_off='grey')
+    pl.add_text("Next", position=(x_ctrl + (btn_size + gap)*2 + 25, y + 35), font_size=8, color='white')
 
-    pl.enable_cell_picking(callback=on_cell_picked, show=False)
-    btn_size, gap, x1, x2, y = 80, 10, 20, 20 + 80 + 10, pl.window_size[1] - 120
-    btns = [("k++", (x2, y), (0,0,1)), ("k--", (x1, y), (0,0,-1)), ("j++", (x2, y-90), (0,1,0)), 
-            ("j--", (x1, y-90), (0,-1,0)), ("i++", (x2, y-180), (1,0,0)), ("i--", (x1, y-180), (-1,0,0))]
-    for lbl, pos, move in btns:
-        pl.add_checkbox_button_widget(lambda v, m=move: state.move_cursor(*m), position=pos, size=btn_size, color_on='grey', color_off='grey')
-        pl.add_text(lbl, position=(pos[0] + 25, pos[1] + 25), font_size=14)
-    pl.add_checkbox_button_widget(state.toggle_mode, position=(x2, y-270), size=btn_size, color_on='red', color_off='grey')
-    pl.add_text("B-Map", position=(x2 + 15, y-245), font_size=14)
-    pl.add_checkbox_button_widget(state.toggle_transparency, position=(x1, y-270), size=btn_size, color_on='cyan', color_off='grey')
-    pl.add_text("Transp.", position=(x1 + 10, y-245), font_size=14)
-    state.update_selection(0, 0, 0)
     pl.show()
     pl.app.exec_()

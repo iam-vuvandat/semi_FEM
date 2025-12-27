@@ -2,7 +2,7 @@ from system.core import libraries_require
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace  
 
-re_create_motor = True
+re_create_motor = False
 
 if re_create_motor == False:
     print("loading aft")
