@@ -5,13 +5,16 @@ from storage.core import workspace
 from tqdm import tqdm
 
 re_create_motor = False
-re_solve = True
+re_solve = False
 
 if re_create_motor == False:
     print("loading aft")
     aft = workspace.load("aft1")
     print("load aft successfully")
-    aft.reluctance_network.list_elements_lite = None
+    if re_solve == False:
+        pass
+    else:
+        aft.reluctance_network.list_elements_lite = None
 else:
     aft = AxialFluxMotorType1(magnet_length=4.0 * 1e-3,
                               airgap=0.5 * 1e-3)
@@ -19,10 +22,11 @@ else:
     aft.create_adaptive_mesh()
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
+    workspace.save(aft1=aft)
 
 if re_solve == True:
     n_theta = aft.mesh.detail_parameter[5] - 1 
-    n_step_shift = 5
+    n_step_shift = 3
     n_step_solve = n_theta // n_step_shift
 
     for i in tqdm(range(int(n_step_solve)), desc="Solving & Rotating"):
