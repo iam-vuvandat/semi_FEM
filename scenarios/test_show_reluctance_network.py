@@ -4,7 +4,7 @@ from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace 
 from tqdm import tqdm
 
-re_create_motor = False
+re_create_motor = True
 re_solve = True
 
 if re_create_motor == False:
@@ -16,8 +16,8 @@ if re_create_motor == False:
     else:
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length=4.0 * 1e-3,
-                              airgap=0.5 * 1e-3)
+    aft = AxialFluxMotorType1(magnet_length=5.0 * 1e-3,
+                              airgap=0.4 * 1e-3)
     aft.create_geometry()
     aft.create_adaptive_mesh()
     aft.create_reluctance_network()
