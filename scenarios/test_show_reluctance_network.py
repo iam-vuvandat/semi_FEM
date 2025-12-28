@@ -5,11 +5,11 @@ from storage.core import workspace
 from tqdm import tqdm
 
 re_create_motor = False
-re_solve = True
+re_solve =False
 
 if re_create_motor == False:
     print("loading aft")
-    aft = workspace.load("aft1")
+    aft = workspace.load("aft3")
     print("load aft successfully")
     if re_solve == False:
         pass
@@ -22,7 +22,7 @@ else:
     aft.create_adaptive_mesh()
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
-    workspace.save(aft1=aft)
+    workspace.save(aft3=aft)
 
 if re_solve == True:
     n_theta = aft.mesh.detail_parameter[5] - 1 
@@ -33,7 +33,7 @@ if re_solve == True:
         aft.reluctance_network.solve_magnetic_equation()
         aft.rotate_rotor(n_step=n_step_shift)
 
-    workspace.save(aft1=aft)
+    workspace.save(aft3=aft)
 else:
     pass
 

@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QAction, QStyle
 from PyQt5.QtCore import QTimer
 import ctypes
 
-# Tối ưu hiển thị cho màn hình Surface (High DPI)
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
@@ -24,19 +23,17 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     n_cells_sector = grid_pv.n_cells
     
     pl = BackgroundPlotter(title="Reluctance Network Animation", window_size=(1600, 900))
-    pl.set_background("#050505")
-    pl.add_axes()
+    pl.set_background("#FFFFFF")
+    pl.add_axes(color='black')
 
-    # --- 1. XÓA SẠCH CÁC TOOLBAR MẶC ĐỊNH ---
-    pl.default_camera_tool_bar.hide()      # Ẩn Top, Bottom, Isometric...
-    pl.saved_cameras_tool_bar.hide()      # Ẩn Save Camera, Clear Cameras
-    # pl.main_menu.hide()                 # (Tùy chọn) Nếu muốn ẩn cả menu File, View...
+    pl.default_camera_tool_bar.hide()
+    pl.saved_cameras_tool_bar.hide()
 
-    colors = {0: "#444444", 1: "#E0E0E0", 2: "#FF3333", 3: "#FF9900", 4: "#3366FF"}
+    colors = {0: "#F0F0F0", 1: "#8B8888", 2: "#FF3333", 3: "#FF9900", 4: "#3366FF"}
     sargs = dict(
         title="Flux Density (T)", title_font_size=20, label_font_size=16,
         n_labels=6, fmt="%.2f", vertical=True, position_x=0.92, position_y=0.15,
-        height=0.7, width=0.04, color='white', shadow=False
+        height=0.7, width=0.04, color='black', shadow=False
     )
 
     class ViewerState:
@@ -83,7 +80,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                 non_air = grid_pv.threshold(0.1, scalars="MatID", preference="cell")
                 if non_air.n_cells > 0:
                     pl.add_mesh(non_air, scalars="FluxB", cmap="jet", clim=[0, 1.8],
-                                opacity=opacity_val, show_edges=False, lighting=False,
+                                opacity=opacity_val, show_edges=False, lighting=True,
                                 scalar_bar_args=sargs, show_scalar_bar=True, name="bmap_mesh")
             else:
                 pl.remove_actor("bmap_mesh")
@@ -91,15 +88,15 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                 for mid, color in colors.items():
                     sub = grid_pv.threshold([mid, mid], scalars="MatID", preference="cell")
                     if sub.n_cells > 0:
-                        op = 0.05 if mid == 0 else opacity_val
-                        pl.add_mesh(sub, color=color, opacity=op, lighting=False,
+                        op = 0.1 if mid == 0 else opacity_val
+                        pl.add_mesh(sub, color=color, opacity=op, lighting=True,
                                     show_edges=self.solid_mode, edge_color="#222222", 
-                                    name=f"mat_{mid}") # name giúp chống nháy
+                                    name=f"mat_{mid}")
                     else:
                         pl.remove_actor(f"mat_{mid}")
             
             pl.add_text(f"Frame: {self.current_frame}/{self.total_frames-1}", 
-                        position="upper_left", font_size=10, name="info_text")
+                        position="upper_left", font_size=10, color="black", name="info_text")
             pl.render()
 
         def toggle_bmap(self, state):
@@ -134,7 +131,6 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
 
     state.render()
 
-    # --- 2. TẠO TOOLBAR RIÊNG CHỈ CÓ CÁC NÚT CỦA BẠN ---
     tb = pl.app_window.addToolBar("Simulation Controls")
 
     act_solid = QAction("Solid", pl.app_window)
