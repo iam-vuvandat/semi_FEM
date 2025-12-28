@@ -5,7 +5,7 @@ from storage.core import workspace
 from tqdm import tqdm
 
 re_create_motor = False
-re_solve = False
+re_solve = True
 
 if re_create_motor == False:
     print("loading aft")
