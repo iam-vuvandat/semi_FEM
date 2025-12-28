@@ -20,6 +20,7 @@ def solve_magnetic_equation(reluctance_network,
                             debug=True):
 
     # Reset reluctance network 
+    reluctance_network.set_reluctance_at_zero()
     reluctance_network.magnetic_potential.data *= 0 
     reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
 

@@ -15,10 +15,8 @@ def create_magnetic_potential_equation(reluctance_network,
                                        load_factor=1.0,
                                        debug=True):
     if first_time:
-        reluctance_network.set_reluctance_at_zero()
-        reluctance_network.magnetic_potential.data *= 0 
-        reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
-
+       pass 
+    
     mesh = reluctance_network.mesh
     matrix_size = mesh.total_cells - 1
     elements = reluctance_network.elements

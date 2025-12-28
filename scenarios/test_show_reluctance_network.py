@@ -5,7 +5,7 @@ from storage.core import workspace
 from tqdm import tqdm
 
 re_create_motor = False
-re_solve = False
+re_solve = True
 
 if re_create_motor == False:
     print("loading aft")
@@ -29,7 +29,7 @@ if re_solve == True:
     n_step_shift = 5
     n_step_solve = n_theta // n_step_shift
 
-    for i in tqdm(range(int(n_step_solve)), desc="Solving & Rotating"):
+    for i in tqdm(range(int(3)), desc="Solving & Rotating"):
         aft.reluctance_network.solve_magnetic_equation()
         aft.rotate_rotor(n_step=n_step_shift)
 
