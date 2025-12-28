@@ -79,7 +79,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                 for mid in range(5): pl.remove_actor(f"mat_{mid}")
                 non_air = grid_pv.threshold(0.1, scalars="MatID", preference="cell")
                 if non_air.n_cells > 0:
-                    pl.add_mesh(non_air, scalars="FluxB", cmap="jet", clim=[0, 1.8],
+                    pl.add_mesh(non_air, scalars="FluxB", cmap="jet", clim=[0, 1.5],
                                 opacity=opacity_val, show_edges=False, lighting=True,
                                 scalar_bar_args=sargs, show_scalar_bar=True, name="bmap_mesh")
             else:

@@ -64,7 +64,7 @@ class ReluctanceNetwork:
                                 method = "conjugate_gradient",
                                 max_iteration = 7,
                                 max_relative_residual = 1 * 1e-4,
-                                adaptive_damping_factor = (0.12,0.12),
+                                adaptive_damping_factor = (0.1,0.1),
                                 load_step = 1,
                                 debug = False):
         

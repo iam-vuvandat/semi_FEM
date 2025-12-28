@@ -19,7 +19,6 @@ def solve_magnetic_equation(reluctance_network,
                             load_step=5, 
                             debug=True):
 
-    # Reset reluctance network 
     reluctance_network.set_reluctance_at_zero()
     reluctance_network.magnetic_potential.data *= 0 
     reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
@@ -35,13 +34,6 @@ def solve_magnetic_equation(reluctance_network,
     residual_history = []
     load_step_indices = []
 
-    prev_direction = None
-    prev_z = None
-    prev_res = None
-    
-    current_damping = adaptive_damping_factor[0]
-    divergence_count = 0
-
     for i in range(load_step):
         current_load = load_factors[i]
         prev_direction = None
@@ -53,7 +45,9 @@ def solve_magnetic_equation(reluctance_network,
             if j == 0 and i > 0:
                 load_step_indices.append(len(residual_history))
 
-            if j == 0:
+            if i == 0 and j == 0:
+                current_damping = 1.0
+            elif j == 0:
                 current_damping = adaptive_damping_factor[0]
             elif j == 1:
                 current_damping = adaptive_damping_factor[1]
@@ -72,11 +66,8 @@ def solve_magnetic_equation(reluctance_network,
                 p_full = np.append(p_sol, 0.0).reshape(magnetic_potential_shape, order='F')
                 res_val = np.linalg.norm(p_full - current_magnetic_potential) / (np.linalg.norm(p_full) + 1e-12)
                 direction = p_full - current_magnetic_potential
-            elif method in ["direct_optimization", "steepest_descent", "preconditioned_steepest_descent"]:
-                res = J - G.dot(P_active)
-                res_val = np.linalg.norm(res) / (np.linalg.norm(J) + 1e-12)
-                direction = spsolve(G, res)
-            elif method == "conjugate_gradient":
+            
+            else: # conjugate_gradient
                 res = J - G.dot(P_active)
                 res_val = np.linalg.norm(res) / (np.linalg.norm(J) + 1e-12)
                 z = spsolve(G, res)
@@ -101,7 +92,6 @@ def solve_magnetic_equation(reluctance_network,
                     reluctance_network.magnetic_potential.data = current_magnetic_potential
                     reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
                     break
-                
                 continue
             else:
                 divergence_count = 0
@@ -116,8 +106,7 @@ def solve_magnetic_equation(reluctance_network,
             if method == "fixed_point_iteration":
                 next_p = current_magnetic_potential + current_damping * direction
             else:
-                p_delta = direction if method != "conjugate_gradient" else direction
-                active_update = P_active + current_damping * p_delta
+                active_update = P_active + current_damping * direction
                 next_p = np.append(active_update, 0.0).reshape(magnetic_potential_shape, order='F')
 
             current_magnetic_potential = next_p
@@ -142,7 +131,6 @@ def solve_magnetic_equation(reluctance_network,
         ax.grid(True, which="both", alpha=0.3)
         ax.legend()
         plt.show()
-        pass
     else:
         plt.close(fig)
 
