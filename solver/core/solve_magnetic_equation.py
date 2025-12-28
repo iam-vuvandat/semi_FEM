@@ -12,7 +12,7 @@ class SolverResult:
     figure: Any
 
 def solve_magnetic_equation(reluctance_network, 
-                            method="conjugate_gradient", 
+                            method="conjugate_gradient", # Giữ lại để không đổi cách gọi
                             max_iteration=50, 
                             max_relative_residual=1e-4, 
                             adaptive_damping_factor=(1.0, 0.1),
@@ -33,25 +33,22 @@ def solve_magnetic_equation(reluctance_network,
     for i in range(load_step):
         current_load = load_factors[i]
         
-        # Reset trạng thái CG cho mỗi load step
+        # Reset các biến trạng thái của Conjugate Gradient cho mỗi load step
         prev_direction = None
         prev_z = None
         prev_res = None
         divergence_count = 0
+        current_damping = adaptive_damping_factor[0]
         
         for j in range(max_iteration):
             if j == 0 and i > 0:
                 load_step_indices.append(len(residual_history))
 
-            # --- Điều chỉnh Damping Factor theo yêu cầu ---
-            if i == 0 and j == 0:
-                current_damping = 1.0  # Bước đầu tiên tuyệt đối là 1.0
-            elif j == 0:
-                current_damping = adaptive_damping_factor[0]
-            elif j == 1:
+            # Cập nhật damping factor theo số vòng lặp trong load step
+            if j == 1:
                 current_damping = adaptive_damping_factor[1]
             
-            # Lập phương trình
+            # Lập hệ phương trình (Ma trận độ dẫn G và vector nguồn J)
             comp = reluctance_network.create_magnetic_potential_equation(
                 first_time=(i == 0 and j == 0),
                 load_factor=current_load,
@@ -61,29 +58,30 @@ def solve_magnetic_equation(reluctance_network,
             G, J = comp.G, comp.J
             P_active = current_magnetic_potential.flatten(order='F')[:-1]
 
-            # --- Thuật toán Conjugate Gradient (CG) ---
+            # --- Thuật toán Conjugate Gradient ---
             res = J - G.dot(P_active)
             res_val = np.linalg.norm(res) / (np.linalg.norm(J) + 1e-12)
             
-            # Giải hệ với G (Preconditioner)
+            # Giải hệ với G đóng vai trò preconditioner (hoặc Jacobian xấp xỉ)
             z = spsolve(G, res)
             
             if prev_direction is None:
                 direction = z
             else:
-                # Công thức Polak-Ribière cải tiến
+                # Tính beta (Polak-Ribière hoặc tương đương dựa trên dữ liệu cũ)
                 beta = np.dot(z, res - prev_res) / (np.dot(prev_z, prev_res) + 1e-15)
                 beta = max(0, beta)
                 direction = z + beta * prev_direction
+            # -------------------------------------
 
-            # Kiểm tra hội tụ và xử lý phân kỳ
+            # Kiểm tra hội tụ/phân kỳ
             if len(residual_history) > 0 and res_val > residual_history[-1]:
                 if divergence_count == 0:
                     checkpoint_potential = current_magnetic_potential.copy()
                 
                 divergence_count += 1
                 current_damping *= 0.5
-                prev_direction = None # Reset CG khi có biến động lớn
+                prev_direction = None # Reset CG khi bị phân kỳ để ổn định lại
                 
                 if divergence_count >= 3:
                     current_magnetic_potential = checkpoint_potential.copy()
@@ -96,12 +94,12 @@ def solve_magnetic_equation(reluctance_network,
 
             residual_history.append(res_val)
             
-            # Lưu trạng thái cho vòng lặp sau
+            # Lưu vết trạng thái cho vòng lặp kế tiếp
             prev_z = z
             prev_res = res.copy()
             prev_direction = direction
 
-            # Cập nhật giá trị thế
+            # Cập nhật giá trị thế từ direction tìm được
             active_update = P_active + current_damping * direction
             next_p = np.append(active_update, 0.0).reshape(magnetic_potential_shape, order='F')
 
@@ -112,10 +110,9 @@ def solve_magnetic_equation(reluctance_network,
             if res_val < max_relative_residual:
                 break
 
-    # Trực quan hóa
+    # Vẽ biểu đồ hội tụ
     fig, ax = plt.subplots(figsize=(10, 6))
     if len(residual_history) > 2:
-        # Làm mượt điểm khởi đầu cho đồ thị log
         residual_history[0] = 2 * residual_history[1] - residual_history[2]
 
     if debug: 
