@@ -4,7 +4,7 @@ from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace 
 from tqdm import tqdm
 
-re_create_motor = True
+re_create_motor =False
 re_solve = True
 
 if re_create_motor == False:
