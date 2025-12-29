@@ -10,7 +10,7 @@ import math
 pi = math.pi
 
 
-re_create_motor = True
+re_create_motor = False
 re_solve = True
 
 if not re_create_motor:
@@ -27,7 +27,7 @@ else:
 
 if re_solve:
     n_theta = aft.mesh.detail_parameter[5] - 1 
-    n_step_shift = 3
+    n_step_shift = 2
     n_step_solve = int(n_theta // n_step_shift)
 
     flux_linkage = np.zeros((4, n_step_solve))

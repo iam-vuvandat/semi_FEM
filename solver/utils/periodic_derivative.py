@@ -41,6 +41,5 @@ def periodic_derivative(data):
 
         dydtheta[:, i] = (y[:, i_next] - y[:, i_prev]) / (2 * dtheta)
 
-    # Ghép lại với theta
     derivative =  np.vstack((dydtheta, theta))
     return Output(derivative=derivative)
