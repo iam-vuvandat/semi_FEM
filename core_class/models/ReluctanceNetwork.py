@@ -10,7 +10,7 @@ from core_class.utils.rotate_reluctance_network import rotate_reluctance_network
 from core_class.utils.set_reluctance_at_zero import set_reluctance_at_zero
 from solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
 from solver.core.solve_magnetic_equation import solve_magnetic_equation
-
+from core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 
 class ReluctanceNetwork:
     def __init__(self,
@@ -20,6 +20,7 @@ class ReluctanceNetwork:
                  magnetic_potential = None,
                  winding_current = None,):
         
+        self.current_position = 0.0
         self.symmetry_factor = motor.symmetry_factor
         self.material_database = motor.material_database
         self.geometry = geometry
@@ -81,6 +82,9 @@ class ReluctanceNetwork:
         rotate_reluctance_network(reluctance_network = self,
                               z_indices = z_indices,
                               n_step = n_step)
+
+    def get_flux_linkage(self):
+        return get_flux_linkage(reluctance_network=self)
 
     def show(self,
              use_symmetry_factor = True):

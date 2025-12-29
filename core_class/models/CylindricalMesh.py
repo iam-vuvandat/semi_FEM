@@ -21,6 +21,7 @@ class CylindricalMesh:
         # 2. Lưu trữ các node biên
         self.r_nodes = np.array(r_nodes)
         self.theta_nodes = np.array(theta_nodes)
+        self.delta_theta = np.abs(self.theta_nodes[1] - self.theta_nodes[0])
         self.z_nodes = np.array(z_nodes)
         
         self.periodic_boundary = periodic_boundary
