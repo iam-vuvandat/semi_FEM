@@ -4,6 +4,7 @@ from material.models.MaterialDataBase import MaterialDataBase
 from motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
 from core_class.models.ReluctanceNetwork import ReluctanceNetwork
 from motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
+from storage.core.Record import Record
 from motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 import pyvista as pv
 import math
@@ -110,6 +111,7 @@ class AxialFluxMotorType1:
         self.geometry = None
         self.mesh     = None
         self.reluctance_network = None
+        self.record = Record()
 
     
     def create_geometry(self,
