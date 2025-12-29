@@ -6,8 +6,8 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
-re_create_motor = True
-re_solve = True
+re_create_motor = False
+re_solve = False
 
 if not re_create_motor:
     aft = workspace.load("aft1")
