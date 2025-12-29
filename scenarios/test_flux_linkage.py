@@ -2,12 +2,16 @@ import paths
 from system.core import libraries_require
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace 
+from solver.utils.periodic_derivative import periodic_derivative
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+pi = math.pi
 
-re_create_motor = False
-re_solve = False
+
+re_create_motor = True
+re_solve = True
 
 if not re_create_motor:
     aft = workspace.load("aft1")
@@ -23,7 +27,7 @@ else:
 
 if re_solve:
     n_theta = aft.mesh.detail_parameter[5] - 1 
-    n_step_shift = 5
+    n_step_shift = 3
     n_step_solve = int(n_theta // n_step_shift)
 
     flux_linkage = np.zeros((4, n_step_solve))
@@ -35,6 +39,12 @@ if re_solve:
         data_out = aft.reluctance_network.get_flux_linkage().flux_linkage
         flux_linkage[:, i] = data_out.flatten()
 
+
+    aft.record.flux_linkage = flux_linkage
+    shaft_speed = aft.shaft_speed #rpm
+    shaft_speed *= 2*pi / 60 # rad/s
+    aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
+    
     workspace.save(aft1=aft)
 
 theta = flux_linkage[-1, :]
@@ -52,6 +62,26 @@ ax.set_ylabel("Flux Linkage (Wb)")
 ax.set_title("Magnetic Flux Linkage vs. Rotor Position")
 ax.grid(True, which='both', alpha=0.3)
 ax.legend()
+plt.tight_layout()
+plt.show()
+
+# Trích xuất dữ liệu từ record
+back_emf_data = aft.record.back_emf_phase
+theta_emf = back_emf_data[-1, :]  # Hàng cuối là Theta
+bemf_phases = back_emf_data[:-1, :]  # Các hàng trên là Phase A, B, C
+
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+labels = ['Back-EMF Phase A', 'Back-EMF Phase B', 'Back-EMF Phase C']
+colors = ['red', 'green', 'blue']
+
+for j in range(bemf_phases.shape[0]):
+    ax2.plot(theta_emf, bemf_phases[j, :], label=labels[j], color=colors[j], linewidth=1.5)
+
+ax2.set_xlabel("Rotor Position (Rad)")
+ax2.set_ylabel("Back-EMF (V)")
+ax2.set_title("Back-EMF Waveforms")
+ax2.grid(True, which='both', alpha=0.3)
+ax2.legend()
 plt.tight_layout()
 plt.show()
 

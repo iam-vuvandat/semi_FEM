@@ -1,4 +1,14 @@
+from typing import Any
 import numpy as np
+from dataclasses import dataclass
+
+from scipy.differentiate import derivative
+
+
+@dataclass
+class Output:
+    derivative : Any
+
 
 def periodic_derivative(data):
     """
@@ -32,4 +42,5 @@ def periodic_derivative(data):
         dydtheta[:, i] = (y[:, i_next] - y[:, i_prev]) / (2 * dtheta)
 
     # Ghép lại với theta
-    return np.vstack((dydtheta, theta))
+    derivative =  np.vstack((dydtheta, theta))
+    return Output(derivative=derivative)

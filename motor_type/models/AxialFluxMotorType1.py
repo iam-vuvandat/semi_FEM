@@ -52,8 +52,9 @@ class AxialFluxMotorType1:
                  # Material
                  air = "default",
                  magnet_type = "N30UH",
-                 iron_type = "M350-50A"
-                 ):
+                 iron_type = "M350-50A",
+                 # shaft speed
+                 shaft_speed = 3000):
         
         # --- Gán Radial Stator Parameters ---
         self.slot_number = slot_number
@@ -106,8 +107,13 @@ class AxialFluxMotorType1:
 
         # Vật liệu 
         self.material_database = MaterialDataBase(air=air,
+    
                                                   magnet_type= magnet_type,
                                                   iron_type= iron_type)
+        
+        #speed 
+        self.shaft_speed = shaft_speed
+        
         self.geometry = None
         self.mesh     = None
         self.reluctance_network = None
