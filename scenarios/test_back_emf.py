@@ -11,11 +11,11 @@ import math
 pi = math.pi
 
 
-re_create_motor = False
-re_solve = False
+re_create_motor = True
+re_solve = True
 
 if not re_create_motor:
-    aft = workspace.load("aft4")
+    aft = workspace.load("aft5")
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
@@ -23,26 +23,26 @@ else:
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
-                         n_r_1                   =4,
-                         n_r_2                   =12,
+                         n_r_1                   =3,
+                         n_r_2                   =6,
                          n_r_3                   =4,
                          n_r_out                 =2,
-                         n_theta                 =120,
+                         n_theta                 =90,
                          n_z_in_air              =2,
                          n_z_rotor_yoke          =4,
                          n_z_magnet              =3,
                          n_z_airgap              =4,
                          n_z_tooth_tip_1         =3,
                          n_z_tooth_tip_2         =4,
-                         n_z_tooth_body          =12,
-                         n_z_stator_yoke         =4,
+                         n_z_tooth_body          =5,
+                         n_z_stator_yoke         =3,
                          n_z_out_air             =2,
                          use_symmetry_factor=True,
                          periodic_boundary=True)
     
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
-    workspace.save(aft4=aft)
+    workspace.save(aft5=aft)
 
 if re_solve:
     start_time = time.perf_counter()
@@ -70,7 +70,7 @@ if re_solve:
     shaft_speed *= 2*pi / 60 # rad/s
     aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
     
-    workspace.save(aft4=aft)
+    workspace.save(aft5=aft)
      
 flux_linkage=aft.record.flux_linkage
 theta = flux_linkage[-1, :]
