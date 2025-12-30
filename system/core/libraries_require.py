@@ -21,7 +21,8 @@ def install_library():
         'ansys.motorcad.core': 'ansys-motorcad-core',
         'pyamg': 'pyamg',
         'pyvistaqt': 'pyvistaqt',
-        'PyQt5': 'PyQt5'
+        'PyQt5': 'PyQt5',
+        'numba' :'numba'
     }
 
     installed_modules = []

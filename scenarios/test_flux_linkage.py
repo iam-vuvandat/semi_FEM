@@ -12,7 +12,7 @@ pi = math.pi
 
 
 re_create_motor = False
-re_solve = False
+re_solve = True
 
 if not re_create_motor:
     aft = workspace.load("aft4")
@@ -52,8 +52,8 @@ if re_solve:
 
     flux_linkage = np.zeros((4, n_step_solve))
 
-    for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
-        aft.reluctance_network.solve_magnetic_equation()
+    for i in tqdm(range(1), desc="Solving & Rotating"):
+        aft.reluctance_network.solve_magnetic_equation(debug = True)
         aft.rotate_rotor(n_step=n_step_shift)
         
         data_out = aft.reluctance_network.get_flux_linkage().flux_linkage

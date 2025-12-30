@@ -47,7 +47,7 @@ def create_magnetic_potential_equation(reluctance_network,
                 element_nei = neighbor_elements[nei_idx, n]
                 
                 if element_nei is not None:
-                    f = (element_nei.magnetic_source[nei_face, n] + element_center.magnetic_source[my_face, n]) * load_factor
+                    f = (element_nei.magnetic_source[nei_face, n] + element_center.magnetic_source[my_face, n]) 
                     r = element_nei.reluctance[nei_face, n] + element_center.reluctance[my_face, n]
                     conductance = 1.0 / r
 
@@ -62,7 +62,7 @@ def create_magnetic_potential_equation(reluctance_network,
         G[0].append(i_th)
         G[1].append(i_th)
         G[2].append(diag_val)
-        J[i_th] = j_val
+        J[i_th] = j_val * load_factor
 
     G_sparse = sp.csr_matrix((G[2], (G[0], G[1])), shape=(matrix_size, matrix_size))
 
