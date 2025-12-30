@@ -19,10 +19,10 @@ if not re_create_motor:
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length= 2.0 * 1e-3,
-                              airgap=1.5 * 1e-3,
-                              stator_length = 30 * 1e-3,
-                              rotor_length = 10 * 1e-3)
+    aft = AxialFluxMotorType1(magnet_length= 4.0 * 1e-3,
+                              airgap=1.0 * 1e-3,
+                              stator_length = 25 * 1e-3,
+                              rotor_length = 6 * 1e-3)
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
