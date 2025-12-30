@@ -1,5 +1,6 @@
 import paths
 from system.core import libraries_require
+import time
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace 
 from solver.utils.periodic_derivative import periodic_derivative
@@ -22,19 +23,19 @@ else:
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
-                         n_r_1                   =5,
-                         n_r_2                   =6,
-                         n_r_3                   =5,
+                         n_r_1                   =3,
+                         n_r_2                   =4,
+                         n_r_3                   =3,
                          n_r_out                 =2,
-                         n_theta                 =120,
+                         n_theta                 =60,
                          n_z_in_air              =2,
-                         n_z_rotor_yoke          =4,
-                         n_z_magnet              =4,
-                         n_z_airgap              =4,
+                         n_z_rotor_yoke          =3,
+                         n_z_magnet              =3,
+                         n_z_airgap              =3,
                          n_z_tooth_tip_1         =3,
-                         n_z_tooth_tip_2         =7,
-                         n_z_tooth_body          =6,
-                         n_z_stator_yoke         =4,
+                         n_z_tooth_tip_2         =3,
+                         n_z_tooth_body          =4,
+                         n_z_stator_yoke         =3,
                          n_z_out_air             =2,
                          use_symmetry_factor=True,
                          periodic_boundary=True)
@@ -44,8 +45,9 @@ else:
     workspace.save(aft4=aft)
 
 if re_solve:
+    start_time = time.perf_counter()
     n_theta = aft.mesh.detail_parameter[5] - 1 
-    n_step_shift = 2
+    n_step_shift = 5
     n_step_solve = int(n_theta // n_step_shift)
 
     flux_linkage = np.zeros((4, n_step_solve))
@@ -58,12 +60,18 @@ if re_solve:
         flux_linkage[:, i] = data_out.flatten()
 
 
+    end_time = time.perf_counter()
+    total_time = end_time - start_time #s
+    total_time *= 1/60 # minute
+    print("total time = ",total_time," minute")
+
     aft.record.flux_linkage = flux_linkage
     shaft_speed = aft.shaft_speed #rpm
     shaft_speed *= 2*pi / 60 # rad/s
     aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
     
     workspace.save(aft4=aft)
+    flux_linkage=aft.record.flux_linkage 
 
 theta = flux_linkage[-1, :]
 psi_data = flux_linkage[:-1, :]
