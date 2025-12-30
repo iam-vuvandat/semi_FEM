@@ -2,7 +2,9 @@ import numpy as np
 import trimesh
 from tqdm import tqdm
 
-def find_geometry_dimension_in_mesh(geometry, mesh):
+def find_geometry_dimension_in_mesh(geometry, 
+                                    mesh,
+                                    debug = False):
     """
     Đo đạc kích thước [r, theta, z] của các segment trong không gian lưới.
     Cập nhật trực tiếp thuộc tính: seg.dimension = np.array([r, theta, z]).
@@ -24,7 +26,8 @@ def find_geometry_dimension_in_mesh(geometry, mesh):
     grid_r_min, grid_r_max = r_nodes[0], r_nodes[-1]
     grid_z_min, grid_z_max = z_nodes[0], z_nodes[-1]
     
-    print(f"[INFO] Measuring Segments within Mesh Grid...")
+    if debug is True:
+        print(f"[INFO] Measuring Segments within Mesh Grid...")
     
     count_out_of_bounds = 0
     count_fallback = 0
@@ -146,9 +149,10 @@ def find_geometry_dimension_in_mesh(geometry, mesh):
         # --- BƯỚC 6: CẬP NHẬT DIMENSION CHO SEGMENT ---
         seg.dimension = np.array([r_val, theta_val, z_val])
 
-    if count_out_of_bounds > 0:
-        print(f"[INFO] Skipped {count_out_of_bounds} segments completely out of mesh bounds.")
-    if count_fallback > 0:
-        print(f"[WARNING] Used fallback dimension for {count_fallback} segments (Mesh too coarse).")
-    
-    print("[INFO] Dimensions calculation completed.")
+    if debug is True:
+        if count_out_of_bounds > 0:
+            print(f"[INFO] Skipped {count_out_of_bounds} segments completely out of mesh bounds.")
+        if count_fallback > 0:
+            print(f"[WARNING] Used fallback dimension for {count_fallback} segments (Mesh too coarse).")
+        
+        print("[INFO] Dimensions calculation completed.")

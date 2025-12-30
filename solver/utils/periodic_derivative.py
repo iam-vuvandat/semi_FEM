@@ -1,45 +1,72 @@
-from typing import Any
 import numpy as np
 from dataclasses import dataclass
-
-from scipy.differentiate import derivative
-
+from typing import Any
+import matplotlib.pyplot as plt
 
 @dataclass
 class Output:
-    derivative : Any
+    derivative: np.ndarray
 
-
-def periodic_derivative(data):
-    """
-    Đạo hàm dữ liệu tuần hoàn theo biến theta.
-    data: ndarray có dạng (n_y + 1, n_x)
-          - các hàng đầu là dữ liệu (y)
-          - hàng cuối là góc rotor (theta)
-    Giả định: data đã có điểm đầu và cuối trùng nhau.
-    """
+def periodic_derivative(data: np.ndarray, half_open_interval: bool = True) -> Output:
     y = data[:-1, :]
     theta = data[-1, :]
+    dtheta = theta[1] - theta[0]
+    
+    if not half_open_interval:
+        y_work = y[:, :-1]
+    else:
+        y_work = y
 
-    n = len(theta)
-    dtheta = theta[1] - theta[0]  # giả định lưới đều
+    y_next = np.roll(y_work, -1, axis=1)
+    y_prev = np.roll(y_work, 1, axis=1)
+    dy_work = (y_next - y_prev) / (2 * dtheta)
 
-    dydtheta = np.zeros_like(y)
+    if not half_open_interval:
+        dy = np.hstack((dy_work, dy_work[:, 0:1]))
+    else:
+        dy = dy_work
 
-    for i in range(n):
-        if i == 0:
-            # điểm đầu: lấy phần tử gần cuối (trừ 2) vì cuối cùng trùng đầu
-            i_prev = n - 2
-            i_next = i + 1
-        elif i == n - 1:
-            # điểm cuối: trùng với đầu → dùng đạo hàm giống điểm đầu
-            dydtheta[:, i] = dydtheta[:, 0]
-            continue
-        else:
-            i_prev = i - 1
-            i_next = i + 1
+    return Output(derivative=np.vstack((dy, theta)))
 
-        dydtheta[:, i] = (y[:, i_next] - y[:, i_prev]) / (2 * dtheta)
+if __name__ == "__main__":
+    # 1. Setup dữ liệu test (Hàm Sine)
+    n_points = 50
+    theta_half = np.linspace(0, 2*np.pi, n_points, endpoint=False)
+    y_half = np.sin(theta_half).reshape(1, -1)
+    data_half = np.vstack((y_half, theta_half))
 
-    derivative =  np.vstack((dydtheta, theta))
-    return Output(derivative=derivative)
+    theta_closed = np.linspace(0, 2*np.pi, n_points + 1, endpoint=True)
+    y_closed = np.sin(theta_closed).reshape(1, -1)
+    data_closed = np.vstack((y_closed, theta_closed))
+
+    # 2. Tính toán đạo hàm
+    res_half = periodic_derivative(data_half, half_open_interval=True)
+    res_closed = periodic_derivative(data_closed, half_open_interval=False)
+
+    # 3. Vẽ đồ thị kiểm chứng
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+    
+    # Đồ thị hàm số và đạo hàm
+    ax1.plot(theta_closed, y_closed[0], 'k--', alpha=0.5, label='Original: sin(θ)')
+    ax1.plot(res_half.derivative[-1, :], res_half.derivative[0, :], 'ro', mfc='none', label='Numerical (Half-open)')
+    ax1.plot(res_closed.derivative[-1, :], res_closed.derivative[0, :], 'b.', label='Numerical (Closed)')
+    ax1.plot(theta_closed, np.cos(theta_closed), 'g', alpha=0.6, label='Analytical: cos(θ)')
+    ax1.set_ylabel('Amplitude')
+    ax1.set_title('Periodic Derivative Verification')
+    ax1.legend()
+    ax1.grid(True)
+
+    # Đồ thị sai số (Error)
+    err_half = res_half.derivative[0, :] - np.cos(theta_half)
+    err_closed = res_closed.derivative[0, :] - np.cos(theta_closed)
+    
+    ax2.plot(theta_half, np.abs(err_half), 'r-', label='Error (Half-open)')
+    ax2.plot(theta_closed, np.abs(err_closed), 'b--', label='Error (Closed)')
+    ax2.set_xlabel('Theta (rad)')
+    ax2.set_ylabel('Absolute Error')
+    ax2.set_yscale('log')
+    ax2.legend()
+    ax2.grid(True)
+
+    plt.tight_layout()
+    plt.show()

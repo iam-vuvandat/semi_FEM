@@ -23,19 +23,19 @@ else:
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
-                         n_r_1                   =3,
-                         n_r_2                   =4,
-                         n_r_3                   =3,
+                         n_r_1                   =4,
+                         n_r_2                   =12,
+                         n_r_3                   =4,
                          n_r_out                 =2,
-                         n_theta                 =60,
+                         n_theta                 =120,
                          n_z_in_air              =2,
-                         n_z_rotor_yoke          =3,
+                         n_z_rotor_yoke          =4,
                          n_z_magnet              =3,
-                         n_z_airgap              =3,
+                         n_z_airgap              =4,
                          n_z_tooth_tip_1         =3,
-                         n_z_tooth_tip_2         =3,
-                         n_z_tooth_body          =4,
-                         n_z_stator_yoke         =3,
+                         n_z_tooth_tip_2         =4,
+                         n_z_tooth_body          =12,
+                         n_z_stator_yoke         =4,
                          n_z_out_air             =2,
                          use_symmetry_factor=True,
                          periodic_boundary=True)
@@ -71,8 +71,8 @@ if re_solve:
     aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
     
     workspace.save(aft4=aft)
-    flux_linkage=aft.record.flux_linkage 
-
+     
+flux_linkage=aft.record.flux_linkage
 theta = flux_linkage[-1, :]
 psi_data = flux_linkage[:-1, :]
 
