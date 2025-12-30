@@ -62,11 +62,11 @@ class ReluctanceNetwork:
                                                   debug = debug)
 
     def solve_magnetic_equation(self,
-                                method = "conjugate_gradient",
-                                max_iteration = 20,
-                                max_relative_residual = 1 * 1e-4,
-                                adaptive_damping_factor = (0.11,0.11),
-                                load_step = 1,
+                                method = "fixed_point_iteration",
+                                max_iteration = 100,
+                                max_relative_residual = 1 * 1e-5,
+                                adaptive_damping_factor = (0.5,0.5),
+                                load_step = 20,
                                 debug = False):
         
         return solve_magnetic_equation(reluctance_network = self,
