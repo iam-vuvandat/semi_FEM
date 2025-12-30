@@ -11,7 +11,7 @@ import math
 pi = math.pi
 
 
-re_create_motor = False
+re_create_motor = True
 re_solve = True
 
 if not re_create_motor:
