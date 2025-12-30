@@ -24,7 +24,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     n_cells_sector = grid_pv.n_cells
     
     pl = BackgroundPlotter(title="Reluctance Network Animation", window_size=(1600, 900))
-    pl.set_background("#C0C0C0")
+    pl.set_background("#FFFFFF")
     pl.add_axes()
 
     # --- 1. XÓA SẠCH CÁC TOOLBAR MẶC ĐỊNH ---
