@@ -11,7 +11,7 @@ import math
 pi = math.pi
 
 
-re_create_motor = False
+re_create_motor = True
 re_solve = True
 
 if not re_create_motor:
@@ -19,7 +19,7 @@ if not re_create_motor:
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length= 3 * 1e-3,
+    aft = AxialFluxMotorType1(magnet_length= 2.0 * 1e-3,
                               airgap=1.5 * 1e-3,
                               stator_length = 30 * 1e-3,
                               rotor_length = 10 * 1e-3)
