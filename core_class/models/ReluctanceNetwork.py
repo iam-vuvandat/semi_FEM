@@ -64,9 +64,9 @@ class ReluctanceNetwork:
     def solve_magnetic_equation(self,
                                 method = "fixed_point_iteration",
                                 max_iteration = 100,
-                                max_relative_residual = 1e-6,
+                                max_relative_residual = 1e-4,
                                 adaptive_damping_factor = (1.0,1.0),
-                                load_step = 60,
+                                load_step = 30,
                                 debug = False):
         
         return solve_magnetic_equation(reluctance_network = self,

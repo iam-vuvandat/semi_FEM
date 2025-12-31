@@ -11,15 +11,15 @@ import math
 pi = math.pi
 
 
-re_create_motor = True
+re_create_motor = False
 re_solve = True
 
 if not re_create_motor:
-    aft = workspace.load("aft5")
+    aft = workspace.load("aft7")
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length= 3.0 * 1e-3,
+    aft = AxialFluxMotorType1(magnet_length= 3 * 1e-3,
                               airgap=1.5 * 1e-3,
                               stator_length = 30 * 1e-3,
                               rotor_length = 10 * 1e-3)
@@ -45,7 +45,7 @@ else:
     
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
-    workspace.save(aft5=aft)
+    workspace.save(aft7=aft)
 
 if re_solve:
     start_time = time.perf_counter()
@@ -56,7 +56,13 @@ if re_solve:
     flux_linkage = np.zeros((4, n_step_solve))
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
-        aft.reluctance_network.solve_magnetic_equation(debug = True)
+        aft.reluctance_network.solve_magnetic_equation(
+                                method = "fixed_point_iteration",
+                                max_iteration = 100,
+                                max_relative_residual = 1e-5,
+                                adaptive_damping_factor = (1,1),
+                                load_step = 5,
+                                debug = True)
                                                       
         aft.rotate_rotor(n_step=n_step_shift)
         
@@ -74,45 +80,8 @@ if re_solve:
     shaft_speed *= 2*pi / 60 # rad/s
     aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
     
-    workspace.save(aft5=aft)
+    workspace.save(aft7=aft)
      
-flux_linkage=aft.record.flux_linkage
-theta = flux_linkage[-1, :]
-psi_data = flux_linkage[:-1, :]
 
-fig, ax = plt.subplots(figsize=(10, 6))
-labels = ['Phase A', 'Phase B', 'Phase C']
-colors = ['red', 'green', 'blue']
-
-for j in range(psi_data.shape[0]):
-    ax.plot(theta, psi_data[j, :], label=labels[j], color=colors[j], linewidth=1.5)
-
-ax.set_xlabel("Rotor Position (Degree)")
-ax.set_ylabel("Flux Linkage (Wb)")
-ax.set_title("Magnetic Flux Linkage vs. Rotor Position")
-ax.grid(True, which='both', alpha=0.3)
-ax.legend()
-plt.tight_layout()
-plt.show()
-
-# Trích xuất dữ liệu từ record
-back_emf_data = aft.record.back_emf_phase
-theta_emf = back_emf_data[-1, :]  # Hàng cuối là Theta
-bemf_phases = back_emf_data[:-1, :]  # Các hàng trên là Phase A, B, C
-
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-labels = ['Back-EMF Phase A', 'Back-EMF Phase B', 'Back-EMF Phase C']
-colors = ['red', 'green', 'blue']
-
-for j in range(bemf_phases.shape[0]):
-    ax2.plot(theta_emf, bemf_phases[j, :], label=labels[j], color=colors[j], linewidth=1.5)
-
-ax2.set_xlabel("Rotor Position (Rad)")
-ax2.set_ylabel("Back-EMF (V)")
-ax2.set_title("Back-EMF Waveforms")
-ax2.grid(True, which='both', alpha=0.3)
-ax2.legend()
-plt.tight_layout()
-plt.show()
 
 aft.reluctance_network.show()
