@@ -57,7 +57,6 @@ class ReluctanceNetwork:
                                            load_factor = 1.0,
                                            debug = True):
         return create_magnetic_potential_equation(reluctance_network= self,
-                                                  first_time= first_time,
                                                   load_factor= load_factor,
                                                   debug = debug)
 

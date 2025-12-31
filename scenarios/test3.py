@@ -57,13 +57,13 @@ if re_solve:
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
         aft.reluctance_network.solve_magnetic_equation(
-                                method = "fixed_point_iteration",
+                                method = "newton_raphson",
                                 max_iteration = 100,
-                                max_relative_residual = 1e-5,
+                                max_relative_residual = 2e-2,
                                 adaptive_damping_factor = (1,1),
                                 load_step = 5,
                                 debug = True)
-                                                      
+                                                    
         aft.rotate_rotor(n_step=n_step_shift)
         
         data_out = aft.reluctance_network.get_flux_linkage().flux_linkage
