@@ -1,26 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def function_nonlinear_load(load_step, order=2):
-    x = np.linspace(0, 1, load_step + 1)[1:]
-    return (1 - np.exp(-order * x)) / (1 - np.exp(-order))
-
-
 def nonlinear_conjugate_gradient(reluctance_network,
-                                 max_iteration=100,
+                                 max_iteration=500, # Jacobi cần nhiều iter hơn để bò về đích
                                  max_relative_residual=1e-4,
-                                 load_step=10,
-                                 line_search_max=8,
+                                 load_step=None, 
+                                 line_search_max=10,
                                  debug=True):
 
-    reluctance_network.set_reluctance_at_zero()
-    magnetic_potential_shape = reluctance_network.magnetic_potential.data.shape
-
-    load_queue = list(function_nonlinear_load(load_step, order=2))
+    mag_pot_shape = reluctance_network.magnetic_potential.data.shape
+    load_queue = [1.0]
     residual_history = []
-    load_step_indices = []
-
-    last_step_checkpoint = reluctance_network.magnetic_potential.data.copy()
+    
+    last_step_checkpoint = np.zeros(mag_pot_shape)
     last_converged_load = 0.0
 
     GREEN, RED, WHITE, YELLOW, CYAN, RESET = \
@@ -28,101 +20,95 @@ def nonlinear_conjugate_gradient(reluctance_network,
 
     while load_queue:
         current_load = load_queue.pop(0)
-        reluctance_network.magnetic_potential.data = last_step_checkpoint.copy()
-        reluctance_network.update_reluctance_network(
-            magnetic_potential=reluctance_network.magnetic_potential
-        )
-
-        comp = reluctance_network.create_magnetic_potential_equation(
-            load_factor=current_load, debug=False
-        )
-        G, J = comp.G, comp.J
-        norm_J = np.linalg.norm(J) + 1e-12
-
-        x = reluctance_network.magnetic_potential.data.flatten(order='F')
-        g = G.dot(x[:-1]) - J
-        g_full = np.append(g, 0.0)
-        d = -g_full
+        
+        # Reset nếu bắt đầu từ 0
+        if last_converged_load == 0.0:
+            reluctance_network.set_reluctance_at_zero()
+            reluctance_network.magnetic_potential.data.fill(0.0)
+            last_step_checkpoint = reluctance_network.magnetic_potential.data.copy()
+        else:
+            reluctance_network.magnetic_potential.data = last_step_checkpoint.copy()
+        
+        reluctance_network.update_reluctance_network(reluctance_network.magnetic_potential)
 
         converged_this_step = False
+        best_x_this_load = last_step_checkpoint.copy()
+        min_res_this_load = float('inf')
+        res_history_this_load = []
 
         for k in range(max_iteration):
-            if k == 0:
-                load_step_indices.append(len(residual_history))
+            comp = reluctance_network.create_magnetic_potential_equation(load_factor=current_load, debug=False)
+            G, J = comp.G, comp.J
+            norm_J = np.linalg.norm(J) + 1e-12
+            
+            x_vec = reluctance_network.magnetic_potential.data.flatten(order='F')
+            g = G.dot(x_vec[:-1]) - J
+            res_old_norm = np.linalg.norm(g)
+            
+            # --- CHIẾN THUẬT JACOBI PRECONDITIONER ---
+            # Lấy đường chéo của G
+            diag_G = G.diagonal()
+            # Tránh chia cho 0 (tại các nút biên hoặc nút cô lập)
+            diag_G_inv = np.where(np.abs(diag_G) > 1e-20, 1.0 / diag_G, 1.0)
+            
+            # Hướng đi d = - diag(G)^-1 * g
+            z = diag_G_inv * g
+            d = -np.append(z, 0.0)
 
+            # --- TẦNG 2: BACKTRACKING LINE SEARCH ---
             alpha = 1.0
-            phi0 = np.linalg.norm(g) ** 2
-
-            for _ in range(line_search_max):
-                x_trial = x + alpha * d
-                reluctance_network.magnetic_potential.data = \
-                    x_trial.reshape(magnetic_potential_shape, order='F')
-                reluctance_network.update_reluctance_network(
-                    magnetic_potential=reluctance_network.magnetic_potential
-                )
-
-                comp_new = reluctance_network.create_magnetic_potential_equation(
-                    load_factor=current_load, debug=False
-                )
+            success_ls = False
+            for ls_idx in range(line_search_max):
+                x_trial = x_vec + alpha * d
+                reluctance_network.magnetic_potential.data = x_trial.reshape(mag_pot_shape, order='F')
+                
+                reluctance_network.update_reluctance_network(reluctance_network.magnetic_potential)
+                comp_new = reluctance_network.create_magnetic_potential_equation(load_factor=current_load, debug=False)
                 g_new = comp_new.G.dot(x_trial[:-1]) - comp_new.J
-                if np.linalg.norm(g_new) ** 2 <= phi0 * (1 - 1e-4 * alpha):
+                res_new_norm = np.linalg.norm(g_new)
+                
+                if res_new_norm < res_old_norm:
+                    success_ls = True
                     break
                 alpha *= 0.5
 
-            res_val = np.linalg.norm(g_new) / norm_J
+            res_val = res_new_norm / norm_J
             residual_history.append(res_val)
+            res_history_this_load.append(res_val)
 
-            if debug:
-                color = WHITE if k == 0 else (GREEN if res_val < residual_history[-2] else RED)
-                print(f"{color}Load {current_load:.4f}, Iter {k+1}: "
-                      f"Alpha = {alpha:.3e}, Res = {res_val*100:.4f}%{RESET}")
+            if res_val < min_res_this_load:
+                min_res_this_load = res_val
+                best_x_this_load = x_trial.reshape(mag_pot_shape, order='F')
+
+            if debug and k % 10 == 0: # Jacobi lặp nhiều nên 10 bước in 1 lần cho đỡ rối
+                print(f"{WHITE}L {current_load:.4f} | It {k+1:3d} | Res {res_val*100:8.4f}%{RESET}")
+
+            # CẮT LỖ: Nếu It 2 tăng sai số
+            if k == 1 and res_history_this_load[1] > res_history_this_load[0]:
+                if debug: print(f"{RED}  [!] Jacobi phân kỳ. Hạ tải ngay...{RESET}")
+                break
 
             if res_val < max_relative_residual:
-                last_step_checkpoint = \
-                    x_trial.reshape(magnetic_potential_shape, order='F')
+                last_step_checkpoint = x_trial.reshape(mag_pot_shape, order='F')
                 last_converged_load = current_load
                 converged_this_step = True
+                if abs(current_load - 1.0) > 1e-5: load_queue.append(1.0)
                 break
+            
+            if not success_ls and alpha < 1e-8: break
+            x_vec = x_trial
 
-            beta = max(
-                np.dot(g_new, g_new - g) / (np.dot(g, g) + 1e-14),
-                0.0
-            )
-
-            g = g_new
-            g_full = np.append(g, 0.0)
-            d = -g_full + beta * d
-            if np.dot(d[:-1], g) >= 0:
-                d = -g_full
-
-            x = x_trial
-
+        # --- TẦNG 1: SUB-STEPPING ---
         if not converged_this_step:
             mid_load = 0.5 * (last_converged_load + current_load)
-            if abs(current_load - last_converged_load) > 1e-5:
+            if abs(current_load - last_converged_load) > 1e-6:
                 load_queue.insert(0, current_load)
                 load_queue.insert(0, mid_load)
-                if debug:
-                    print(f"{YELLOW}[!!] Load {current_load:.4f} failed, "
-                          f"sub-stepping to {mid_load:.4f}{RESET}")
             else:
-                if debug:
-                    print(f"{RED}[!!!] FATAL: convergence failed at "
-                          f"{current_load:.4f}{RESET}")
-                break
+                last_step_checkpoint = best_x_this_load.copy()
+                last_converged_load = current_load
+                converged_this_step = True
 
+    reluctance_network.magnetic_potential.data = last_step_checkpoint
     reluctance_network.add_elements_lite()
-
-    if debug and residual_history:
-        fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
-        ax.plot(residual_history, marker='o', markersize=2)
-        for idx in load_step_indices:
-            ax.axvline(x=idx, color='red', linestyle='--', alpha=0.15)
-        ax.set_yscale('log')
-        ax.set_xlabel("Total Iterations")
-        ax.set_ylabel("Relative Residual")
-        ax.set_title("3D MBGRN: Nonlinear Conjugate Gradient Convergence")
-        ax.grid(True, which="both", alpha=0.2)
-        plt.show()
-
-    return reluctance_network.magnetic_potential.data
+    return last_step_checkpoint

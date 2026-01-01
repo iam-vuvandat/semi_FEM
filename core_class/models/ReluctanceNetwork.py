@@ -60,10 +60,10 @@ class ReluctanceNetwork:
                                                   load_factor= load_factor,
                                                   debug = debug)
     def nonlinear_conjugate_gradient(self,
-                                 max_iteration=100,
-                                 max_relative_residual=1e-4,
-                                 load_step=1,
-                                 line_search_max=8,
+                                 max_iteration=1,
+                                 max_relative_residual=5e-2,
+                                 load_step=10,
+                                 line_search_max=10,
                                  debug=True):
         return nonlinear_conjugate_gradient(reluctance_network = self,
                                  max_iteration= max_iteration,
