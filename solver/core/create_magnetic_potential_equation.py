@@ -6,16 +6,12 @@ from tqdm import tqdm
 
 @dataclass
 class Output:
-    G: Any
-    J: Any
-    Ja: Any
+    G: Any # Ma trận từ thế
+    J: Any # Ma trận nguồn từ thông 
 
 def create_magnetic_potential_equation(reluctance_network,
-                                       first_time=False,
                                        load_factor=1.0,
                                        debug=True):
-    if first_time:
-       pass 
     
     mesh = reluctance_network.mesh
     matrix_size = mesh.total_cells - 1
@@ -66,4 +62,4 @@ def create_magnetic_potential_equation(reluctance_network,
 
     G_sparse = sp.csr_matrix((G[2], (G[0], G[1])), shape=(matrix_size, matrix_size))
 
-    return Output(G=G_sparse, J=J, Ja=None)
+    return Output(G=G_sparse, J=J)

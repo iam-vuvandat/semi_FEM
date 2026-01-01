@@ -10,6 +10,7 @@ from core_class.utils.rotate_reluctance_network import rotate_reluctance_network
 from core_class.utils.set_reluctance_at_zero import set_reluctance_at_zero
 from solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
 from solver.core.solve_magnetic_equation import solve_magnetic_equation
+from solver.utils.nonlinear_conjugate_gradient import nonlinear_conjugate_gradient
 from core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 
 class ReluctanceNetwork:
@@ -53,13 +54,23 @@ class ReluctanceNetwork:
         set_reluctance_at_zero(reluctance_network = self)
 
     def create_magnetic_potential_equation(self,
-                                           first_time = False,
                                            load_factor = 1.0,
                                            debug = True):
         return create_magnetic_potential_equation(reluctance_network= self,
-                                                  first_time= first_time,
                                                   load_factor= load_factor,
                                                   debug = debug)
+    def nonlinear_conjugate_gradient(self,
+                                 max_iteration=100,
+                                 max_relative_residual=1e-4,
+                                 load_step=1,
+                                 line_search_max=8,
+                                 debug=True):
+        return nonlinear_conjugate_gradient(reluctance_network = self,
+                                 max_iteration= max_iteration,
+                                 max_relative_residual= max_relative_residual,
+                                 load_step= load_step,
+                                 line_search_max= line_search_max,
+                                 debug= debug)
 
     def solve_magnetic_equation(self,
                                 method = "fixed_point_iteration",

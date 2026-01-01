@@ -56,13 +56,7 @@ if re_solve:
     flux_linkage = np.zeros((4, n_step_solve))
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
-        aft.reluctance_network.solve_magnetic_equation(
-                                method = "fixed_point_iteration",
-                                max_iteration = 100,
-                                max_relative_residual = 1e-5,
-                                adaptive_damping_factor = (1,1),
-                                load_step = 5,
-                                debug = True)
+        aft.reluctance_network.nonlinear_conjugate_gradient()
                                                       
         aft.rotate_rotor(n_step=n_step_shift)
         

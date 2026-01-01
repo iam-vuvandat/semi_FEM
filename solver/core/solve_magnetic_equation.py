@@ -1,4 +1,5 @@
 from solver.utils.fixed_point_iteration import fix_point_iteration
+from solver.utils.nonlinear_conjugate_gradient import nonlinear_conjugate_gradient
 
 def solve_magnetic_equation(reluctance_network, 
                             method="fixed_point_iteration",
@@ -15,3 +16,12 @@ def solve_magnetic_equation(reluctance_network,
                             adaptive_damping_factor= adaptive_damping_factor,
                             load_step= load_step,
                             debug= debug)
+        
+    if method == "nonlinear_conjugate_gradient":
+        nonlinear_conjugate_gradient(reluctance_network= reluctance_network,
+                            max_iteration= max_iteration,
+                            max_relative_residual= max_relative_residual,
+                            adaptive_damping_factor= adaptive_damping_factor,
+                            load_step= load_step,
+                            debug= debug)
+        
