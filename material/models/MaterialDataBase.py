@@ -1,6 +1,8 @@
 import math
 import numpy as np
 from material.utils.smooth_BH_curve import smooth_BH_curve
+from material.utils.staircase_permeability import staircase_permeability
+from material.utils.continuous_permeability import continuous_permeability
 
 PI = math.pi
 
@@ -37,6 +39,8 @@ class Iron:
         else:
             raise ValueError(f"Iron '{name}' not found")
         
+        self.backup_B_H_curve = None
+        
         
 
 class MaterialDataBase:
@@ -45,3 +49,11 @@ class MaterialDataBase:
         self.magnet = Magnet(magnet_type)
         self.iron = Iron(iron_type)
         smooth_BH_curve(iron = self.iron)
+
+    def staircase_permeability(self,num_step = 10):
+        staircase_permeability(iron=self.iron, 
+                               num_steps= num_step)
+        
+    def continuous_permeability(self):
+        continuous_permeability(iron = self.iron)
+        

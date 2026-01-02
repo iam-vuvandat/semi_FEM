@@ -1,13 +1,13 @@
 import numpy as np
 from scipy.interpolate import UnivariateSpline, PchipInterpolator, interp1d
 
-def smooth_BH_curve(iron, num_points=1000): # Thay đổi mặc định thành 1000 điểm
+def smooth_BH_curve(iron, num_points=1000): 
     mu_0 = 4 * np.pi * 1e-7
     
     B_raw = iron.B_H_curve["B_data"]
     H_raw = iron.B_H_curve["H_data"]
     
-    # --- BƯỚC 1, 2, 3, 4: GIỮ NGUYÊN ĐỂ LÀM MƯỢT ĐẠO HÀM ---
+  
     with np.errstate(divide='ignore', invalid='ignore'):
         mu_r_raw = B_raw / (mu_0 * H_raw)
     
@@ -33,8 +33,7 @@ def smooth_BH_curve(iron, num_points=1000): # Thay đổi mặc định thành 1
 
     deriv_spline = UnivariateSpline(B_mirror, dmu_mirror, k=3, s=0)
 
-    # --- BƯỚC 5: TÍCH PHÂN ĐỂ LẤY CÁC ĐIỂM "MỐC" ĐÃ LÀM MƯỢT ---
-    # Ta lấy khoảng 50 điểm mốc cực kỳ mượt mà từ hàm tích phân
+   
     B_anchor = np.linspace(B_raw.min(), B_raw.max(), 50)
     mu_antiderivative = deriv_spline.antiderivative()
     

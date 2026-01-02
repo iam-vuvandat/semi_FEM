@@ -48,7 +48,7 @@ else:
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
     workspace.save(aft7=aft)
-[]
+
 if re_solve:
     start_time = time.perf_counter()
     n_theta = aft.mesh.detail_parameter[5] - 1 
@@ -58,7 +58,7 @@ if re_solve:
     flux_linkage = np.zeros((4, n_step_solve))
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
-        
+        aft.material_database.staircase_permeability()
         aft.reluctance_network.fixed_point_iteration()
                                                       
         aft.rotate_rotor(n_step=n_step_shift)
