@@ -48,7 +48,7 @@ else:
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
     workspace.save(aft7=aft)
-
+[]
 if re_solve:
     start_time = time.perf_counter()
     n_theta = aft.mesh.detail_parameter[5] - 1 
