@@ -11,6 +11,7 @@ import math
 pi = math.pi
 
 from solver.utils.newton_raphson import newton_raphson_iteration
+from solver.utils.fixed_point_iteration import fix_point_iteration
 
 re_create_motor = False
 re_solve = True
@@ -21,9 +22,9 @@ if not re_create_motor:
         aft.reluctance_network.list_elements_lite = None
 else:
     aft = AxialFluxMotorType1(magnet_length= 3 * 1e-3,
-                              airgap=1 * 1e-3,
-                              stator_length = 27 * 1e-3,
-                              rotor_length = 17 * 1e-3)
+                              airgap=1.5 * 1e-3,
+                              stator_length = 25* 1e-3,
+                              rotor_length = 7 * 1e-3)
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
@@ -58,8 +59,7 @@ if re_solve:
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
         
-        newton_raphson_iteration(reluctance_network = aft.reluctance_network)
-    
+        aft.reluctance_network.fixed_point_iteration()
                                                       
         aft.rotate_rotor(n_step=n_step_shift)
         
