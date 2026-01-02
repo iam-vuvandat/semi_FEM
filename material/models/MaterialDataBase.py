@@ -1,8 +1,10 @@
+from json import load
 import math
 import numpy as np
 from material.utils.smooth_BH_curve import smooth_BH_curve
 from material.utils.staircase_permeability import staircase_permeability
 from material.utils.continuous_permeability import continuous_permeability
+from material.utils.step_permeability import step_permeability
 
 PI = math.pi
 
@@ -49,6 +51,7 @@ class MaterialDataBase:
         self.magnet = Magnet(magnet_type)
         self.iron = Iron(iron_type)
         smooth_BH_curve(iron = self.iron)
+        self.reset()
 
     def staircase_permeability(self,num_step = 10):
         staircase_permeability(iron=self.iron, 
@@ -56,4 +59,16 @@ class MaterialDataBase:
         
     def continuous_permeability(self):
         continuous_permeability(iron = self.iron)
-        
+    
+    def step_permeability(self,
+                          load_factor):
+        step_permeability(iron= self.iron,
+                          load_factor= load_factor)
+
+    def reset(self):
+        iron = self.iron
+        iron.backup_B_H_curve = {
+        "B_data": iron.B_H_curve["B_data"].copy(),
+        "H_data": iron.B_H_curve["H_data"].copy()
+    }
+    

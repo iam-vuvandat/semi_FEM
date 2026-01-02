@@ -2,17 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse.linalg import spsolve
 
-def fix_point_iteration(reluctance_network, 
+def fixed_point_at_peak(reluctance_network, 
                         max_iteration=50, 
                         max_relative_residual=5e-2, 
                         max_backtracking_steps=10, 
                         debug=True):
     
-    reluctance_network.set_reluctance_at_zero()
+    reluctance_network.set_minimum_reluctance()
     mag_pot_shape = reluctance_network.magnetic_potential.data.shape
     last_reliable_pot = reluctance_network.magnetic_potential.data.copy()
     last_converged_load = 0.0
-    load_queue = [ 0.1,0.4, 0.7, 0.8, 0.9, 0.95,1.0]
+    load_queue = [1.0]
     
     load_attempt_count = {}
     history_residual = []

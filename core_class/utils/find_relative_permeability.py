@@ -12,11 +12,11 @@ def find_relative_permeability(element):
     d_relative_permeability_d_B = np.zeros((2, 3))
 
     if element.material == "iron":
-        data = lookup_BH_curve(B_input=element.flux_density_direct, 
+        data = lookup_BH_curve(B_input=element.flux_density_average[-1], 
                                material_database=element.material_database, 
                                return_du_dB=True)
-        relative_permeability = data.mu_r
-        d_relative_permeability_d_B = data.dmu_r_dB
+        relative_permeability *= data.mu_r 
+        d_relative_permeability_d_B *= data.dmu_r_dB
 
     elif element.material == "magnet":
         relative_permeability.fill(element.material_database.magnet.relative_permeance)
