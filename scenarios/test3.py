@@ -58,7 +58,7 @@ if re_solve:
     flux_linkage = np.zeros((4, n_step_solve))
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
-        aft.material_database.staircase_permeability()
+
         aft.reluctance_network.fixed_point_iteration()
                                                       
         aft.rotate_rotor(n_step=n_step_shift)
