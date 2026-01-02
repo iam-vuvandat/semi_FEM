@@ -34,7 +34,7 @@ def test():
     from material.models.MaterialDataBase import MaterialDataBase
 
     material_database = MaterialDataBase()
-    material_database.staircase_permeability()
+    material_database.staircase_permeability(num_step= 6 )
     #material_database.continuous_permeability()
     B_input = np.linspace(-3.0, 3.0, 2000)
 
