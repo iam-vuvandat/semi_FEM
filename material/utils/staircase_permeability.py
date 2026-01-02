@@ -14,7 +14,8 @@ def staircase_permeability(iron, num_steps=8):
     mu_real[0] = mu_real[1] 
     
     mu_min, mu_max = np.min(mu_real), np.max(mu_real)
-    levels = np.geomspace(mu_min, mu_max, num_steps)
+    # Thay đổi từ np.geomspace sang np.linspace để các bậc thang đều nhau
+    levels = np.linspace(mu_min, mu_max, num_steps)
     
     mu_staircase = np.array([levels[np.abs(levels - m).argmin()] for m in mu_real])
     
@@ -26,4 +27,3 @@ def staircase_permeability(iron, num_steps=8):
     iron.B_H_curve["H_data"] = H_staircase
 
     return iron
-
