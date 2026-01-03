@@ -11,7 +11,8 @@ from core_class.utils.set_reluctance_at_zero import set_reluctance_at_zero
 from solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
 from solver.core.solve_magnetic_equation import solve_magnetic_equation
 from solver.utils.fixed_point_iteration import fix_point_iteration
-from solver.utils.fix_point_material_stepping import fix_point_material_stepping
+from solver.utils.advanced_solver  import advanced_solver
+
 from solver.utils.nonlinear_conjugate_gradient import nonlinear_conjugate_gradient
 from core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 
@@ -44,11 +45,13 @@ class ReluctanceNetwork:
     
     def update_reluctance_network(self,
                                   magnetic_potential = None,
-                                  winding_current = None):
+                                  winding_current = None,
+                                  material_relaxation_factor = 1.0):
         
         update_reluctance_network(reluctance_network=self,
                                   magnetic_potential = magnetic_potential,
-                                  winding_current = winding_current)
+                                  winding_current = winding_current,
+                                  material_relaxation_factor = material_relaxation_factor)
 
     def set_minimum_reluctance(self):
         set_minimum_reluctance(reluctance_network=self)
@@ -58,21 +61,24 @@ class ReluctanceNetwork:
 
     def create_magnetic_potential_equation(self,
                                            load_factor = 1.0,
-                                           debug = True):
+                                           create_jacobian = False,
+                                           debug = False):
         return create_magnetic_potential_equation(reluctance_network= self,
                                                   load_factor= load_factor,
+                                                  create_jacobian = create_jacobian,
                                                   debug = debug)
     
     
     def fixed_point_iteration(self):
         return fix_point_iteration(reluctance_network = self)
     
-    def fix_point_material_stepping(self):
-        return fix_point_material_stepping(reluctance_network = self)
     
     def nonlinear_conjugate_gradient(self):
         return nonlinear_conjugate_gradient(reluctance_network = self)
                                  
+
+    def advanced_solver(self):
+        return advanced_solver(reluctance_network= self)
 
     def solve_magnetic_equation(self,
                                 method = "fixed_point_iteration",

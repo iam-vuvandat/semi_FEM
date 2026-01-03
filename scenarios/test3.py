@@ -59,9 +59,8 @@ if re_solve:
     flux_linkage = np.zeros((4, n_step_solve))
 
     for i in tqdm(range(1), desc="Solving & Rotating"):
-        aft.reluctance_network.material_database.reset()
-        aft.reluctance_network.nonlinear_conjugate_gradient()
-                                                      
+        
+        aft.reluctance_network.advanced_solver()                       
         aft.rotate_rotor(n_step=n_step_shift)
         
         data_out = aft.reluctance_network.get_flux_linkage().flux_linkage
