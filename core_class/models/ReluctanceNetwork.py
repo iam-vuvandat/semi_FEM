@@ -71,10 +71,18 @@ class ReluctanceNetwork:
     def fixed_point_iteration(self):
         return fix_point_iteration(reluctance_network = self)
     
-    def advanced_solver(self,
-                        debug = False):
-        return advanced_solver(reluctance_network = self,
-                               debug = debug)
+    def advanced_solver(self, 
+                    material_relax=0.5,   
+                    node_damping=0.05,      
+                    max_iteration=200,    
+                    max_relative_residual=5e-3, 
+                    debug=True):
+        return advanced_solver(reluctance_network = self, 
+                    material_relax=material_relax,   
+                    node_damping=node_damping,      
+                    max_iteration=max_iteration,    
+                    max_relative_residual=max_relative_residual, 
+                    debug= debug)
     
     def nonlinear_conjugate_gradient(self,
                                  max_iteration=1,
