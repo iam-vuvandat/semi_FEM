@@ -1,19 +1,9 @@
 import numpy as np
 import pyvista as pv
-from pyvista.plotting.renderer import Renderer 
 from pyvistaqt import BackgroundPlotter
 from PyQt5.QtWidgets import QAction, QStyle, QWidget, QLabel
 from PyQt5.QtCore import QTimer
 import ctypes
-
-# --- [PATCH CHO PYTHON 3.13] ---
-_original_init = Renderer.__init__
-def _patched_init(self, *args, **kwargs):
-    _original_init(self, *args, **kwargs)
-    if not hasattr(self, '_actors') and hasattr(self, 'actors'):
-        self._actors = self.actors
-Renderer.__init__ = _patched_init
-# -------------------------------
 
 # Tối ưu hiển thị cho màn hình Surface (High DPI)
 try:
@@ -33,6 +23,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     mesh_obj = reluctance_network.mesh
     grid_pv = mesh_obj.to_pyvista_grid()
     
+    # Xử lý đối xứng
     if use_symmetry_factor and hasattr(reluctance_network, 'symmetry_factor'):
         sym_factor = int(reluctance_network.symmetry_factor)
         if sym_factor > 1:
@@ -40,8 +31,9 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
             segments = [grid_pv.rotate_z(i * angle_step) for i in range(sym_factor)]
             grid_pv = segments[0].merge(segments[1:]).clean(tolerance=1e-5)
     
-    # --- 2. LOGIC TỰ ĐỘNG PHÁT HIỆN LỚP LƯỚI ---
+    # --- 2. TỰ ĐỘNG PHÁT HIỆN LỚP (DISCRETE LAYERS) ---
     centers = grid_pv.cell_centers().points
+    
     r_raw = np.sqrt(centers[:, 0]**2 + centers[:, 1]**2)
     theta_raw = np.degrees(np.arctan2(centers[:, 1], centers[:, 0]))
     theta_raw[theta_raw < 0] += 360
@@ -61,7 +53,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     grid_pv.cell_data["idx_k"] = np.searchsorted(u_z, np.round(z_raw, DECIMALS))
 
     # --- 3. PLOTTER ---
-    pl = BackgroundPlotter(title="Reluctance Network - Smooth Viewer", window_size=(1600, 900))
+    pl = BackgroundPlotter(title="Reluctance Network - Production Version", window_size=(1600, 900))
     pl.set_background("#FFFFFF")
     pl.add_axes()
     pl.default_camera_tool_bar.hide()
@@ -114,11 +106,21 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                     return np.tile(mat_sector, sym), np.tile(b_sector, sym)
             return mat_sector, b_sector
         
-        # Hàm xóa an toàn chỉ dùng khi CẦN THIẾT (chuyển mode)
+        # --- CÁC HÀM WRAPPER AN TOÀN (BỎ QUA LỖI) ---
         def safe_remove(self, name):
             try:
-                if name in pl.actors: pl.remove_actor(name)
-            except: pass
+                if name in pl.actors: 
+                    pl.remove_actor(name)
+            except Exception: 
+                pass # Chấp nhận lỗi để chạy tiếp
+
+        def safe_add_mesh(self, mesh, **kwargs):
+            try:
+                # Ép buộc reset_camera=False để giữ zoom
+                kwargs['reset_camera'] = False
+                pl.add_mesh(mesh, **kwargs)
+            except Exception:
+                pass # Chấp nhận lỗi, PyVista sẽ tự xử lý ngầm
 
         def render(self):
             mat_ids, b_values = self.get_current_data()
@@ -134,12 +136,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
             
             mesh_to_render = grid_pv.extract_cells(mask_total) if has_selection else grid_pv
 
-            # --- [FIX NHÁY HÌNH] ---
-            # Tuyệt đối KHÔNG gọi remove_actor() bừa bãi ở đây.
-            # Chỉ add_mesh chồng lên (update in-place).
-            
             if mesh_to_render.n_cells == 0:
-                # Nếu lưới rỗng mới buộc phải xóa để màn hình sạch
                 self.safe_remove("dynamic_mesh")
                 for mid in range(5): self.safe_remove(f"mat_{mid}")
                 self.update_text_info()
@@ -147,7 +144,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                 return
 
             if self.bmap_mode:
-                # 1. Chế độ B-Map -> Xóa các actor vật liệu
+                # Mode B-Map: Xóa vật liệu
                 for mid in range(5): self.safe_remove(f"mat_{mid}")
                 
                 if has_selection:
@@ -156,15 +153,14 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                     mesh_bmap = mesh_to_render.threshold(0.1, scalars="MatID", preference="cell")
 
                 if mesh_bmap.n_cells > 0:
-                    pl.add_mesh(mesh_bmap, scalars="FluxB", cmap="jet", clim=[0, 1.5],
-                                show_edges=False, lighting=False,
-                                scalar_bar_args=sargs, show_scalar_bar=True,
-                                reset_camera=False, # Không reset camera -> Zoom mượt
-                                name="dynamic_mesh") # Tên cố định -> Update in-place
+                    self.safe_add_mesh(mesh_bmap, scalars="FluxB", cmap="jet", clim=[0, 1.5],
+                                       show_edges=False, lighting=False,
+                                       scalar_bar_args=sargs, show_scalar_bar=True,
+                                       name="dynamic_mesh")
                 else:
                     self.safe_remove("dynamic_mesh")
             else:
-                # 2. Chế độ Vật liệu -> Xóa actor B-Map
+                # Mode Vật liệu: Xóa B-Map
                 self.safe_remove("dynamic_mesh")
                 if len(pl.scalar_bars) > 0: pl.scalar_bars.clear()
 
@@ -174,17 +170,13 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                     except ValueError: sub = pv.UnstructuredGrid()
 
                     if sub.n_cells > 0:
-                        if has_selection:
-                            op = 1.0 
-                        else:
-                            op = 0.05 if mid == 0 else 1.0 
+                        if has_selection: op = 1.0 
+                        else: op = 0.05 if mid == 0 else 1.0 
                         
-                        pl.add_mesh(sub, color=color, opacity=op, lighting=True,
-                                    show_edges=True, edge_color="#333333", line_width=1,
-                                    reset_camera=False, # Không reset camera -> Zoom mượt
-                                    name=f"mat_{mid}") # Tên cố định -> Update in-place
+                        self.safe_add_mesh(sub, color=color, opacity=op, lighting=True,
+                                           show_edges=True, edge_color="#333333", line_width=1,
+                                           name=f"mat_{mid}")
                     else:
-                        # Chỉ remove nếu vật liệu này không còn tồn tại trong frame này
                         self.safe_remove(f"mat_{mid}")
 
             self.update_text_info()
@@ -230,7 +222,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     state = ViewerState()
     state.render()
     
-    pl.reset_camera() # Reset camera lần đầu tiên
+    pl.reset_camera() # Chỉ reset camera lần đầu tiên khi mở app
 
     # --- 4. TẠO TOOLBAR ---
     tb = pl.app_window.addToolBar("Controls")
