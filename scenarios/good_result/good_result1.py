@@ -15,6 +15,8 @@ from solver.utils.fixed_point_iteration import fix_point_iteration
 
 re_create_motor = False
 re_solve = False
+plot = False
+show_reluctance = True
 
 if not re_create_motor:
     aft = workspace.load("aft7")
@@ -78,45 +80,48 @@ if re_solve:
     aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
     
     workspace.save(aft7=aft)
-    
+ 
 flux_linkage=aft.record.flux_linkage
-theta = flux_linkage[-1, :]
-psi_data = flux_linkage[:-1, :]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-labels = ['Phase A', 'Phase B', 'Phase C']
-colors = ['red', 'green', 'blue']
-
-for j in range(psi_data.shape[0]):
-    ax.plot(theta, psi_data[j, :], label=labels[j], color=colors[j], linewidth=1.5)
-
-ax.set_xlabel("Rotor Position (Degree)")
-ax.set_ylabel("Flux Linkage (Wb)")
-ax.set_title("Magnetic Flux Linkage vs. Rotor Position")
-ax.grid(True, which='both', alpha=0.3)
-ax.legend()
-plt.tight_layout()
-plt.show()
-
-# Trích xuất dữ liệu từ record
 back_emf_data = aft.record.back_emf_phase
-theta_emf = back_emf_data[-1, :]  # Hàng cuối là Theta
-bemf_phases = back_emf_data[:-1, :]  # Các hàng trên là Phase A, B, C
 
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-labels = ['Back-EMF Phase A', 'Back-EMF Phase B', 'Back-EMF Phase C']
-colors = ['red', 'green', 'blue']
+if plot:
+    theta = flux_linkage[-1, :]
+    psi_data = flux_linkage[:-1, :]
 
-for j in range(bemf_phases.shape[0]):
-    ax2.plot(theta_emf, bemf_phases[j, :], label=labels[j], color=colors[j], linewidth=1.5)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    labels = ['Phase A', 'Phase B', 'Phase C']
+    colors = ['red', 'green', 'blue']
 
-ax2.set_xlabel("Rotor Position (Rad)")
-ax2.set_ylabel("Back-EMF (V)")
-ax2.set_title("Back-EMF Waveforms")
-ax2.grid(True, which='both', alpha=0.3)
-ax2.legend()
-plt.tight_layout()
-plt.show()
+    for j in range(psi_data.shape[0]):
+        ax.plot(theta, psi_data[j, :], label=labels[j], color=colors[j], linewidth=1.5)
+
+    ax.set_xlabel("Rotor Position (Degree)")
+    ax.set_ylabel("Flux Linkage (Wb)")
+    ax.set_title("Magnetic Flux Linkage vs. Rotor Position")
+    ax.grid(True, which='both', alpha=0.3)
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
 
 
-aft.reluctance_network.show()
+
+    theta_emf = back_emf_data[-1, :]  # Hàng cuối là Theta
+    bemf_phases = back_emf_data[:-1, :]  # Các hàng trên là Phase A, B, C
+
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    labels = ['Back-EMF Phase A', 'Back-EMF Phase B', 'Back-EMF Phase C']
+    colors = ['red', 'green', 'blue']
+
+    for j in range(bemf_phases.shape[0]):
+        ax2.plot(theta_emf, bemf_phases[j, :], label=labels[j], color=colors[j], linewidth=1.5)
+
+    ax2.set_xlabel("Rotor Position (Rad)")
+    ax2.set_ylabel("Back-EMF (V)")
+    ax2.set_title("Back-EMF Waveforms")
+    ax2.grid(True, which='both', alpha=0.3)
+    ax2.legend()
+    plt.tight_layout()
+    plt.show()
+
+if show_reluctance:
+    aft.reluctance_network.show()
