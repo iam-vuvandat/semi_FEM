@@ -1,9 +1,20 @@
 import numpy as np
 import pyvista as pv
+from pyvista.plotting.renderer import Renderer 
 from pyvistaqt import BackgroundPlotter
-from PyQt5.QtWidgets import QAction, QStyle, QWidget, QLabel
+# Thêm QFileDialog để chọn nơi lưu file
+from PyQt5.QtWidgets import QAction, QStyle, QWidget, QLabel, QFileDialog
 from PyQt5.QtCore import QTimer
 import ctypes
+
+# --- [PATCH CHO PYTHON 3.13] ---
+_original_init = Renderer.__init__
+def _patched_init(self, *args, **kwargs):
+    _original_init(self, *args, **kwargs)
+    if not hasattr(self, '_actors') and hasattr(self, 'actors'):
+        self._actors = self.actors
+Renderer.__init__ = _patched_init
+# -------------------------------
 
 # Tối ưu hiển thị cho màn hình Surface (High DPI)
 try:
@@ -23,7 +34,6 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     mesh_obj = reluctance_network.mesh
     grid_pv = mesh_obj.to_pyvista_grid()
     
-    # Xử lý đối xứng
     if use_symmetry_factor and hasattr(reluctance_network, 'symmetry_factor'):
         sym_factor = int(reluctance_network.symmetry_factor)
         if sym_factor > 1:
@@ -53,7 +63,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     grid_pv.cell_data["idx_k"] = np.searchsorted(u_z, np.round(z_raw, DECIMALS))
 
     # --- 3. PLOTTER ---
-    pl = BackgroundPlotter(title="Reluctance Network - Production Version", window_size=(1600, 900))
+    pl = BackgroundPlotter(title="Reluctance Network - GIF Recorder", window_size=(1600, 900))
     pl.set_background("#FFFFFF")
     pl.add_axes()
     pl.default_camera_tool_bar.hide()
@@ -106,21 +116,20 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                     return np.tile(mat_sector, sym), np.tile(b_sector, sym)
             return mat_sector, b_sector
         
-        # --- CÁC HÀM WRAPPER AN TOÀN (BỎ QUA LỖI) ---
+        # --- CÁC HÀM WRAPPER AN TOÀN ---
         def safe_remove(self, name):
             try:
                 if name in pl.actors: 
                     pl.remove_actor(name)
             except Exception: 
-                pass # Chấp nhận lỗi để chạy tiếp
+                pass 
 
         def safe_add_mesh(self, mesh, **kwargs):
             try:
-                # Ép buộc reset_camera=False để giữ zoom
                 kwargs['reset_camera'] = False
                 pl.add_mesh(mesh, **kwargs)
             except Exception:
-                pass # Chấp nhận lỗi, PyVista sẽ tự xử lý ngầm
+                pass 
 
         def render(self):
             mat_ids, b_values = self.get_current_data()
@@ -144,13 +153,9 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                 return
 
             if self.bmap_mode:
-                # Mode B-Map: Xóa vật liệu
                 for mid in range(5): self.safe_remove(f"mat_{mid}")
-                
-                if has_selection:
-                    mesh_bmap = mesh_to_render 
-                else:
-                    mesh_bmap = mesh_to_render.threshold(0.1, scalars="MatID", preference="cell")
+                if has_selection: mesh_bmap = mesh_to_render 
+                else: mesh_bmap = mesh_to_render.threshold(0.1, scalars="MatID", preference="cell")
 
                 if mesh_bmap.n_cells > 0:
                     self.safe_add_mesh(mesh_bmap, scalars="FluxB", cmap="jet", clim=[0, 1.5],
@@ -160,19 +165,16 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                 else:
                     self.safe_remove("dynamic_mesh")
             else:
-                # Mode Vật liệu: Xóa B-Map
                 self.safe_remove("dynamic_mesh")
                 if len(pl.scalar_bars) > 0: pl.scalar_bars.clear()
 
                 for mid, color in colors.items():
-                    try:
-                        sub = mesh_to_render.threshold([mid, mid], scalars="MatID", preference="cell")
+                    try: sub = mesh_to_render.threshold([mid, mid], scalars="MatID", preference="cell")
                     except ValueError: sub = pv.UnstructuredGrid()
 
                     if sub.n_cells > 0:
                         if has_selection: op = 1.0 
                         else: op = 0.05 if mid == 0 else 1.0 
-                        
                         self.safe_add_mesh(sub, color=color, opacity=op, lighting=True,
                                            show_edges=True, edge_color="#333333", line_width=1,
                                            name=f"mat_{mid}")
@@ -192,6 +194,43 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
                          f"Layer Th(j): {status_j}\n"
                          f"Layer Z (k): {status_k}")
             pl.add_text(info_text, position="upper_left", font_size=9, name="info_text")
+
+        # --- LOGIC XUẤT GIF ---
+        def save_gif(self):
+            # 1. Dừng Play nếu đang chạy
+            was_playing = self.is_playing
+            if self.is_playing:
+                self.timer.stop()
+                self.is_playing = False
+
+            # 2. Chọn file
+            filename, _ = QFileDialog.getSaveFileName(pl.app_window, "Save Animation", "animation.gif", "GIF Files (*.gif)")
+            if not filename:
+                if was_playing: self.toggle_play()
+                return
+
+            print(f"Start recording GIF to {filename}...")
+            old_frame = self.current_frame
+            
+            try:
+                # Mở context ghi GIF của PyVista
+                pl.open_gif(filename)
+                
+                # Chạy vòng lặp từ đầu đến cuối
+                for i in range(self.total_frames):
+                    self.current_frame = i
+                    self.render()
+                    pl.write_frame() # Chụp frame hiện tại
+                
+                pl.close() # Đóng file GIF (lưu ý: PyVista sẽ tự xử lý đóng writer)
+                print("GIF saved successfully!")
+            except Exception as e:
+                print(f"Error saving GIF: {e}")
+            
+            # 3. Khôi phục trạng thái
+            self.current_frame = old_frame
+            self.render()
+            if was_playing: self.toggle_play()
 
         # --- CONTROLS ---
         def toggle_play(self):
@@ -221,20 +260,19 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
 
     state = ViewerState()
     state.render()
-    
-    pl.reset_camera() # Chỉ reset camera lần đầu tiên khi mở app
+    pl.reset_camera()
 
     # --- 4. TẠO TOOLBAR ---
     tb = pl.app_window.addToolBar("Controls")
 
-    # GROUP 1: DISPLAY MODE
+    # Group 1: Display
     act_bmap = QAction("B-Map", pl.app_window)
     act_bmap.setCheckable(True)
     act_bmap.triggered.connect(state.toggle_bmap)
     tb.addAction(act_bmap)
     tb.addSeparator()
 
-    # GROUP 2: LAYER CONTROLS (I, J, K)
+    # Group 2: Layers
     def add_ctrl_group(label, toggle_func, move_func, default_check=False):
         act_show = QAction(label, pl.app_window)
         act_show.setCheckable(True)
@@ -258,7 +296,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
 
     tb.addSeparator()
 
-    # GROUP 3: PLAYBACK
+    # Group 3: Playback & Export
     act_pre = QAction(pl.app_window.style().standardIcon(QStyle.SP_MediaSkipBackward), "", pl.app_window)
     act_pre.triggered.connect(state.pre_frame)
     tb.addAction(act_pre)
@@ -270,6 +308,14 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     act_next = QAction(pl.app_window.style().standardIcon(QStyle.SP_MediaSkipForward), "", pl.app_window)
     act_next.triggered.connect(state.next_frame)
     tb.addAction(act_next)
+
+    tb.addSeparator()
+    
+    # Nút Xuất GIF mới
+    act_gif = QAction("Save GIF", pl.app_window) # Bạn có thể thêm icon nếu muốn
+    act_gif.setToolTip("Export animation to GIF file")
+    act_gif.triggered.connect(state.save_gif)
+    tb.addAction(act_gif)
 
     pl.show()
     pl.app.exec_()
