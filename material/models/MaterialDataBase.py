@@ -48,7 +48,7 @@ class MaterialDataBase:
         self.air = Air(air)
         self.magnet = Magnet(magnet_type)
         self.iron = Iron(iron_type)
-        smooth_BH_curve(iron = self.iron)
+        #smooth_BH_curve(iron = self.iron)
 
     def staircase_permeability(self,num_step = 10):
         staircase_permeability(iron=self.iron, 

@@ -36,7 +36,7 @@ def show_reluctance_network(reluctance_network, use_symmetry_factor=True):
     sargs = dict(
         title="Flux Density (T)", title_font_size=20, label_font_size=16,
         n_labels=6, fmt="%.2f", vertical=True, position_x=0.92, position_y=0.15,
-        height=0.7, width=0.04, color='white', shadow=False
+        height=0.7, width=0.04,color='black', shadow=False
     )
 
     class ViewerState:

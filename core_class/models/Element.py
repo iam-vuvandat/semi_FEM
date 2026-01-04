@@ -77,7 +77,11 @@ class Element:
     def neighbor_elements(self):
         return find_neighbor_elements(element=self).neighbor_elements
 
-    def update_element(self, magnetic_potential=None, winding_current=None):
+    def update_element(self, 
+                       magnetic_potential=None, 
+                       winding_current=None,
+                       material_relaxation_factor = 1.0,
+                       delta_mu_max=-1):
         if winding_current is not None:
             self.winding_current = winding_current
             self.winding_source = find_winding_source(element=self).winding_source
@@ -90,7 +94,9 @@ class Element:
             self.flux_density_direct = flux_density.flux_density_direct
             self.flux_density_average = flux_density.flux_density_average
             
-            permeability_data = find_relative_permeability(element=self)
+            permeability_data = find_relative_permeability(element=self, 
+                                                           material_relaxation_factor = material_relaxation_factor,
+                                                           delta_mu_max= delta_mu_max)
             self.relative_permeability = permeability_data.relative_permeability
             self.d_relative_permeability_d_B = permeability_data.d_relative_permeability_d_B
             
