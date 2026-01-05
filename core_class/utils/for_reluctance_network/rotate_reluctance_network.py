@@ -1,6 +1,6 @@
 import numpy as np
-from core_class.utils.find_flat_position import find_flat_position
-from core_class.utils.get_neighbor_elements_position import get_neighbor_elements_position
+from core_class.utils.for_element.find_flat_position import find_flat_position
+from core_class.utils.for_element.get_neighbor_elements_position import get_neighbor_elements_position
 
 def rotate_reluctance_network(reluctance_network, z_indices=(0, 1, 2), n_step=1):
     
