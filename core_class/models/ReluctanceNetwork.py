@@ -21,6 +21,8 @@ class ReluctanceNetwork:
                  motor = None,
                  geometry = None,
                  mesh = None,
+                 equation_type = "loop",
+                 loop_flux = None,
                  magnetic_potential = None,
                  winding_current = None,):
         
@@ -29,6 +31,8 @@ class ReluctanceNetwork:
         self.material_database = motor.material_database
         self.geometry = geometry
         self.mesh = mesh
+        self.equation_type = equation_type
+        self.loop_flux = loop_flux
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
         find_geometry_dimension_in_mesh(geometry= geometry,
