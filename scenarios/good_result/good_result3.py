@@ -13,20 +13,21 @@ pi = math.pi
 from solver.utils.newton_raphson import newton_raphson_iteration
 from solver.utils.fixed_point_iteration import fix_point_iteration
 
-re_create_motor = False
-re_solve = False
+motor_name = "999986"
+re_create_motor = True
+re_solve = True
 plot = True
 show_reluctance = True
 
 if not re_create_motor:
-    aft = workspace.load("aft7")
+    aft = workspace.load(motor_name)
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length= 3.5 * 1e-3,
-                              airgap=1.0 * 1e-3,
-                              stator_length = 23* 1e-3,
-                              rotor_length = 7 * 1e-3)
+    aft = AxialFluxMotorType1(magnet_length= 2.5 * 1e-3,
+                              airgap=1.5 * 1e-3,
+                              stator_length = 30* 1e-3,
+                              rotor_length = 15 * 1e-3)
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
@@ -49,7 +50,7 @@ else:
     
     aft.create_reluctance_network()
     aft.reluctance_network.update_reluctance_network(magnetic_potential=aft.reluctance_network.magnetic_potential)
-    workspace.save(aft7=aft)
+    workspace.save(motor_name=aft)
 
 if re_solve:
     start_time = time.perf_counter()
@@ -61,7 +62,12 @@ if re_solve:
 
     for i in tqdm(range( n_step_solve), desc="Solving & Rotating"):
 
-        aft.reluctance_network.advanced_solver(debug = True)
+        aft.reluctance_network.advanced_solver(
+                    material_relax=0.5,   
+                    node_damping=0.075,      
+                    max_iteration=200,    
+                    max_relative_residual=5e-2, 
+                    debug=True)
                                                       
         aft.rotate_rotor(n_step=n_step_shift)
         
@@ -79,7 +85,7 @@ if re_solve:
     shaft_speed *= 2*pi / 60 # rad/s
     aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
     
-    workspace.save(aft7=aft)
+    workspace.save(motor_name=aft)
  
 flux_linkage=aft.record.flux_linkage
 back_emf_data = aft.record.back_emf_phase
