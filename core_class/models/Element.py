@@ -18,25 +18,22 @@ from core_class.utils.for_element.set_element_reluctance_at_zero import set_elem
 
 class Element:
     def __init__(self,
-                 motor=None,
-                 position=None,
-                 geometry=None,
-                 mesh=None,
-                 magnetic_potential=None,
-                 winding_current=None,
-                 elements=None):
+                 reluctance_network=None,
+                 position=None):
         
         self.position = position
-        self.mesh = mesh
-        self.material_database = motor.material_database
-        self.magnetic_potential = magnetic_potential
-        self.winding_current = winding_current
-        self.elements = elements
+        self.geometry = reluctance_network.geometry
+        self.material_database = reluctance_network.material_database
+
+        self.loop_flux = reluctance_network.loop_flux
+        self.magnetic_potential = reluctance_network.magnetic_potential
+        self.winding_current = reluctance_network.winding_current
+        self.elements = reluctance_network.elements
         self.flat_position = find_flat_position(element=self).flat_position
 
         info = extract_element_info(position=position,
-                                    geometry=geometry,
-                                    mesh=mesh)
+                                    geometry=reluctance_network.geometry,
+                                    mesh=reluctance_network.mesh)
         
         self.material = info.material
         self.dimension = info.dimension
@@ -78,6 +75,7 @@ class Element:
         return find_neighbor_elements(element=self).neighbor_elements
 
     def update_element(self, 
+                       loop_flux = None,
                        magnetic_potential=None, 
                        winding_current=None,
                        material_relaxation_factor = 1.0,
@@ -87,7 +85,9 @@ class Element:
             self.winding_source = find_winding_source(element=self).winding_source
             self.magnetic_source = find_branch_magnetic_source(element=self).branch_magnetic_source
 
-        if magnetic_potential is not None:
+        if magnetic_potential is not None or loop_flux is not None:
+            self.magnetic_potential = magnetic_potential
+            self.loop_flux = loop_flux
             self.flux_direct = find_flux_direct(element=self).flux_direct
 
             flux_density = find_flux_density(element=self)

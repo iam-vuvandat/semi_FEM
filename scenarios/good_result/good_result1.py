@@ -15,7 +15,7 @@ from solver.utils.fixed_point_iteration import fix_point_iteration
 
 re_create_motor = False
 re_solve = False
-plot = True
+plot = False
 show_reluctance = True
 
 if not re_create_motor:

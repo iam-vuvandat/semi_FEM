@@ -2,7 +2,7 @@ from core_class.utils.for_reluctance_network.find_geometry_dimension_in_mesh imp
 from core_class.utils.for_reluctance_network.create_elements import create_elements
 from core_class.utils.for_reluctance_network.add_elements_lite import add_elements_lite
 from core_class.utils.for_reluctance_network.show_reluctance_network import show_reluctance_network
-from core_class.utils.for_reluctance_network.create_magnetic_potential import create_magnetic_potential
+from core_class.utils.for_reluctance_network.create_system_variable import create_system_variable
 from core_class.utils.for_reluctance_network.create_winding_current import create_winding_current
 from core_class.utils.for_reluctance_network.update_reluctance_network import update_reluctance_network
 from core_class.utils.for_reluctance_network.set_minimum_reluctance import set_minimum_reluctance
@@ -21,7 +21,7 @@ class ReluctanceNetwork:
                  motor = None,
                  geometry = None,
                  mesh = None,
-                 equation_type = "loop",
+                 system_variable = "loop_flux",
                  loop_flux = None,
                  magnetic_potential = None,
                  winding_current = None,):
@@ -31,7 +31,7 @@ class ReluctanceNetwork:
         self.material_database = motor.material_database
         self.geometry = geometry
         self.mesh = mesh
-        self.equation_type = equation_type
+        self.system_variable = system_variable
         self.loop_flux = loop_flux
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
@@ -39,7 +39,11 @@ class ReluctanceNetwork:
                                         mesh= mesh)
         
         self.winding_current = create_winding_current(reluctance_network=self)
-        self.magnetic_potential = create_magnetic_potential(reluctance_network= self)
+
+        system_variable_data = create_system_variable(reluctance_network=self)
+        self.magnetic_potential = system_variable_data.magnetic_potential
+        self.loop_flux = system_variable_data.loop_flux
+
         self.elements = create_elements(self)
         self.list_elements_lite = None
 
@@ -47,12 +51,14 @@ class ReluctanceNetwork:
         add_elements_lite(reluctance_network = self)
     
     def update_reluctance_network(self,
+                                  loop_flux = None,
                                   magnetic_potential = None,
                                   winding_current = None,
                                   material_relaxation_factor = 1.0,
                                   delta_mu_max=-1):
         
         update_reluctance_network(reluctance_network=self,
+                                  loop_flux = loop_flux,
                                   magnetic_potential = magnetic_potential,
                                   winding_current = winding_current,
                                   material_relaxation_factor = material_relaxation_factor,
