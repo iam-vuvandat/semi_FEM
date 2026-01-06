@@ -44,6 +44,7 @@ class ReluctanceNetwork:
         self.magnetic_potential = system_variable_data.magnetic_potential
         self.loop_flux = system_variable_data.loop_flux
 
+        self.elements = None
         self.elements = create_elements(self)
         self.list_elements_lite = None
 

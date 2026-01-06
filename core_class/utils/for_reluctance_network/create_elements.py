@@ -10,7 +10,8 @@ def create_elements(reluctance_network, debug=True):
     total_elements = nr * nt * nz
     
     elements = np.empty((nr, nt, nz), dtype=object, order='F')
-    
+    reluctance_network.elements = elements
+
     with tqdm(total=total_elements, desc="Creating Elements", disable=not debug) as pbar:
         for i_z in range(nz):
             for i_t in range(nt):

@@ -7,6 +7,9 @@ class Output:
     flat_position :int
 
 def find_flat_position(element):
-    flat_position = int(element.magnetic_potential.retrieve(position = element.position).index)
+    nr,nt,nz = element.elements.shape()
+    i,j,k = element.position
+    flat_position = i + (j * nr) + (k * nr * nt)
+    
     return Output(flat_position= flat_position)
     

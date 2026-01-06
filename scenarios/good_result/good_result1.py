@@ -126,3 +126,7 @@ if plot:
 if show_reluctance:
     aft.show()
     aft.reluctance_network.show()
+
+
+
+

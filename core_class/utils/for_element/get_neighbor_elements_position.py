@@ -7,7 +7,7 @@ class Output:
     neighbor_elements_position: np.ndarray
 
 def get_neighbor_elements_position(element):
-    nr, nt, nz = element.magnetic_potential.data.shape
+    nr, nt, nz = element.elements.shape
     i, j, k = element.position
     periodic_boundary = getattr(element.mesh, 'periodic_boundary', False)
 

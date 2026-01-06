@@ -25,15 +25,18 @@ class Element:
         self.geometry = reluctance_network.geometry
         self.material_database = reluctance_network.material_database
 
+        self.mesh = reluctance_network.mesh
+        self.geometry = reluctance_network.geometry
+
         self.loop_flux = reluctance_network.loop_flux
         self.magnetic_potential = reluctance_network.magnetic_potential
         self.winding_current = reluctance_network.winding_current
         self.elements = reluctance_network.elements
-        self.flat_position = find_flat_position(element=self).flat_position
+        
 
         info = extract_element_info(position=position,
-                                    geometry=reluctance_network.geometry,
-                                    mesh=reluctance_network.mesh)
+                                    geometry=self.geometry,
+                                    mesh=self.mesh)
         
         self.material = info.material
         self.dimension = info.dimension
@@ -70,6 +73,10 @@ class Element:
         self.d_relative_permeability_d_B = None
         self.neighbor_elements_position = get_neighbor_elements_position(element=self).neighbor_elements_position
         self.own_magnetic_potential = None
+
+    @property
+    def flat_position(self):
+        return find_flat_position(element=self).flat_position
 
     def neighbor_elements(self):
         return find_neighbor_elements(element=self).neighbor_elements

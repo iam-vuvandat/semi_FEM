@@ -182,10 +182,11 @@ class AxialFluxMotorType1:
         
         return self.mesh
     
-    def create_reluctance_network(self):
+    def create_reluctance_network(self,system_variable = "magnetic_potential"):
         self.reluctance_network = ReluctanceNetwork(motor = self,
                                                     geometry=self.geometry,
-                                                    mesh = self.mesh)
+                                                    mesh = self.mesh,
+                                                    system_variable = system_variable)
         
         return self.reluctance_network
     
