@@ -23,6 +23,7 @@ class LoopFLux:
         self.Ort_size = None
         self.Orz_size = None
         self.Otz_size = None
+        self.global_size = None
 
         if reluctance_network is not None:
 
@@ -35,7 +36,8 @@ class LoopFLux:
             self.Ort_size = ((self.nr - 1) , self.nt, self.nz,(self.nr - 1) * self.nt, self.nz * (self.nr - 1) * self.nt  )
             self.Orz_size = (self.nr - 1 , self.nz -1, self.nt,(self.nr - 1) * (self.nz -1), self.nt * (self.nr - 1) * (self.nz -1)  )
             self.Otz_size = (self.nt , self.nz -1, 1, (self.nt)*(self.nz -1),1 * (self.nt)*(self.nz -1) )
-
+            self.global_size = 1
+        
             if self.data is None:
                 self.data = np.zeros(self.total_size)
 
@@ -114,3 +116,23 @@ class LoopFLux:
                 valid = True
 
         return ValueAccess(value=value, valid=valid, flat_index=flat_index)
+    
+    def access_global(self,
+                      position):
+        
+        # position = (r_index,z_index)
+        # quy ước biến vòng global xếp cuối cùng
+        # biến global chỉ nằm ở r_index = 0; z_index = 0 
+        value = 0.0
+        valid = False
+        flat_index = None
+        begin_index = self.Ort_size[4] + self.Orz_size[4] + self.Otz_size[4]
+
+        if position[0] == 0:
+            if position[1] == 0 : 
+                flat_index = begin_index
+                value = self.data[flat_index]
+                valid = True
+
+        return ValueAccess(value=value, valid=valid, flat_index=flat_index)
+

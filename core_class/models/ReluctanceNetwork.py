@@ -9,6 +9,7 @@ from core_class.utils.for_reluctance_network.set_minimum_reluctance import set_m
 from core_class.utils.for_reluctance_network.rotate_reluctance_network import rotate_reluctance_network
 from core_class.utils.for_reluctance_network.set_reluctance_at_zero import set_reluctance_at_zero
 from core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
+from core_class.utils.for_reluctance_network.access_elements import access_elements
 from solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
 from solver.core.solve_magnetic_equation import solve_magnetic_equation
 from solver.utils.fixed_point_iteration import fix_point_iteration
@@ -51,6 +52,10 @@ class ReluctanceNetwork:
     def add_elements_lite(self):
         add_elements_lite(reluctance_network = self)
     
+    def access_elements(self,position):
+        return access_elements(reluctance_network=self,
+                               position=position)
+
     def update_reluctance_network(self,
                                   loop_flux = None,
                                   magnetic_potential = None,

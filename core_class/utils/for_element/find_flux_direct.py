@@ -45,6 +45,7 @@ def find_flux_direct(element):
     else:
         loop_flux = element.loop_flux
 
+        # Hướng r
         flux_direct[0,0] = (
                             +loop_flux.access_Ort_plane(z_layer = z_k, position = (r_i -1 ,t_j)).value 
                             -loop_flux.access_Ort_plane(z_layer = z_k, position = (r_i -1 ,t_j -1)).value
@@ -58,12 +59,13 @@ def find_flux_direct(element):
                             +loop_flux.access_Orz_plane(t_layer = t_j, position = (r_i ,z_k -1)).value
                             -loop_flux.access_Orz_plane(t_layer = t_j, position = (r_i ,z_k)).value
                             )
-
+        # Hướng theta
         flux_direct[0,1] = (
                             +loop_flux.access_Ort_plane(z_layer = z_k, position = (r_i -1 ,t_j-1)).value
                             -loop_flux.access_Ort_plane(z_layer = z_k, position = (r_i ,t_j-1)).value
                             +loop_flux.access_Otz_plane(r_layer = r_i, position = (t_j -1 ,z_k-1)).value 
                             -loop_flux.access_Otz_plane(r_layer = r_i, position = (t_j -1 ,z_k)).value   
+                            +loop_flux.access_global(position = (r_i,z_k)).value
                             )
         
         flux_direct[1,1] = (
@@ -71,8 +73,9 @@ def find_flux_direct(element):
                             -loop_flux.access_Ort_plane(z_layer = z_k, position = (r_i ,t_j)).value
                             +loop_flux.access_Otz_plane(r_layer = r_i, position = (t_j,z_k-1)).value 
                             -loop_flux.access_Otz_plane(r_layer = r_i, position = (t_j ,z_k)).value   
+                            +loop_flux.access_global(position = (r_i,z_k)).value
                             )
-        
+        # Hướng z
         flux_direct[0,2] = (
                             +loop_flux.access_Orz_plane(t_layer = t_j, position = (r_i ,z_k -1)).value
                             -loop_flux.access_Orz_plane(t_layer = t_j, position = (r_i-1 ,z_k -1)).value
