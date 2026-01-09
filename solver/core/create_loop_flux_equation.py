@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from turtle import position
 from typing import Any
 import numpy as np
 import scipy.sparse as sp
@@ -20,7 +21,7 @@ def create_loop_flux_equation(reluctance_network,
     
     loop_flux = reluctance_network.loop_flux
     matrix_size = loop_flux.total_size
-    R = [[],[],[]]
+    R = [[],[],[]] # row, column, value
     F = np.zeros(matrix_size)
 
     # Viết các vòng mặt Ort
@@ -39,6 +40,58 @@ def create_loop_flux_equation(reluctance_network,
                 Ec = reluctance_network.access_elements(position = (i,j+1,k))
                 Ed = reluctance_network.access_elements(position = (i,j,k))
                 
+                # Truy cập các vòng
+                center = loop_flux.access_Ort_plane(n_z_layer = k,
+                                                          position = (i,j))
+                
+                right = loop_flux.access_Ort_plane(n_z_layer = k,
+                                                          position = (i,j+1))
+                
+                left = loop_flux.access_Ort_plane(n_z_layer = k,
+                                                          position = (i,j-1))
+                
+                top = loop_flux.access_Ort_plane(n_z_layer = k,
+                                                          position = (i+1,j))
+                
+                bottom = loop_flux.access_Ort_plane(n_z_layer = k,
+                                                          position = (i-1,j))
+                
+                # Gán vòng trung tâm:
+                R[0].append(center.flat_index)
+                R[1].append(center.flat_index)
+                R[2].append(+ Ea.reluctance[0,0] + Ea.reluctance[1,1]
+                            + Eb.reluctance[0,1] - Eb.reluctance[0,0]
+                            - Ec.reluctance[1,0] - Ec.reluctance[0,1]
+                            - Ed.reluctance[1,1] + Ed.reluctance[1,0])
+                
+                # gán các vòng lân cận:
+                if top.valid is True:
+                    R[0].append(center.flat_index)
+                    R[1].append(top.flat_index)
+                    R[2].append(- Ea.reluctance[1,1] + Eb.reluctance[0,1])
+
+                if right.valid is True:
+                    R[0].append(center.flat_index)
+                    R[1].append(right.flat_index)
+                    R[2].append(+ Eb.reluctance[0,0] + Ec.reluctance[1,0])
+                
+                if bottom.valid is True:
+                    R[0].append(center.flat_index)
+                    R[1].append(bottom.flat_index)
+                    R[2].append(+ Ec.reluctane[0,1] + Ed.reluctance[1,1])
+
+                if left.valid is True:
+                    R[0].append(center.flat_index)
+                    R[1].append(left.flat_index)
+                    R[2].append(- Ed.reluctance[1,0] - Ea.reluctance[0,0])
+
+                # gán F: 
+                F[center.flat_index] = (+ Ea.magnetic_source[0,0] + Ea.magnetic_source[1,1]
+                                        + Eb.magnetic_source[0,1] - Eb.magnetic_source[0,0]
+                                        - Ec.magnetic_source[1,0] - Ec.magnetic_source[0,1]
+                                        - Ed.magnetic_source[1,1] + Ed.magnetic_source[1,0])
+                
+
 
 
     
