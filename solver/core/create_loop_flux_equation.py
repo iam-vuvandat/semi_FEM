@@ -78,7 +78,7 @@ def create_loop_flux_equation(reluctance_network,
                 if bottom.valid is True:
                     R[0].append(center.flat_index)
                     R[1].append(bottom.flat_index)
-                    R[2].append(+ Ec.reluctane[0,1] + Ed.reluctance[1,1])
+                    R[2].append(+ Ec.reluctance[0,1] + Ed.reluctance[1,1])
 
                 if left.valid is True:
                     R[0].append(center.flat_index)
