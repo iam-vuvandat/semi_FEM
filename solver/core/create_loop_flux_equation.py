@@ -33,6 +33,11 @@ def create_loop_flux_equation(reluctance_network,
     for k in range(n_z_layer):
         for j in range(n_t_layer):
             for i in range(n_r_layer):
+                # truy cập các phần tử lân cận
+                Ea = reluctance_network.access_elements(position = (i+1,j,k))
+                Eb = reluctance_network.access_elements(position = (i+1,j+1,k))
+                Ec = reluctance_network.access_elements(position = (i,j+1,k))
+                Ed = reluctance_network.access_elements(position = (i,j,k))
                 
 
 
