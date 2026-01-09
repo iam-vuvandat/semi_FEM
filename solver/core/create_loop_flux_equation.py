@@ -24,10 +24,8 @@ def create_loop_flux_equation(reluctance_network,
     R = [[],[],[]] # row, column, value
     F = np.zeros(matrix_size)
 
-    # Viết các vòng mặt Ort
-    # Xác định số lớp z:
-    n_z_layer = loop_flux.Ort_size[2]
-    # Xác định số lớp r, theta
+    # Viết các vòng mặt Ort===============================
+    # Xác định số lớp r, theta, z
     n_r_layer, n_t_layer, n_z_layer = loop_flux.Ort_size[0], loop_flux.Ort_size[1], loop_flux.Ort_size[2]
     # r tăng nhanh nhất, sau đó đến t, sau đó đến z
     
@@ -93,6 +91,8 @@ def create_loop_flux_equation(reluctance_network,
                 
 
 
+    # Viết các vòng mặt Orz===============================
+    
 
     
 

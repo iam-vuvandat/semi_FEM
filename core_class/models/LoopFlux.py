@@ -41,7 +41,7 @@ class LoopFLux:
             if self.data is None:
                 self.data = np.zeros(self.total_size)
 
-    def access_Ort_plane(self,
+    def access_Ort_plane(self,   #(1)
                          z_layer,
                          position):
         # position = (r_idex, theta_index)
@@ -66,7 +66,7 @@ class LoopFLux:
 
         return ValueAccess(value=value, valid=valid, flat_index=flat_index)
                 
-    def access_Orz_plane(self,
+    def access_Orz_plane(self,   #(2)
                          t_layer,
                          position):
         # position = (r_index, z_index)
@@ -91,7 +91,7 @@ class LoopFLux:
                 
         return ValueAccess(value=value, valid=valid, flat_index=flat_index)
     
-    def access_Otz_plane(self,
+    def access_Otz_plane(self, #(3)
                          r_layer,
                          position):
         
