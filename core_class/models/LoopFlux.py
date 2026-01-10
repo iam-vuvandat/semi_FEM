@@ -10,10 +10,9 @@ class ValueAccess:
 
 class LoopFLux:
     def __init__(self,
-                 data = None,
                  reluctance_network = None):
         
-        self.data = data
+        self.data = None
         
         self.nr = None
         self.nt = None
@@ -37,9 +36,7 @@ class LoopFLux:
             self.Orz_size = (self.nr - 1 , self.nz -1, self.nt,(self.nr - 1) * (self.nz -1), self.nt * (self.nr - 1) * (self.nz -1)  )
             self.Otz_size = (self.nt , self.nz -1, 1, (self.nt)*(self.nz -1),1 * (self.nt)*(self.nz -1) )
             self.global_size = 1
-        
-            if self.data is None:
-                self.data = np.zeros(self.total_size)
+            self.data = np.zeros(self.total_size)
 
     def access_Ort_plane(self,   #(1)
                          z_layer,

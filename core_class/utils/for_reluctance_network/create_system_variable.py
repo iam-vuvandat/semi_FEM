@@ -2,6 +2,7 @@ from typing import Any
 from core_class.utils.for_reluctance_network.create_magnetic_potential import create_magnetic_potential
 from core_class.utils.for_reluctance_network.create_loop_flux import create_loop_flux
 from dataclasses import dataclass
+from core_class.models.LoopFlux import LoopFLux
 
 @dataclass
 class SystemVariable:
@@ -14,8 +15,8 @@ def create_system_variable(reluctance_network):
     magnetic_potential = None
 
     if reluctance_network.system_variable == "loop_flux":
-        loop_flux =  create_loop_flux(reluctance_network= reluctance_network)
-    elif reluctance_network.system_variable == "magnetic_potential":
+        loop_flux = LoopFLux(reluctance_network= reluctance_network)
+    else: 
         magnetic_potential =  create_magnetic_potential(reluctance_network= reluctance_network)
     
     return SystemVariable(loop_flux = loop_flux,

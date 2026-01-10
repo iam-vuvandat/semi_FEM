@@ -87,6 +87,7 @@ class Element:
                        winding_current=None,
                        material_relaxation_factor = 1.0,
                        delta_mu_max=-1):
+        
         if winding_current is not None:
             self.winding_current = winding_current
             self.winding_source = find_winding_source(element=self).winding_source

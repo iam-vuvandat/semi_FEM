@@ -54,7 +54,9 @@ class AxialFluxMotorType1:
                  magnet_type = "N30UH",
                  iron_type = "M350-50A",
                  # shaft speed
-                 shaft_speed = 3000):
+                 shaft_speed = 3000,
+                 # equation type
+                 system_variable = "loop_flux"):
         
         # --- Gán Radial Stator Parameters ---
         self.slot_number = slot_number
@@ -113,6 +115,9 @@ class AxialFluxMotorType1:
         
         #speed 
         self.shaft_speed = shaft_speed
+
+        # equation_type
+        self.system_variable = system_variable
         
         self.geometry = None
         self.mesh     = None
@@ -182,11 +187,11 @@ class AxialFluxMotorType1:
         
         return self.mesh
     
-    def create_reluctance_network(self,system_variable = "magnetic_potential"):
+    def create_reluctance_network(self):
         self.reluctance_network = ReluctanceNetwork(motor = self,
                                                     geometry=self.geometry,
-                                                    mesh = self.mesh,
-                                                    system_variable = system_variable)
+                                                    mesh = self.mesh
+                                                    )
         
         return self.reluctance_network
     

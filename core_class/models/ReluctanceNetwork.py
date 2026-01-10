@@ -11,6 +11,7 @@ from core_class.utils.for_reluctance_network.set_reluctance_at_zero import set_r
 from core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 from core_class.utils.for_reluctance_network.access_elements import access_elements
 from solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
+from solver.core.create_loop_flux_equation import create_loop_flux_equation
 from solver.core.solve_magnetic_equation import solve_magnetic_equation
 from solver.utils.fixed_point_iteration import fix_point_iteration
 from solver.utils.advanced_solver import advanced_solver
@@ -22,7 +23,6 @@ class ReluctanceNetwork:
                  motor = None,
                  geometry = None,
                  mesh = None,
-                 system_variable = "loop_flux",
                  loop_flux = None,
                  magnetic_potential = None,
                  winding_current = None,):
@@ -32,7 +32,7 @@ class ReluctanceNetwork:
         self.material_database = motor.material_database
         self.geometry = geometry
         self.mesh = mesh
-        self.system_variable = system_variable
+        self.system_variable = motor.system_variable
         self.loop_flux = loop_flux
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
@@ -82,6 +82,15 @@ class ReluctanceNetwork:
         return create_magnetic_potential_equation(reluctance_network= self,
                                                   load_factor= load_factor,
                                                   debug = debug)
+    
+    def create_loop_flux_equation(self,
+                                  load_factor = 1.0,
+                                  create_jacobian = False,
+                                  debug = True):
+        return create_loop_flux_equation(reluctance_network = self,
+                                         load_factor = load_factor,
+                                         create_jacobian = create_jacobian,
+                                         debug = debug)
     
     
     def fixed_point_iteration(self):
