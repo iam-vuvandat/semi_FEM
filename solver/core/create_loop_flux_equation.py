@@ -222,6 +222,7 @@ def create_loop_flux_equation(reluctance_network,
                                         - Ec.magnetic_source[1,2] - Ec.magnetic_source[0,1]
                                         - Ed.magnetic_source[1,1] + Ed.magnetic_source[1,2])
     
+    
     # Viết 1 vòng global duy nhất tại lớp r = 0, z = 0
     n_t = elements.shape[1]
     global_index = loop_flux.access_global(position = (0,0)).flat_index
@@ -263,7 +264,7 @@ def create_loop_flux_equation(reluctance_network,
     R[1].append(global_index)
     R[2].append(global_value)
     F[global_index] = f_value
-
+    
     R_sparse = sp.csr_matrix((R[2], (R[0], R[1])), shape=(matrix_size, matrix_size))
 
     return Output(R = R_sparse,
