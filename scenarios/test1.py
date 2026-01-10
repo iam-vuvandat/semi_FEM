@@ -2,17 +2,14 @@ import paths
 from motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
 from storage.core import workspace 
 from tqdm import tqdm
+import numpy as np
 
-re_create_motor = False
+re_create_motor = True
 re_solve = True
 
 if re_create_motor == False:
-    print("loading aft")
     aft = workspace.load("aft1")
-    print("load aft successfully")
-    if re_solve == False:
-        pass
-    else:
+    if re_solve == True:
         aft.reluctance_network.list_elements_lite = None
 else:
     aft = AxialFluxMotorType1(magnet_length=4.0 * 1e-3,
@@ -28,16 +25,24 @@ else:
 
 
 if re_solve == True:
-    n_theta = aft.mesh.detail_parameter[5] - 1 
-    n_step_shift = 3
-    n_step_solve = n_theta // n_step_shift
+    equation_component = aft.reluctance_network.create_loop_flux_equation()
+    F = equation_component.F
+    R = equation_component.R
 
-    for i in range(1):
-        aft.reluctance_network.fixed_point_iteration()
-        
+    # Kích thước hệ
+    system_size = F.size
+
+    # Tính rank (chú ý tolerance)
+    rank_R = np.linalg.matrix_rank(R.toarray(), tol=1e-10)
+
+    if rank_R < system_size:
+        print("⚠️ HỆ THIẾU RANK")
+        print(f"   rank(R) = {rank_R}")
+        print(f"   size(F) = {system_size}")
+        print("→ Có khả năng thiếu vòng toàn cục hoặc vòng topo sai.")
+    else:
+        print("✅ Hệ đủ rank (topo đầy đủ)")
 
     workspace.save(aft1=aft)
-else:
-    pass
 
 aft.reluctance_network.show()
