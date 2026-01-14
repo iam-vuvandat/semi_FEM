@@ -36,7 +36,7 @@ class CylindricalMesh:
     def to_pyvista_grid(self):
         return pv.StructuredGrid(self.X, self.Y, self.Z)
 
-    def show(self, show_edges=True, notebook=False, plotter=None, opacity=1.0, save_path=None):
+    def show(self, show_edges=True, notebook=False, plotter=None, opacity=0.3, save_path=None):
         pv.set_plot_theme("document")
         
         if plotter is None:
@@ -55,7 +55,7 @@ class CylindricalMesh:
                     color="white",
                     opacity=opacity,
                     edge_color="black",
-                    line_width=0.8)
+                    line_width=1.5)
         
         if own_plotter:
             pl.view_isometric()

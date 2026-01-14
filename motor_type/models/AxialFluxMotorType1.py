@@ -200,56 +200,29 @@ class AxialFluxMotorType1:
                      n_step= n_step)
 
     def show(self, show_geometry=True, show_mesh=True):
-        """
-        Hiển thị toàn bộ mô hình động cơ (Geometry + Mesh).
-        Kết hợp tính năng tương tác (Click) của Geometry và trực quan hóa Lưới.
-        """
-        
-
-        # --- 1. KHỞI TẠO SÂN KHẤU CHUNG (PLOTTER) ---
-        pv.set_plot_theme("dark")
+        pv.set_plot_theme("document")
         pl = pv.Plotter(window_size=[1400, 1000])
-        pl.set_background("#0F0F0F")  # Nền đen tuyền hiện đại
-        pl.add_axes()
+        pl.set_background("white")
         
-        # [FIX]: Sửa position='upper_center' thành 'upper_right' để tránh KeyError
-        # và dùng font to hơn một chút để làm tiêu đề
-        pl.add_text("AXIAL FLUX MOTOR SIMULATION", position='upper_right', font_size=10, color='white')
-
-        # Thêm đèn chiếu sáng (Quan trọng để Geometry hiện khối 3D đẹp)
-        light = pv.Light(position=(1000, 1000, 1000), color='white', intensity=0.9)
-        pl.add_light(light)
-
         has_content = False
 
-        # --- 2. VẼ GEOMETRY (CÁC KHỐI ĐẶC) ---
         if show_geometry:
             if hasattr(self, 'geometry') and self.geometry is not None:
-                print("[INFO] Adding Geometry layer...")
-                # Gọi hàm show của Geometry, truyền plotter 'pl' vào.
-                # Geometry sẽ vẽ các khối lên 'pl' và gắn sự kiện click vào 'pl'.
-                # Thông tin click sẽ hiện ở 'upper_left'
-                self.geometry.show(plotter=pl)
+                self.geometry.show(plotter=pl, show_axes=True)
                 has_content = True
             else:
-                print("[WARNING] Geometry data is missing. Please run 'create_geometry()' first.")
+                print("[WARNING] Geometry data is missing.")
 
-        # --- 3. VẼ MESH (LƯỚI TÍNH TOÁN) ---
         if show_mesh:
             if hasattr(self, 'mesh') and self.mesh is not None:
-                print("[INFO] Adding Mesh layer...")
-                # Gọi hàm show của Mesh, truyền plotter 'pl' vào.
-                # Mesh sẽ tự động vẽ mờ (opacity=0.3)
-                # Thông tin thống kê mesh sẽ hiện ở 'lower_left'
                 self.mesh.show(plotter=pl, show_edges=True)
                 has_content = True
             else:
-                print("[WARNING] Mesh data is missing. Please run 'create_adaptive_mesh()' first.")
+                print("[WARNING] Mesh data is missing.")
 
-        # --- 4. HIỂN THỊ CỬA SỔ ---
         if has_content:
-            print("[INFO] Displaying interactive window...")
+            pl.add_text("AXIAL FLUX MOTOR SIMULATION", position='upper_right', font_size=10, color='black')
             pl.view_isometric()
             pl.show()
         else:
-            print("[ERROR] Nothing to show. Please generate Geometry or Mesh first.")
+            print("[ERROR] Nothing to show.")
