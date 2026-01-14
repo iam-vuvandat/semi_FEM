@@ -6,6 +6,7 @@ from core_class.models.ReluctanceNetwork import ReluctanceNetwork
 from motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
 from storage.core.Record import Record
 from motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
+from motor_type.utils.for_show.show_motor import show_motor
 import pyvista as pv
 import math
 pi = math.pi
@@ -226,3 +227,6 @@ class AxialFluxMotorType1:
             pl.show()
         else:
             print("[ERROR] Nothing to show.")
+
+    def deep_view(self):
+        show_motor(motor=self)
