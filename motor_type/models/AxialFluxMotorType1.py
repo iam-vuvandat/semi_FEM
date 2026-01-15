@@ -228,5 +228,5 @@ class AxialFluxMotorType1:
         else:
             print("[ERROR] Nothing to show.")
 
-    def deep_view(self):
+    def display(self):
         show_motor(motor=self)

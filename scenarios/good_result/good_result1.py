@@ -124,9 +124,8 @@ if plot:
     plt.show()
 
 if show_reluctance:
-    aft.deep_view()
-    aft.show()
-    aft.reluctance_network.show()
+    aft.display()
+    
 
 
 
