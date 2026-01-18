@@ -1,0 +1,30 @@
+# --- Core Math & Science ---
+numpy
+scipy
+matplotlib
+scikit-learn
+pyamg
+
+# --- Geometry & Mesh Processing ---
+trimesh
+shapely
+manifold3d
+rtree
+
+# --- Visualization & GUI ---
+pyvista
+pyvistaqt
+PyQt5
+pyglet<2
+imageio
+
+# --- Specialized Tools ---
+ansys-motorcad-core
+pywin32; sys_platform == 'win32'
+
+# --- Utilities & Performance ---
+tqdm
+pympler
+
+# --- Distribution/Packaging ---
+pyinstaller

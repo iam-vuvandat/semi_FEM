@@ -1,0 +1,29 @@
+from src.core.solver.utils.fixed_point_iteration_for_magnetic_potential import fix_point_iteration_for_magnetic_potential
+
+def solve(reluctance_network,
+          method = "fixed_point_iteration",
+          max_iteration=50,
+          material_relax=0.5, 
+          damping_factor = 0.05,   
+          debug = True):
+    
+    if method == "fixed_point_iteration":
+        if reluctance_network.system_variable == "loop_flux":
+            pass
+        elif reluctance_network.system_variable == "magnetic_potential":
+            fix_point_iteration_for_magnetic_potential(reluctance_network= reluctance_network,
+                                                       max_iteration= max_iteration,
+                                                       material_relax= material_relax,
+                                                       damping_factor= damping_factor,
+                                                       debug = debug)
+        else:
+            print("system variable is undefined")
+    elif method == "newton_raphson":
+        if reluctance_network.system_variable == "loop_flux":
+            pass
+        elif reluctance_network.system_variable == "magnetic_potential":
+            pass
+        else:
+            print("system variable is undefined")
+    else:
+        print("method is undefined")
