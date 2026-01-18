@@ -27,19 +27,19 @@ else:
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
-                         n_r_1                   =3,
-                         n_r_2                   =6,
-                         n_r_3                   =3,
+                         n_r_1                   =4,
+                         n_r_2                   =15,
+                         n_r_3                   =4,
                          n_r_out                 =2,
-                         n_theta                 =80,
+                         n_theta                 =120,
                          n_z_in_air              =2,
-                         n_z_rotor_yoke          =3,
-                         n_z_magnet              =3,
-                         n_z_airgap              =3,
-                         n_z_tooth_tip_1         =3,
-                         n_z_tooth_tip_2         =3,
+                         n_z_rotor_yoke          =5,
+                         n_z_magnet              =5,
+                         n_z_airgap              =5,
+                         n_z_tooth_tip_1         =5,
+                         n_z_tooth_tip_2         =5,
                          n_z_tooth_body          =6,
-                         n_z_stator_yoke         =3,
+                         n_z_stator_yoke         =5,
                          n_z_out_air             =2, 
                          use_symmetry_factor=True,
                          periodic_boundary=True)
@@ -57,9 +57,10 @@ if re_solve:
     for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
         aft.reluctance_network.solve(method = "fixed_point_iteration",
               max_iteration=50,
-              material_relax=0.25, 
-              damping_factor = 0.05,   
+              material_relax=0.19, 
+              damping_factor = 0.19/2.5,   
               debug = True)
+        
         if n_step_solve != 1:
             aft.rotate_rotor(n_step=n_step_shift)
             data_out = aft.reluctance_network.get_flux_linkage().flux_linkage
@@ -70,8 +71,6 @@ if re_solve:
             aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
             
     workspace.save(aft765=aft)
- 
-
 
 if plot:
     flux_linkage=aft.record.flux_linkage
@@ -93,8 +92,6 @@ if plot:
     ax.legend()
     plt.tight_layout()
     plt.show()
-
-
 
     theta_emf = back_emf_data[-1, :]  # Hàng cuối là Theta
     bemf_phases = back_emf_data[:-1, :]  # Các hàng trên là Phase A, B, C

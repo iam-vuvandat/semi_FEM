@@ -10,12 +10,12 @@ def fix_point_iteration_for_magnetic_potential(reluctance_network,
     G_c, Y_c, R_c, C_c, B_c, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[96m", "\033[94m", "\033[0m"
 
     if debug: 
-        print(f"\n{Y_c}{'='*100}")
+        print(f"\n{Y_c}{'='*155}")
         print(f" FIXED POINT ITERATION (Strict Monotonic Strategy)")
         print(f" Relax: {material_relax} | Damping: {damping_factor}")
-        print(f"{'='*100}{RESET}")
-        print(f"{B_c}{'Iter':>4} | {'Step Res':>12} | {'Curr Res':>12} | {'Best Res':>12} | {'Step Norm':>10} | {'Cond(G)':>10} | {'Contr. L':>10} | {'Status'}{RESET}")
-        print(f"{'-'*100}")
+        print(f"{'='*155}{RESET}")
+        print(f"{B_c}{'Iter':>4} | {'Curr Res':>12} | {'Best Res':>12} | {'Step Norm':>10} | {'Cond(G)':>10} | {'Contr. L':>10} | {'Status'}{RESET}")
+        print(f"{'-'*155}")
 
     best_residual_history = []
     reluctance_network.set_reluctance_at_zero()
@@ -53,10 +53,6 @@ def fix_point_iteration_for_magnetic_potential(reluctance_network,
             except:
                 break
 
-        # Tinh Relative Residual cua buoc nhay (Linear System Residual)
-        raw_res_vec = comp.J - comp.G.dot(p_target_active)
-        step_res = np.linalg.norm(raw_res_vec) / (np.linalg.norm(comp.J) + 1e-12)
-
         current_raw_step = p_target_active - p_current_active
         current_raw_step_norm = np.linalg.norm(current_raw_step)
         
@@ -91,14 +87,14 @@ def fix_point_iteration_for_magnetic_potential(reluctance_network,
             
             if debug:
                 l_color = G_c if (np.isnan(contraction_L) or contraction_L < 1) else R_c
-                print(f" {j:03d} | {step_res:12.2e} | {phi_true*100:10.6f}% | {best_phi*100:10.6f}% | {display_step_norm:.2e} | {cond_est:.2e} | {l_color}{contraction_L:10.4f}{RESET} | {status_msg}")
+                print(f" {j:03d} | {phi_true*100:10.6f}% | {best_phi*100:10.6f}% | {display_step_norm:.2e} | {cond_est:.2e} | {l_color}{contraction_L:10.4f}{RESET} | {status_msg}")
         else:
             diff = phi_true - best_phi
             status_msg = f"{R_c}WORSENED (+{diff:.2e}){RESET}"
             best_residual_history.append(phi_true)
             
             if debug:
-                print(f" {j:03d} | {step_res:12.2e} | {phi_true*100:10.6f}% | {best_phi*100:10.6f}% | {display_step_norm:.2e} | {cond_est:.2e} | {R_c}{contraction_L:10.4f}{RESET} | {status_msg}")
+                print(f" {j:03d} | {phi_true*100:10.6f}% | {best_phi*100:10.6f}% | {display_step_norm:.2e} | {cond_est:.2e} | {R_c}{contraction_L:10.4f}{RESET} | {status_msg}")
                 print(f"\n{Y_c}>>> STOPPED EARLY: Reverting to best result.{RESET}")
             break
 
