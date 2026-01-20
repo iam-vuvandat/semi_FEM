@@ -14,9 +14,10 @@ re_create_motor = False
 re_solve = False
 plot = False
 show_reluctance = True
+filename = "motor7997"
 
 if not re_create_motor:
-    aft = motor_io.load_motor(filename= "motor7997")
+    aft = motor_io.load_motor(filename= filename)
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
@@ -46,7 +47,7 @@ else:
                          periodic_boundary=True)
     
     aft.create_reluctance_network()
-    motor_io.save_motor(motor_obj=aft,filename="motor7997")
+    motor_io.save_motor(motor_obj=aft,filename=filename)
 
 if re_solve:
     n_theta = aft.mesh.detail_parameter[5] - 1 
@@ -72,7 +73,7 @@ if re_solve:
             shaft_speed *= 2*pi / 60 # rad/s
             aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
             
-    motor_io.save_motor(motor_obj=aft,filename="motor7997")
+    motor_io.save_motor(motor_obj=aft,filename=filename)
 
 if plot:
     flux_linkage=aft.record.flux_linkage
