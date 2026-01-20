@@ -40,13 +40,11 @@ def _add_cylindrical_axes_static(pl, length=100):
     origin = np.array([0, 0, 0])
     arrow_params = {'tip_length': 0.15, 'tip_radius': 0.04, 'shaft_radius': 0.015, 'scale': length}
     
-    # Xóa cũ
     for n in ['axis_z', 'axis_r', 'axis_arc', 'axis_tip_th']:
         if n in pl.renderer.actors: pl.remove_actor(n)
     if hasattr(pl, '_labels_actor') and pl._labels_actor:
         pl.remove_actor(pl._labels_actor)
 
-    # Vẽ mới
     pl.add_mesh(pv.Arrow(start=origin, direction=[0, 0, 1], **arrow_params), 
                 color='#2980B9', name='axis_z', lighting=False)
     pl.add_mesh(pv.Arrow(start=origin, direction=[1, 0, 0], **arrow_params), 
@@ -81,7 +79,6 @@ def show_motor(motor):
     history = reluctance_network.list_elements_lite
     if not history: return
 
-    # 1. Prepare Mesh
     mesh_obj = reluctance_network.mesh
     grid_sector = mesh_obj.to_pyvista_grid()
     dim_sector = _process_grid_indices(grid_sector)
@@ -98,7 +95,6 @@ def show_motor(motor):
     else:
         grid_full = grid_sector
 
-    # 2. Init Plotter
     pl = BackgroundPlotter(title="Integrated Motor Viewer", window_size=(1600, 900))
     pl.set_background("#FFFFFF")
     
@@ -115,20 +111,22 @@ def show_motor(motor):
 
     class ViewerState:
         def __init__(self):
-            # UI References
             self.ref_act_geo = None
             self.ref_act_bmap = None
             
             self.current_frame = 0
             self.total_frames = len(history)
             self.is_playing = False
-            self.bmap_mode = False
-            self.use_symmetry = (sym_factor > 1)
+            
+            # --- KHỞI TẠO THEO YÊU CẦU ---
+            self.bmap_mode = True           # Bắt đầu với B-Map
+            self.show_geometry = False      # Tắt Geometry khi xem B-Map
+            self.use_symmetry = False       # Symmetry mặc định OFF
+            self.show_i = False             # Tắt xem lớp R
+            self.show_j = False             # Tắt xem lớp Th
+            self.show_k = False             # Tắt xem lớp Z
             
             self.pos_i, self.pos_j, self.pos_k = 0, 0, 0
-            self.show_i, self.show_j, self.show_k = False, False, True
-            
-            self.show_geometry = True
             self.show_mesh_lines = False
             self.show_axes = True
             self.axes_scale = 1.0
@@ -182,15 +180,12 @@ def show_motor(motor):
                 self._actors["static_mesh_wire"].SetVisibility(self.show_mesh_lines)
 
         def update_static_visibility(self):
-            # Geometry
             if geometry_obj:
                 for idx in range(len(geometry_obj.geometry)):
                     if f"geo_{idx}" in self._actors: 
                         self._actors[f"geo_{idx}"].SetVisibility(self.show_geometry)
-            # Mesh
             if "static_mesh_wire" in self._actors: 
                 self._actors["static_mesh_wire"].SetVisibility(self.show_mesh_lines)
-            # Axes
             for n in ['axis_z', 'axis_r', 'axis_arc', 'axis_tip_th']:
                 if n in self._actors: self._actors[n].SetVisibility(self.show_axes)
             if hasattr(pl, '_labels_actor') and pl._labels_actor:
@@ -202,8 +197,8 @@ def show_motor(motor):
             if state: 
                 self.bmap_mode = False
                 if self.ref_act_bmap: self.ref_act_bmap.setChecked(False)
-                self.render()
             self.update_static_visibility()
+            self.render()
 
         def toggle_bmap_btn(self, state):
             self.bmap_mode = state
@@ -276,7 +271,7 @@ def show_motor(motor):
                 target = render_mesh if has_sel else render_mesh.threshold(0.1, scalars="MatID")
                 if target.n_cells > 0:
                     self._safe_add(target, scalars="FluxB", cmap="jet", clim=[0, 2.0],
-                                   lighting=False, scalar_bar_args=sargs, show_scalar_bar=True, name="dynamic_mesh")
+                                    lighting=False, scalar_bar_args=sargs, show_scalar_bar=True, name="dynamic_mesh")
                 else: self._safe_remove("dynamic_mesh")
             else:
                 self._safe_remove("dynamic_mesh")
@@ -286,7 +281,7 @@ def show_motor(motor):
                         sub = render_mesh.threshold([mid, mid], scalars="MatID")
                         op = 1.0 if has_sel else (0.05 if mid == 0 else 1.0)
                         self._safe_add(sub, color=col, opacity=op, lighting=True,
-                                       show_edges=True, edge_color="#333333", name=f"mat_{mid}")
+                                        show_edges=True, edge_color="#333333", name=f"mat_{mid}")
                     except: self._safe_remove(f"mat_{mid}")
             self.update_text_info()
             pl.render()
@@ -322,23 +317,18 @@ def show_motor(motor):
     state.render()
     pl.reset_camera()
 
-    # --- 3. UI INTEGRATION: VIEW MENU ---
-    # TÌM VÀ XÓA CÁC ITEM MẶC ĐỊNH CỦA PYVISTAQT TRONG MENU VIEW
     menubar = pl.app_window.menuBar()
     view_menu = None
-    
-    # Tìm menu View
     for action in menubar.actions():
         if "View" in action.text():
             view_menu = action.menu()
             break
     
-    # XÓA SẠCH VÀ THÊM LẠI
     if view_menu:
-        view_menu.clear() # Lệnh quan trọng nhất để xóa các mục mặc định
+        view_menu.clear() 
         
-        # Thêm mục của chúng ta
-        act_geo = QAction("Show Geometry", pl.app_window); act_geo.setCheckable(True); act_geo.setChecked(True)
+        # Geometry: Mặc định False
+        act_geo = QAction("Show Geometry", pl.app_window); act_geo.setCheckable(True); act_geo.setChecked(False)
         act_geo.triggered.connect(state.toggle_geometry_btn); view_menu.addAction(act_geo)
         state.ref_act_geo = act_geo
         
@@ -349,47 +339,39 @@ def show_motor(motor):
         act_axes.triggered.connect(state.toggle_axes_btn); view_menu.addAction(act_axes)
         
         if sym_factor > 1:
-            act_sym = QAction("Enable Symmetry", pl.app_window); act_sym.setCheckable(True); act_sym.setChecked(True)
+            # Symmetry: Mặc định False
+            act_sym = QAction("Enable Symmetry", pl.app_window); act_sym.setCheckable(True); act_sym.setChecked(False)
             act_sym.triggered.connect(state.toggle_symmetry_btn); view_menu.addAction(act_sym)
             
-        act_bmap = QAction("Show B-Map (Flux)", pl.app_window); act_bmap.setCheckable(True)
+        # B-Map: Mặc định True
+        act_bmap = QAction("Show B-Map (Flux)", pl.app_window); act_bmap.setCheckable(True); act_bmap.setChecked(True)
         act_bmap.triggered.connect(state.toggle_bmap_btn); view_menu.addAction(act_bmap)
         state.ref_act_bmap = act_bmap
 
         view_menu.addSeparator()
-        
-        # Scale Axes Submenu
         scale_menu = view_menu.addMenu("Scale Axes")
-        act_inc = QAction("Increase Size (+)", pl.app_window)
-        act_inc.triggered.connect(lambda: state.resize_axes(1))
-        scale_menu.addAction(act_inc)
-        act_dec = QAction("Decrease Size (-)", pl.app_window)
-        act_dec.triggered.connect(lambda: state.resize_axes(-1))
-        scale_menu.addAction(act_dec)
-        
+        act_inc = QAction("Increase Size (+)", pl.app_window); act_inc.triggered.connect(lambda: state.resize_axes(1)); scale_menu.addAction(act_inc)
+        act_dec = QAction("Decrease Size (-)", pl.app_window); act_dec.triggered.connect(lambda: state.resize_axes(-1)); scale_menu.addAction(act_dec)
         view_menu.addSeparator()
         act_hd = QAction("Screenshot HD", pl.app_window); act_hd.triggered.connect(state.save_screenshot_hd); view_menu.addAction(act_hd)
 
-    # --- 4. TOOLBAR ---
     tb = pl.app_window.addToolBar("Playback & Slicing")
-    
     def add_slice(label, attr_show, attr_pos, check=False):
         a = QAction(label, pl.app_window); a.setCheckable(True); a.setChecked(check)
         a.triggered.connect(lambda s: (setattr(state, attr_show, s), state.render()))
         tb.addAction(a)
-        
         l_attr = f"max_{attr_pos.split('_')[1]}"
         dec = QAction("-", pl.app_window); dec.triggered.connect(lambda: (setattr(state, attr_pos, np.clip(getattr(state, attr_pos)-1, 0, getattr(state, l_attr)-1)), state.render())); tb.addAction(dec)
         inc = QAction("+", pl.app_window); inc.triggered.connect(lambda: (setattr(state, attr_pos, np.clip(getattr(state, attr_pos)+1, 0, getattr(state, l_attr)-1)), state.render())); tb.addAction(inc)
         tb.addWidget(QWidget())
 
-    add_slice("R", 'show_i', 'pos_i')
-    add_slice("Th", 'show_j', 'pos_j')
-    add_slice("Z", 'show_k', 'pos_k', True)
+    # Tất cả các lớp (R, Th, Z) mặc định là False để xem Panorama
+    add_slice("R", 'show_i', 'pos_i', False)
+    add_slice("Th", 'show_j', 'pos_j', False)
+    add_slice("Z", 'show_k', 'pos_k', False)
     
     tb.addSeparator()
-    act_play = QAction(pl.app.style().standardIcon(QStyle.SP_MediaPlay), "", pl.app_window)
-    act_play.triggered.connect(state.toggle_play); tb.addAction(act_play)
+    act_play = QAction(pl.app.style().standardIcon(QStyle.SP_MediaPlay), "", pl.app_window); act_play.triggered.connect(state.toggle_play); tb.addAction(act_play)
     act_gif = QAction("GIF", pl.app_window); act_gif.triggered.connect(state.save_gif); tb.addAction(act_gif)
 
     pl.show()

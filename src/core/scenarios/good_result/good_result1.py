@@ -57,7 +57,7 @@ if re_solve:
     for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
         aft.reluctance_network.solve(method = "adaptive_broyden",
               max_iteration=100,
-              max_relative_residual = 0.005,
+              max_relative_residual = 0.01,
               material_relax=0.2, 
               damping_factor = 1.0,   
               debug = True)
