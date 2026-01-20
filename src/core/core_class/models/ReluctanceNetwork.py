@@ -94,6 +94,8 @@ class ReluctanceNetwork:
     
     def solve(self,
               method = "fixed_point_iteration",
+              load_step = 1,
+              max_relative_residual = 0.05,
               max_iteration=50,
               material_relax=0.5, 
               damping_factor = 0.05,   
@@ -101,6 +103,8 @@ class ReluctanceNetwork:
         
         solve(reluctance_network= self,
               method= method,
+              load_step = load_step,
+              max_relative_residual = 0.05,
               max_iteration= max_iteration,
               material_relax= material_relax,
               damping_factor= damping_factor,

@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 *.ini
 *.spec
+.venv/
 build/
 dist/
-docs
+docs/

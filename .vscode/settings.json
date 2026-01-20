@@ -5,8 +5,8 @@
         "**/*.pyo": true,
         "**/*.pyd": true,
         "**/*.ini": true,
-        "**/*.gitignore": true,
-        "**/*.project_root": true
+        //"**/*.gitignore": true,
+        //"**/*.project_root": true
     },
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000,   

@@ -28,3 +28,7 @@ pympler
 
 # --- Distribution/Packaging ---
 pyinstaller
+
+# ansys maxwell
+pyaedt
+ansys-aedt-core
