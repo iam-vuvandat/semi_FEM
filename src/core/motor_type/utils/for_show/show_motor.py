@@ -275,7 +275,7 @@ def show_motor(motor):
                 for mid in range(5): self._safe_remove(f"mat_{mid}")
                 target = render_mesh if has_sel else render_mesh.threshold(0.1, scalars="MatID")
                 if target.n_cells > 0:
-                    self._safe_add(target, scalars="FluxB", cmap="jet", clim=[0, 1.5],
+                    self._safe_add(target, scalars="FluxB", cmap="jet", clim=[0, 2.0],
                                    lighting=False, scalar_bar_args=sargs, show_scalar_bar=True, name="dynamic_mesh")
                 else: self._safe_remove("dynamic_mesh")
             else:

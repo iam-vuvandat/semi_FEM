@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import math
 pi = math.pi
 
-re_create_motor = False
+re_create_motor = True
 re_solve = True
 plot = False
 show_reluctance = True
@@ -21,25 +21,26 @@ if not re_create_motor:
         aft.reluctance_network.list_elements_lite = None
 else:
     aft = AxialFluxMotorType1(magnet_length= 3.5 * 1e-3,
-                              airgap=1.0 * 1e-3,
+                              airgap=0.5 * 1e-3,
                               stator_length = 25* 1e-3,
-                              rotor_length = 6 * 1e-3)
+                              rotor_length = 10 * 1e-3)
+    
     aft.create_geometry()
 
     aft.create_adaptive_mesh(n_r_in              =2,
-                         n_r_1                   =3,
-                         n_r_2                   =15,
-                         n_r_3                   =3,
+                         n_r_1                   =4,
+                         n_r_2                   =8,
+                         n_r_3                   =4,
                          n_r_out                 =2,
                          n_theta                 =80,
                          n_z_in_air              =2,
-                         n_z_rotor_yoke          =3,
+                         n_z_rotor_yoke          =5,
                          n_z_magnet              =3,
                          n_z_airgap              =3,
                          n_z_tooth_tip_1         =3,
-                         n_z_tooth_tip_2         =3,
-                         n_z_tooth_body          =6,
-                         n_z_stator_yoke         =3,
+                         n_z_tooth_tip_2         =5,
+                         n_z_tooth_body          =8,
+                         n_z_stator_yoke         =5,
                          n_z_out_air             =2, 
                          use_symmetry_factor=True,
                          periodic_boundary=True)
@@ -57,9 +58,9 @@ if re_solve:
     for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
         aft.reluctance_network.solve(method = "broyden",
               max_iteration=100,
-              max_relative_residual = 0.05,
+              max_relative_residual = 0.01,
               material_relax=0.2, 
-              damping_factor = 0.2,   
+              damping_factor = 1.0,   
               debug = True)
         
         if n_step_solve != 1:

@@ -25,7 +25,10 @@ class ElementInfo:
     # Row 1: Segment Info (Geometry size)
     dimension: np.ndarray = field(default_factory=lambda: np.zeros((2, 3)))
 
-def extract_element_info(position: tuple, geometry: Any, mesh: Any) -> Optional[ElementInfo]:
+def extract_element_info(position: tuple, 
+                         geometry: Any, 
+                         mesh: Any) -> Optional[ElementInfo]:
+    
     if not isinstance(position, (tuple, list)) or len(position) != 3:
         raise TypeError("Position phải là tuple (i_r, i_t, i_z)")
 
