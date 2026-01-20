@@ -1,4 +1,5 @@
 from src.core.solver.utils.fixed_point_iteration_for_magnetic_potential import fix_point_iteration_for_magnetic_potential
+from src.core.solver.utils.adaptive_broyden_iteration_for_magnetic_potential import adaptive_broyden_iteration_for_magnetic_potential
 from src.core.solver.utils.broyden_iteration_for_magnetic_potential import broyden_iteration_for_magnetic_potential
 def solve(reluctance_network,
           method = "fixed_point_iteration",
@@ -41,5 +42,14 @@ def solve(reluctance_network,
                                                      max_relative_residual = max_relative_residual,
                                                      damping_factor= damping_factor,
                                                      debug = debug)
+    elif method == "adaptive_broyden":
+        if reluctance_network.system_variable == "magnetic_potential":
+            adaptive_broyden_iteration_for_magnetic_potential(reluctance_network= reluctance_network,
+                                                     max_iteration= max_iteration,
+                                                     material_relax = material_relax,
+                                                     max_relative_residual = max_relative_residual,
+                                                     damping_factor= damping_factor,
+                                                     debug = debug)
+
     else:
         print("method is undefined")

@@ -19,10 +19,10 @@ if not re_create_motor:
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length= 3.5 * 1e-3,
+    aft = AxialFluxMotorType1(magnet_length= 4.0 * 1e-3,
                               airgap=0.5 * 1e-3,
-                              stator_length = 25* 1e-3,
-                              rotor_length = 10 * 1e-3)
+                              stator_length = 23* 1e-3,
+                              rotor_length = 5 * 1e-3)
     
     aft.create_geometry()
 
@@ -33,13 +33,13 @@ else:
                          n_r_out                 =2,
                          n_theta                 =80,
                          n_z_in_air              =2,
-                         n_z_rotor_yoke          =5,
+                         n_z_rotor_yoke          =6,
                          n_z_magnet              =3,
                          n_z_airgap              =3,
                          n_z_tooth_tip_1         =3,
                          n_z_tooth_tip_2         =5,
                          n_z_tooth_body          =8,
-                         n_z_stator_yoke         =5,
+                         n_z_stator_yoke         =6,
                          n_z_out_air             =2, 
                          use_symmetry_factor=True,
                          periodic_boundary=True)
@@ -55,9 +55,9 @@ if re_solve:
     flux_linkage = np.zeros((4, n_step_solve))
     
     for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
-        aft.reluctance_network.solve(method = "broyden",
+        aft.reluctance_network.solve(method = "adaptive_broyden",
               max_iteration=100,
-              max_relative_residual = 0.01,
+              max_relative_residual = 0.005,
               material_relax=0.2, 
               damping_factor = 1.0,   
               debug = True)

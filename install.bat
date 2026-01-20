@@ -1,40 +1,39 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Virtual Environment Setup
+title MBGRN Auto-Setup
 echo [+] Checking system requirements...
 
-:: 1. Check/Install Python 3.10
+:: 1. Kiem tra Python (Khong dung khoi lenh phuc tap de tranh loi syntax)
 python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [!] Python not found. Installing Python 3.10...
-    winget install -e --id Python.Python.3.10 --scope machine
-    echo PLEASE RESTART this script after installation.
+if errorlevel 1 (
+    echo [!] Installing Python 3.10...
+    winget install -e --id Python.Python.3.10 --scope machine --silent
+    echo Vui long mo lai VS Code sau khi cai dat xong.
     pause
     exit /b
 )
 
-:: 2. Create and Upgrade .venv
+:: 2. Tao moi truong ao
 if not exist .venv (
     echo [+] Creating virtual environment...
     python -m venv .venv
 )
+
+:: 3. Cai dat thu vien (Dung lenh don gian de khong bi loi unexpected)
+echo [+] Upgrading pip...
 .venv\Scripts\python.exe -m pip install --upgrade pip --quiet
 
-:: 3. Install Requirements
 if exist requirements.txt (
     echo [+] Installing packages...
-    for /f "usebackq delims=" %%i in ("requirements.txt") do (
-        set "line=%%i"
-        if "!line:~0,1!" neq "#" if "!line!" neq "" (
-            .venv\Scripts\pip.exe install "%%i" --no-warn-script-location
-        )
-    )
+    .venv\Scripts\pip.exe install -r requirements.txt --no-warn-script-location --quiet
 )
 
-:: 4. Force VS Code to Select .venv and Enable Auto-Activation
-echo [+] Configuring VS Code Interpreter...
-powershell -NoProfile -Command "$d='.vscode'; if(!(Test-Path $d)){New-Item $d -ItemType Directory -Force | Out-Null}; $f='.vscode/settings.json'; $s=if(Test-Path $f){$j=(Get-Content $f -Raw) -replace '//.*','' -replace ',\s*([}\]])','$1'; $j | ConvertFrom-Json}else{New-Object PSObject}; $s | Add-Member -NotePropertyName 'python.defaultInterpreterPath' -NotePropertyValue './.venv/Scripts/python.exe' -Force; $s | Add-Member -NotePropertyName 'python.terminal.activateEnvironment' -NotePropertyValue $true -Force; $s | Add-Member -NotePropertyName 'python.analysis.extraPaths' -NotePropertyValue @('./src') -Force; $s | ConvertTo-Json | Set-Content $f"
+:: 4. FIX LOI IMPORT & KHOA INTERPRETER
+:: Tao file .env de sua loi 'No module named system'
+echo PYTHONPATH=src > .env
 
-echo [+] Setup finished! Opening environment...
-:: Kết thúc mà không pause để VS Code nhận diện cấu hình mới ngay lập tức
+echo [+] Configuring VS Code...
+powershell -NoProfile -Command "$d='.vscode'; if(!(Test-Path $d)){New-Item $d -ItemType Directory -Force | Out-Null}; $f='.vscode/settings.json'; $s=if(Test-Path $f){$j=(Get-Content $f -Raw) -replace '//.*','' -replace ',\s*([}\]])','$1'; $j | ConvertFrom-Json}else{New-Object PSObject}; $s | Add-Member -NotePropertyName 'python.defaultInterpreterPath' -NotePropertyValue '${workspaceFolder}/.venv/Scripts/python.exe' -Force; $s | Add-Member -NotePropertyName 'python.terminal.activateEnvironment' -NotePropertyValue $true -Force; $s | Add-Member -NotePropertyName 'python.envFile' -NotePropertyValue '${workspaceFolder}/.env' -Force; $s | Add-Member -NotePropertyName 'python.analysis.extraPaths' -NotePropertyValue @('./src') -Force; $s | ConvertTo-Json | Set-Content $f"
+
+echo [+] SETUP SUCCESSFUL!
 exit /b 0
