@@ -8,8 +8,8 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
                                                        damping_factor=0.5,   
                                                        debug=True):
     
-    ADAPTIVE_FACTOR_1 = 0.15
-    ADAPTIVE_FACTOR_2 = 0.7
+    ADAPTIVE_FACTOR_1 = 0.2
+    ADAPTIVE_FACTOR_2 = 0.5
 
     G_c, Y_c, R_c, C_c, B_c, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[96m", "\033[94m", "\033[0m"
 
@@ -76,14 +76,14 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
         relax_changed = False
         if phi_true < ADAPTIVE_FACTOR_1:
             if not threshold_triggered:
-                current_relax = material_relax * ADAPTIVE_FACTOR_1
+                current_relax = material_relax * ADAPTIVE_FACTOR_2
                 threshold_triggered = True
                 relax_changed = True
-                if debug: print(f"{Y_c} >>> ADAPTIVE: Residual < 10%, Relax halved to {current_relax}{RESET}")
+                if debug: print(f"{Y_c} >>> ADAPTIVE: Residual < {ADAPTIVE_FACTOR_1}, Relax halved to {current_relax}{RESET}")
             elif not np.isnan(contraction_L) and contraction_L > 0.9:
-                current_relax *= 0.6
+                current_relax *= ADAPTIVE_FACTOR_2
                 relax_changed = True
-                if debug: print(f"{Y_c} >>> ADAPTIVE: L > 0.9, Relax scaled to {current_relax}{RESET}")
+                if debug: print(f"{Y_c} >>> ADAPTIVE: L > 0.9, Relax decreased to {current_relax}{RESET}")
 
         if phi_true < best_phi:
             improvement = best_phi - phi_true

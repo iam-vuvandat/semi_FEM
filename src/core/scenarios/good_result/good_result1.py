@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import math
 pi = math.pi
 
-re_create_motor = True
+re_create_motor = False
 re_solve = True
 plot = False
 show_reluctance = True
