@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Auto Initialize MBGRN",
+            "label": "1. Setup Virtual Environment",
             "type": "shell",
             "command": "cmd /c install.bat",
             "runOptions": {
@@ -14,6 +14,24 @@
                 "focus": true
             },
             "group": "none"
+        },
+        {
+            "label": "2. Run Python in .venv",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "${file}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "problemMatcher": []
         }
     ]
-}
+}  

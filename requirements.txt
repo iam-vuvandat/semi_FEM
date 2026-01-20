@@ -31,4 +31,3 @@ pyinstaller
 
 # ansys maxwell
 pyaedt
-ansys-aedt-core
