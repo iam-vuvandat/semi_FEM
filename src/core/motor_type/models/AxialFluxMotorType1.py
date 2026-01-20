@@ -59,6 +59,7 @@ class AxialFluxMotorType1:
                  # equation type
                  system_variable = "magnetic_potential"):
         
+        self.type ="axial_flux_motor_type_1"
         # --- Gán Radial Stator Parameters ---
         self.slot_number = slot_number
         self.stator_lam_dia = stator_lam_dia

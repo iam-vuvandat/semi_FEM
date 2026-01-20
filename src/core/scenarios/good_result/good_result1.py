@@ -1,7 +1,8 @@
 import paths
 import time
 from src.core.motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
-from src.core.storage.core import workspace 
+from src.core.storage.core import workspace , motor_io
+
 from src.core.solver.utils.periodic_derivative import periodic_derivative
 from tqdm import tqdm
 import numpy as np
@@ -10,12 +11,12 @@ import math
 pi = math.pi
 
 re_create_motor = False
-re_solve = True
+re_solve = False
 plot = False
 show_reluctance = True
 
 if not re_create_motor:
-    aft = workspace.load("aft765")
+    aft = motor_io.load_motor(filename= "motor7997")
     if re_solve:
         aft.reluctance_network.list_elements_lite = None
 else:
@@ -45,7 +46,7 @@ else:
                          periodic_boundary=True)
     
     aft.create_reluctance_network()
-    workspace.save(aft765=aft)
+    motor_io.save_motor(motor_obj=aft,filename="motor7997")
 
 if re_solve:
     n_theta = aft.mesh.detail_parameter[5] - 1 
@@ -71,7 +72,7 @@ if re_solve:
             shaft_speed *= 2*pi / 60 # rad/s
             aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
             
-    workspace.save(aft765=aft)
+    motor_io.save_motor(motor_obj=aft,filename="motor7997")
 
 if plot:
     flux_linkage=aft.record.flux_linkage

@@ -4,6 +4,11 @@
                           "**/*.pyc":  true,
                           "**/*.pyo":  true,
                           "**/*.pyd":  true,
+                          "**/*.venv":  true,
+                          "**/*.env":  true,
+                          "**/*.project_root":  true,
+                          "**/*.gitignore":  true,
+                          "**/*.bat":  true,
                           "**/*.ini":  true
                       },
     "files.autoSave":  "afterDelay",
