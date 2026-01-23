@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
         self.setMenuBar(self.main_menu)
 
         self.widget = Widget(main_window=self)
+        self.setCentralWidget(self.widget)
         
 
 

@@ -24,14 +24,15 @@ def set_ieee_style():
     })
 
 def test():
+    import paths
     current_file = os.path.abspath(__file__)
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 
     if root_dir not in sys.path:
         sys.path.append(root_dir)
 
-    from material.core.lookup_BH_curve import lookup_BH_curve
-    from material.models.MaterialDataBase import MaterialDataBase
+    from src.core.material.core.lookup_BH_curve import lookup_BH_curve
+    from src.core.material.models.MaterialDataBase import MaterialDataBase
 
     material_database = MaterialDataBase()
     B_input = np.linspace(-3.0, 3.0, 2000)

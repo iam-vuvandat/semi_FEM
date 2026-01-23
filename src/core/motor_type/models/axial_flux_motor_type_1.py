@@ -7,6 +7,8 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import r
 from src.core.motor_type.models.Record import Record
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 from src.core.motor_type.utils.for_show.show_motor import show_motor
+from src.core.motor_type.utils.for_create_geometry.reload import reload
+
 import pyvista as pv
 import math
 pi = math.pi
@@ -102,12 +104,12 @@ class AxialFluxMotorType1:
         self.winding_matrix = winding_matrix
 
         # Hệ số tuần hoàn 
-        symmetry_data = find_symmetry_factor(self)
-        self.symmetry_factor = symmetry_data.symmetry_factor
+        self.symmetry_factor = None
+        self.find_symmetry_factor()
 
         # Ma trận dây quấn
-        winding_data = find_winding_matrix(self)
-        self.winding_matrix = winding_data.winding_matrix
+        self.winding_matrix = None
+        self.find_winding_matrix()
 
         # Vật liệu 
         self.material_database = MaterialDataBase(air=air,
@@ -126,7 +128,20 @@ class AxialFluxMotorType1:
         self.reluctance_network = None
         self.record = Record()
 
-    
+    def reload(self):
+        reload(motor= self)
+
+    def find_symmetry_factor(self):
+        symmetry_data = find_symmetry_factor(motor= self)
+        self.symmetry_factor = symmetry_data.symmetry_factor
+
+
+    def find_winding_matrix(self):
+        winding_data = find_winding_matrix(motor=self)
+        self.winding_matrix = winding_data.winding_matrix
+
+
+
     def create_geometry(self,
                         rotor_angle_offset = 0,
                         stator_angle_offset = 0,

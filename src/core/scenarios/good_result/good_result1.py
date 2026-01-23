@@ -1,6 +1,6 @@
 import paths
 import time
-from src.core.motor_type.models.AxialFluxMotorType1 import AxialFluxMotorType1
+from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 from src.core.storage.core import motor_io
 
 from src.core.solver.utils.periodic_derivative import periodic_derivative
@@ -53,7 +53,7 @@ if re_solve:
     n_theta = aft.mesh.detail_parameter[5] - 1 
     n_step_shift =6
     n_step_solve = int(n_theta // n_step_shift)
-    #n_step_solve = 1
+    n_step_solve = 1
     flux_linkage = np.zeros((4, n_step_solve))
     
     for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
@@ -115,6 +115,7 @@ if plot:
     plt.show()
 
 if show_reluctance:
+    aft.geometry.show()
     aft.display()
     
 
