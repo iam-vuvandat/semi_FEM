@@ -10,5 +10,6 @@ def reload(motor):
                           create_tooth = True,
                           create_stator_yoke = True)
     motor.mesh     = None
+    motor.create_adaptive_mesh()
     motor.reluctance_network = None
     motor.record = None

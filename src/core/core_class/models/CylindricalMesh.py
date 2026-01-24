@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 
 class CylindricalMesh:
-    def __init__(self, r_nodes=None, theta_nodes=None, z_nodes=None, periodic_boundary=True, detail_parameter=None):
+    def __init__(self, r_nodes=None, theta_nodes=None, z_nodes=None, periodic_boundary=True, adaptive_mesh_data = None):
         if r_nodes is None: r_nodes = np.linspace(0, 1, 2)
         if theta_nodes is None: theta_nodes = np.linspace(0, np.pi, 2)
         if z_nodes is None: z_nodes = np.linspace(0, 1, 2)
@@ -25,7 +25,7 @@ class CylindricalMesh:
         self.R, self.Theta, self.Z = np.meshgrid(self.r_nodes, self.theta_nodes, self.z_nodes, indexing='ij')
         self.X = self.R * np.cos(self.Theta)
         self.Y = self.R * np.sin(self.Theta)
-        self.detail_parameter = detail_parameter
+        self.adaptive_mesh_data = adaptive_mesh_data
 
     def get_cell_centers(self):
         r_c = (self.r_nodes[:-1] + self.r_nodes[1:]) / 2

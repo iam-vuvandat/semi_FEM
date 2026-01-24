@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import math
 pi = math.pi
 
-re_create_motor = False
-re_solve = False
+re_create_motor = True
+re_solve = True
 plot = False
 show_reluctance = True
 filename = "motor_ngon_1"
@@ -28,29 +28,13 @@ else:
     
     aft.create_geometry()
 
-    aft.create_adaptive_mesh(n_r_in              =2,
-                         n_r_1                   =3,
-                         n_r_2                   =7,
-                         n_r_3                   =3,
-                         n_r_out                 =2,
-                         n_theta                 =120,
-                         n_z_in_air              =2,
-                         n_z_rotor_yoke          =4,
-                         n_z_magnet              =2,
-                         n_z_airgap              =4,
-                         n_z_tooth_tip_1         =2,
-                         n_z_tooth_tip_2         =3,
-                         n_z_tooth_body          =5,
-                         n_z_stator_yoke         =4,
-                         n_z_out_air             =2, 
-                         use_symmetry_factor=True,
-                         periodic_boundary=True)
+    aft.create_adaptive_mesh()
     
     aft.create_reluctance_network()
     motor_io.save_motor(motor_obj=aft,filename=filename)
 
 if re_solve:
-    n_theta = aft.mesh.detail_parameter[5] - 1 
+    n_theta = aft.mesh.adaptive_mesh_data.n_theta - 1 
     n_step_shift =6
     n_step_solve = int(n_theta // n_step_shift)
     n_step_solve = 1

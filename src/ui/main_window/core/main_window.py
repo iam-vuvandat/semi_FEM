@@ -17,12 +17,18 @@ class MainWindow(QMainWindow):
         general_setup(main_window=self)
         self.motor = None
 
+        self.main_menu = None
+        self.widget = None
+
+        self.reload()
+        
+        
+    def reload(self):
         self.main_menu = MainMenu(main_window=self)
         self.setMenuBar(self.main_menu)
 
         self.widget = Widget(main_window=self)
         self.setCentralWidget(self.widget)
-        
 
 
         

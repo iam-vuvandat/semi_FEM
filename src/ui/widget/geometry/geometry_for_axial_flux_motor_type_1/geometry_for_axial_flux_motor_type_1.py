@@ -9,8 +9,8 @@ class GeometryForAxialFluxType1(QWidget):
         super().__init__(parent_widget)
         self.parent_widget = parent_widget
         self.main_window = self.parent_widget.main_window
-
-        self.main_window.motor = AxialFluxMotorType1()
+        if self.main_window.motor is None:
+            self.main_window.motor = AxialFluxMotorType1()
         
         # Các thuộc tính UI cần quản lý
         self.motor_type_combo = None

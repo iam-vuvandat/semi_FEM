@@ -4,7 +4,7 @@ from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
 from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
-from src.core.motor_type.models.Container import Container
+from core.motor_type.models.Container import Record
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
@@ -126,24 +126,7 @@ class AxialFluxMotorType1:
         self.geometry = None
         self.mesh     = None
         self.reluctance_network = None
-        self.record = Container()
-        self.adaptive_mesh_data = Container(n_r_in =2,
-                                            n_r_1                  =3,
-                                            n_r_2                  =6,
-                                            n_r_3                  =3,
-                                            n_r_out                =2,
-                                            n_theta                =70,
-                                            n_z_in_air             =2,
-                                            n_z_rotor_yoke         =3,
-                                            n_z_magnet             =3,
-                                            n_z_airgap             =3,
-                                            n_z_tooth_tip_1        =3,
-                                            n_z_tooth_tip_2        =3,
-                                            n_z_tooth_body         =6, 
-                                            n_z_stator_yoke        =3,
-                                            n_z_out_air            =2,
-                                            use_symmetry_factor    =True,
-                                            periodic_boundary      =True)
+        self.record = Record()
 
     def reload(self):
         reload(motor= self)
@@ -174,16 +157,60 @@ class AxialFluxMotorType1:
                                         create_magnet=create_magnet,
                                         create_tooth=create_tooth,
                                         create_stator_yoke=create_stator_yoke)
-                                        
-    
 
-    def create_adaptive_mesh(self):
-        self.mesh = create_adaptive_mesh(motor=self)
+    def create_adaptive_mesh(self,
+                         n_r_in                       =2,
+                         n_r_1                        =3,
+                         n_r_2                        =6,
+                         n_r_3                        =3,
+                         n_r_out                      =2,
+                         n_theta                      =70,
+                         n_z_in_air                   =2,
+                         n_z_rotor_yoke               =3,
+                         n_z_magnet                   =3,
+                         n_z_airgap                   =3,
+                         n_z_tooth_tip_1              =3,
+                         n_z_tooth_tip_2              =3,
+                         n_z_tooth_body               =6,
+                         n_z_stator_yoke              =3,
+                         n_z_out_air                  =2,
+                         use_symmetry_factor=True,
+                         periodic_boundary=True):
+        """
+        Tạo lưới thích ứng (Adaptive Mesh) cho động cơ.
+        Các tham số đầu vào sẽ ghi đè lên giá trị mặc định.
+        """
+        # Gọi hàm tạo lưới và truyền đúng các biến số vào (không hardcode số)
+        self.mesh = create_adaptive_mesh(
+            motor=self,
+            n_r_in=n_r_in,
+            n_r_1=n_r_1,
+            n_r_2=n_r_2,
+            n_r_3=n_r_3,
+            n_r_out=n_r_out,
+            n_theta=n_theta,
+            n_z_in_air=n_z_in_air,
+            n_z_rotor_yoke=n_z_rotor_yoke,
+            n_z_magnet=n_z_magnet,
+            n_z_airgap=n_z_airgap,
+            n_z_tooth_tip_1=n_z_tooth_tip_1,
+            n_z_tooth_tip_2=n_z_tooth_tip_2,
+            n_z_tooth_body=n_z_tooth_body,
+            n_z_stator_yoke=n_z_stator_yoke,
+            n_z_out_air=n_z_out_air,
+            use_symmetry_factor=use_symmetry_factor,
+            periodic_boundary=periodic_boundary
+        )
         
+        return self.mesh
+    
     def create_reluctance_network(self):
         self.reluctance_network = ReluctanceNetwork(motor = self,
                                                     geometry=self.geometry,
-                                                    mesh = self.mesh)
+                                                    mesh = self.mesh
+                                                    )
+        
+        return self.reluctance_network
     
     def rotate_rotor(self,n_step):
         rotate_rotor(motor = self,

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class Record:
+class Container:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)

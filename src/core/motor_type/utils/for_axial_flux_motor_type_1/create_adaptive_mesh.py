@@ -1,4 +1,4 @@
-from typing import Any
+from src.core.motor_type.models.Container import Container
 from src.core.core_class.models.CylindricalMesh import CylindricalMesh
 from dataclasses import dataclass
 import numpy as np
@@ -7,34 +7,30 @@ import math
 pi = math.pi
 
 
-def create_adaptive_mesh(motor,
-                         n_r_in=3,
-                         n_r_1=4,
-                         n_r_2=4,
-                         n_r_3=4,
-                         n_r_out=3,
-                         n_theta=180,
-                         n_z_in_air=3,
-                         n_z_rotor_yoke=4,
-                         n_z_magnet=4,
-                         n_z_airgap=5,
-                         n_z_tooth_tip_1=1,
-                         n_z_tooth_tip_2=4,
-                         n_z_tooth_body=4,
-                         n_z_stator_yoke=3,
-                         n_z_out_air=3,
-                         use_symmetry_factor=True,
-                         periodic_boundary=True):
+def create_adaptive_mesh(motor):
     
-    # Trích xuất thông tin sử dụng sau:
-    detail_parameter = [
-        n_r_in, n_r_1, n_r_2, n_r_3, n_r_out,
-        n_theta,
-        n_z_in_air, n_z_rotor_yoke, n_z_magnet, n_z_airgap,
-        n_z_tooth_tip_1, n_z_tooth_tip_2, n_z_tooth_body,
-        n_z_stator_yoke, n_z_out_air,
-        use_symmetry_factor, periodic_boundary
-    ]
+    # extract data
+    adaptive_mesh_data = motor.adaptive_mesh_data
+
+    n_r_in= adaptive_mesh_data.n_r_in
+    n_r_1=adaptive_mesh_data.n_r_1
+    n_r_2=adaptive_mesh_data.n_r_2
+    n_r_3=adaptive_mesh_data.n_r_3
+    n_r_out=adaptive_mesh_data.n_r_out
+    n_theta=adaptive_mesh_data.n_theta
+    n_z_in_air=adaptive_mesh_data.n_z_in_air
+    n_z_rotor_yoke=adaptive_mesh_data.n_z_rotor_yoke
+    n_z_magnet=adaptive_mesh_data.n_z_magnet
+    n_z_airgap=adaptive_mesh_data.n_z_airgap
+    n_z_tooth_tip_1=adaptive_mesh_data.n_z_tooth_tip_1
+    n_z_tooth_tip_2=adaptive_mesh_data.n_z_tooth_tip_2
+    n_z_tooth_body=adaptive_mesh_data.n_z_tooth_body
+    n_z_stator_yoke=adaptive_mesh_data.n_z_stator_yoke
+    n_z_out_air=adaptive_mesh_data.n_z_out_air
+    use_symmetry_factor = adaptive_mesh_data.use_symmetry_factor
+    periodic_boundary = adaptive_mesh_data.periodic_boundary
+
+    
 
     # initial check
     if motor.magnet_embed_depth == 0:
@@ -185,4 +181,4 @@ def create_adaptive_mesh(motor,
                            theta_nodes=theta_cordinate,
                            z_nodes=z_cordinate,
                            periodic_boundary=periodic_boundary,
-                           detail_parameter= detail_parameter)
+                           adaptive_mesh_data= adaptive_mesh_data)
