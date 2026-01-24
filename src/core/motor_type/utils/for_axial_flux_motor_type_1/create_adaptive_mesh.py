@@ -6,179 +6,190 @@ import math
 
 pi = math.pi
 
-
 def create_adaptive_mesh(motor):
+    """
+    Generates a 3D cylindrical mesh based on the motor's geometry and discretization parameters.
+    Updated to match the refactored nested Container structure.
+    """
     
-    # extract data
-    adaptive_mesh_data = motor.adaptive_mesh_data
+    # --- 1. DATA EXTRACTION ---
+    # Accessing new containers
+    stator    = motor.geometry_data.stator
+    rotor     = motor.geometry_data.rotor
+    mesh_data = motor.adaptive_mesh_data
 
-    n_r_in= adaptive_mesh_data.n_r_in
-    n_r_1=adaptive_mesh_data.n_r_1
-    n_r_2=adaptive_mesh_data.n_r_2
-    n_r_3=adaptive_mesh_data.n_r_3
-    n_r_out=adaptive_mesh_data.n_r_out
-    n_theta=adaptive_mesh_data.n_theta
-    n_z_in_air=adaptive_mesh_data.n_z_in_air
-    n_z_rotor_yoke=adaptive_mesh_data.n_z_rotor_yoke
-    n_z_magnet=adaptive_mesh_data.n_z_magnet
-    n_z_airgap=adaptive_mesh_data.n_z_airgap
-    n_z_tooth_tip_1=adaptive_mesh_data.n_z_tooth_tip_1
-    n_z_tooth_tip_2=adaptive_mesh_data.n_z_tooth_tip_2
-    n_z_tooth_body=adaptive_mesh_data.n_z_tooth_body
-    n_z_stator_yoke=adaptive_mesh_data.n_z_stator_yoke
-    n_z_out_air=adaptive_mesh_data.n_z_out_air
-    use_symmetry_factor = adaptive_mesh_data.use_symmetry_factor
-    periodic_boundary = adaptive_mesh_data.periodic_boundary
-
+    # Map to long-form variable names for mesh settings
+    nodes_radial_inner       = mesh_data.nodes_radial_inner
+    nodes_radial_region_1    = mesh_data.nodes_radial_region_1
+    nodes_radial_region_2    = mesh_data.nodes_radial_region_2
+    nodes_radial_region_3    = mesh_data.nodes_radial_region_3
+    nodes_radial_outer       = mesh_data.nodes_radial_outer
+    nodes_tangential_theta   = mesh_data.nodes_tangential_theta
+    nodes_axial_inner_air    = mesh_data.nodes_axial_inner_air
+    nodes_axial_rotor_yoke   = mesh_data.nodes_axial_rotor_yoke
+    nodes_axial_magnet       = mesh_data.nodes_axial_magnet
+    nodes_axial_airgap       = mesh_data.nodes_axial_airgap
+    nodes_axial_tooth_tip_1  = mesh_data.nodes_axial_tooth_tip_1
+    nodes_axial_tooth_tip_2  = mesh_data.nodes_axial_tooth_tip_2
+    nodes_axial_tooth_body   = mesh_data.nodes_axial_tooth_body
+    nodes_axial_stator_yoke  = mesh_data.nodes_axial_stator_yoke
+    nodes_axial_outer_air    = mesh_data.nodes_axial_outer_air
     
+    use_symmetry_factor      = mesh_data.use_symmetry_factor
+    periodic_boundary        = mesh_data.periodic_boundary
 
-    # initial check
-    if motor.magnet_embed_depth == 0:
-        n_r_3 = -1
+    # --- 2. INITIAL MESH VALIDATION ---
+    # Logic remains identical: skip region 3 if magnets are not embedded
+    if rotor.magnet_embedded_depth == 0:
+        nodes_radial_region_3 = -1
 
-    if motor.rotor_lam_dia / 2 - motor.magnet_embed_depth - motor.magnet_depth == motor.shaft_hole_diameter:
-        n_r_1 = - 1 
+    # Logic remains identical: skip region 1 if internal radius matches shaft hole
+    if rotor.rotor_lamination_diameter / 2 - rotor.magnet_embedded_depth - rotor.magnet_depth == rotor.shaft_hole_diameter / 2:
+        nodes_radial_region_1 = -1 
 
-    r_segments = []
+    # --- 3. RADIAL (R) COORDINATES GENERATION ---
+    radial_segments = []
     
-    r_min = motor.shaft_hole_diameter/2 if motor.stator_bore_dia > motor.shaft_hole_diameter else motor.stator_bore_dia/2
-    
-    r_max = motor.stator_lam_dia/2 if motor.stator_lam_dia > motor.rotor_lam_dia else motor.rotor_lam_dia/2
+    # Minimum and maximum boundaries for radial mesh
+    radial_min = rotor.shaft_hole_diameter/2 if stator.stator_bore_diameter > rotor.shaft_hole_diameter else stator.stator_bore_diameter/2
+    radial_max = stator.stator_lamination_diameter/2 if stator.stator_lamination_diameter > rotor.rotor_lamination_diameter else rotor.rotor_lamination_diameter/2
 
-    # Chiều dài vật lý của các phân đoạn R
-    L_r_1 = motor.rotor_lam_dia / 2 - motor.magnet_embed_depth - motor.magnet_depth - motor.shaft_hole_diameter / 2
-    L_r_2 = motor.magnet_depth
-    L_r_3 = motor.magnet_embed_depth
+    # Physical lengths of radial regions
+    radial_length_1 = rotor.rotor_lamination_diameter / 2 - rotor.magnet_embedded_depth - rotor.magnet_depth - rotor.shaft_hole_diameter / 2
+    radial_length_2 = rotor.magnet_depth
+    radial_length_3 = rotor.magnet_embedded_depth
 
-    # 1. r_in
-    if n_r_in > 0:
-        r_in = np.linspace(r_min * 0.9, motor.shaft_hole_diameter / 2, n_r_in)
-        r_segments.append(r_in)
-        R_start_1 = r_in[-1]
+    # Segment 1: Radial Inner Air/Boundary
+    if nodes_radial_inner > 0:
+        radial_inner = np.linspace(radial_min * 0.9, rotor.shaft_hole_diameter / 2, nodes_radial_inner)
+        radial_segments.append(radial_inner)
+        radial_start_position_1 = radial_inner[-1]
     else:
-        R_start_1 = motor.shaft_hole_diameter / 2
+        radial_start_position_1 = rotor.shaft_hole_diameter / 2
 
-    # 2. r_1
-    if n_r_1 > 0:
-        r_1 = np.linspace(R_start_1, R_start_1 + L_r_1, n_r_1)
-        r_segments.append(r_1[1:])
-        R_start_2 = r_1[-1]
+    # Segment 2: Region 1 (Internal Iron/Air)
+    if nodes_radial_region_1 > 0:
+        radial_region_1 = np.linspace(radial_start_position_1, radial_start_position_1 + radial_length_1, nodes_radial_region_1)
+        radial_segments.append(radial_region_1[1:])
+        radial_start_position_2 = radial_region_1[-1]
     else:
-        R_start_2 = R_start_1 + L_r_1
+        radial_start_position_2 = radial_start_position_1 + radial_length_1
 
-    # 3. r_2
-    if n_r_2 > 0:
-        r_2 = np.linspace(R_start_2, R_start_2 + L_r_2, n_r_2)
-        r_segments.append(r_2[1:])
-        R_start_3 = r_2[-1]
+    # Segment 3: Region 2 (Magnet Zone)
+    if nodes_radial_region_2 > 0:
+        radial_region_2 = np.linspace(radial_start_position_2, radial_start_position_2 + radial_length_2, nodes_radial_region_2)
+        radial_segments.append(radial_region_2[1:])
+        radial_start_position_3 = radial_region_2[-1]
     else:
-        R_start_3 = R_start_2 + L_r_2
+        radial_start_position_3 = radial_start_position_2 + radial_length_2
 
-    # 4. r_3
-    if n_r_3 > 0:
-        r_3 = np.linspace(R_start_3, R_start_3 + L_r_3, n_r_3)
-        r_segments.append(r_3[1:])
-        R_start_out = r_3[-1]
+    # Segment 4: Region 3 (Magnet Embedding/Outer Rim)
+    if nodes_radial_region_3 > 0:
+        radial_region_3 = np.linspace(radial_start_position_3, radial_start_position_3 + radial_length_3, nodes_radial_region_3)
+        radial_segments.append(radial_region_3[1:])
+        radial_start_position_outer = radial_region_3[-1]
     else:
-        R_start_out = R_start_3 + L_r_3
+        radial_start_position_outer = radial_start_position_3 + radial_length_3
 
-    # 5. r_out
-    if n_r_out > 0:
-        r_out = np.linspace(R_start_out, R_start_out * 1.1, n_r_out)
-        r_segments.append(r_out[1:])
+    # Segment 5: Radial Outer Boundary
+    if nodes_radial_outer > 0:
+        radial_outer = np.linspace(radial_start_position_outer, radial_start_position_outer * 1.1, nodes_radial_outer)
+        radial_segments.append(radial_outer[1:])
 
-    r_cordinate = np.concatenate(r_segments)
+    radial_coordinates = np.concatenate(radial_segments)
 
-    # --- Theta ---
-    if use_symmetry_factor == True: 
+    # --- 4. TANGENTIAL (THETA) COORDINATES GENERATION ---
+    if use_symmetry_factor: 
         symmetry_factor = motor.symmetry_factor
         theta_min = 0 
-        theta_max = 2*pi / symmetry_factor
-        theta_cordinate = np.linspace(theta_min, theta_max, n_theta)
+        theta_max = 2 * pi / symmetry_factor
+        theta_coordinates = np.linspace(theta_min, theta_max, nodes_tangential_theta)
     else:
-        theta_cordinate = np.linspace(0, 2*pi, n_theta)
+        theta_coordinates = np.linspace(0, 2 * pi, nodes_tangential_theta)
 
-    # --- Axial (Z) ---
-    z_segments = []
+    # --- 5. AXIAL (Z) COORDINATES GENERATION ---
+    axial_segments = []
     
-    L_stator_yoke = motor.stator_length - motor.tooth_tip_depth - motor.slot_depth
-    w1 = (1/2) * (motor.slot_width - motor.slot_opening)
-    h1 = w1 * np.tan(np.radians(motor.tooth_tip_angle))
+    # Physical lengths calculation
+    stator_yoke_axial_height = stator.stator_yoke_length - stator.tooth_tip_depth - stator.slot_depth
+    tooth_tip_transition_width = (1/2) * (stator.slot_width - stator.slot_opening_width)
+    tooth_tip_transition_height = tooth_tip_transition_width * np.tan(np.radians(stator.tooth_tip_angle))
 
-    # 1. z_air_in
-    if n_z_in_air > 0:
-        z_air_in = np.linspace(-motor.rotor_length, 0, n_z_in_air)
-        z_segments.append(z_air_in)
-        Z_start_1 = z_air_in[-1]
+    # Z 1. Inner Air
+    if nodes_axial_inner_air > 0:
+        axial_inner_air = np.linspace(-rotor.rotor_yoke_axial_length, 0, nodes_axial_inner_air)
+        axial_segments.append(axial_inner_air)
+        axial_start_position_1 = axial_inner_air[-1]
     else:
-        Z_start_1 = 0
+        axial_start_position_1 = 0
 
-    # 2. z_rotor_yoke
-    if n_z_rotor_yoke > 0:
-        z_rotor_yoke_cordinate = np.linspace(Z_start_1, Z_start_1 + motor.rotor_length, n_z_rotor_yoke)
-        z_segments.append(z_rotor_yoke_cordinate[1:])
-        Z_start_2 = z_rotor_yoke_cordinate[-1]
+    # Z 2. Rotor Yoke
+    if nodes_axial_rotor_yoke > 0:
+        axial_rotor_yoke = np.linspace(axial_start_position_1, axial_start_position_1 + rotor.rotor_yoke_axial_length, nodes_axial_rotor_yoke)
+        axial_segments.append(axial_rotor_yoke[1:])
+        axial_start_position_2 = axial_rotor_yoke[-1]
     else:
-        Z_start_2 = Z_start_1 + motor.rotor_length
+        axial_start_position_2 = axial_start_position_1 + rotor.rotor_yoke_axial_length
 
-    # 3. z_magnet
-    if n_z_magnet > 0:
-        z_magnet_cordinate = np.linspace(Z_start_2, Z_start_2 + motor.magnet_length, n_z_magnet)
-        z_segments.append(z_magnet_cordinate[1:])
-        Z_start_3 = z_magnet_cordinate[-1]
+    # Z 3. Magnet
+    if nodes_axial_magnet > 0:
+        axial_magnet = np.linspace(axial_start_position_2, axial_start_position_2 + rotor.magnet_axial_length, nodes_axial_magnet)
+        axial_segments.append(axial_magnet[1:])
+        axial_start_position_3 = axial_magnet[-1]
     else:
-        Z_start_3 = Z_start_2 + motor.magnet_length
+        axial_start_position_3 = axial_start_position_2 + rotor.magnet_axial_length
 
-    # 4. z_airgap
-    if n_z_airgap > 0:
-        z_airgap_cordinate = np.linspace(Z_start_3, Z_start_3 + motor.airgap, n_z_airgap)
-        z_segments.append(z_airgap_cordinate[1:])
-        Z_start_4 = z_airgap_cordinate[-1]
+    # Z 4. Airgap
+    if nodes_axial_airgap > 0:
+        axial_airgap = np.linspace(axial_start_position_3, axial_start_position_3 + rotor.airgap_length, nodes_axial_airgap)
+        axial_segments.append(axial_airgap[1:])
+        axial_start_position_4 = axial_airgap[-1]
     else:
-        Z_start_4 = Z_start_3 + motor.airgap
+        axial_start_position_4 = axial_start_position_3 + rotor.airgap_length
 
-    # 5. z_tooth_tip_1
-    if n_z_tooth_tip_1 > 0:
-        z_tooth_tip_1_cordinate = np.linspace(Z_start_4, Z_start_4 + motor.tooth_tip_depth, n_z_tooth_tip_1)
-        if n_z_tooth_tip_1 > 1:
-            z_segments.append(z_tooth_tip_1_cordinate[1:])
-        Z_start_5 = z_tooth_tip_1_cordinate[-1]
+    # Z 5. Tooth Tip Part 1 (Constant Width)
+    if nodes_axial_tooth_tip_1 > 0:
+        axial_tooth_tip_1 = np.linspace(axial_start_position_4, axial_start_position_4 + stator.tooth_tip_depth, nodes_axial_tooth_tip_1)
+        if nodes_axial_tooth_tip_1 > 1:
+            axial_segments.append(axial_tooth_tip_1[1:])
+        axial_start_position_5 = axial_tooth_tip_1[-1]
     else:
-        Z_start_5 = Z_start_4 + motor.tooth_tip_depth
+        axial_start_position_5 = axial_start_position_4 + stator.tooth_tip_depth
         
-    # 6. z_tooth_tip_2
-    if n_z_tooth_tip_2 > 0:
-        z_tooth_tip_2_cordinate = np.linspace(Z_start_5, Z_start_5 + h1, n_z_tooth_tip_2)
-        z_segments.append(z_tooth_tip_2_cordinate[1:])
-        Z_start_6 = z_tooth_tip_2_cordinate[-1]
+    # Z 6. Tooth Tip Part 2 (Transition Loft)
+    if nodes_axial_tooth_tip_2 > 0:
+        axial_tooth_tip_2 = np.linspace(axial_start_position_5, axial_start_position_5 + tooth_tip_transition_height, nodes_axial_tooth_tip_2)
+        axial_segments.append(axial_tooth_tip_2[1:])
+        axial_start_position_6 = axial_tooth_tip_2[-1]
     else:
-        Z_start_6 = Z_start_5 + h1
+        axial_start_position_6 = axial_start_position_5 + tooth_tip_transition_height
         
-    # 7. z_tooth_body (Bắt đầu từ Z_start_5 theo logic gốc)
-    if n_z_tooth_body > 0:
-        z_tooth_cordinate = np.linspace(Z_start_5, Z_start_5 + motor.slot_depth, n_z_tooth_body)
-        z_segments.append(z_tooth_cordinate[1:])
-        Z_start_7 = z_tooth_cordinate[-1]
+    # Z 7. Tooth Body (Winding Section)
+    if nodes_axial_tooth_body > 0:
+        axial_tooth_body = np.linspace(axial_start_position_5, axial_start_position_5 + stator.slot_depth, nodes_axial_tooth_body)
+        axial_segments.append(axial_tooth_body[1:])
+        axial_start_position_7 = axial_tooth_body[-1]
     else:
-        Z_start_7 = Z_start_5 + motor.slot_depth
+        axial_start_position_7 = axial_start_position_5 + stator.slot_depth
 
-    # 8. z_stator_yoke
-    if n_z_stator_yoke > 0:
-        z_stator_yoke_cordinate = np.linspace(Z_start_7, Z_start_7 + L_stator_yoke, n_z_stator_yoke)
-        z_segments.append(z_stator_yoke_cordinate[1:])
-        Z_start_8 = z_stator_yoke_cordinate[-1]
+    # Z 8. Stator Yoke
+    if nodes_axial_stator_yoke > 0:
+        axial_stator_yoke = np.linspace(axial_start_position_7, axial_start_position_7 + stator_yoke_axial_height, nodes_axial_stator_yoke)
+        axial_segments.append(axial_stator_yoke[1:])
+        axial_start_position_8 = axial_stator_yoke[-1]
     else:
-        Z_start_8 = Z_start_7 + L_stator_yoke
+        axial_start_position_8 = axial_start_position_7 + stator_yoke_axial_height
 
-    # 9. z_air_out (Cùng chiều dài L_stator_yoke theo logic gốc)
-    if n_z_out_air > 0:
-        z_air_out = np.linspace(Z_start_8, Z_start_8 + L_stator_yoke, n_z_out_air)
-        z_segments.append(z_air_out[1:])
+    # Z 9. Outer Air
+    if nodes_axial_outer_air > 0:
+        axial_outer_air = np.linspace(axial_start_position_8, axial_start_position_8 + stator_yoke_axial_height, nodes_axial_outer_air)
+        axial_segments.append(axial_outer_air[1:])
 
-    z_cordinate = np.concatenate(z_segments)
+    axial_coordinates = np.concatenate(axial_segments)
     
-    return CylindricalMesh(r_nodes=r_cordinate,
-                           theta_nodes=theta_cordinate,
-                           z_nodes=z_cordinate,
-                           periodic_boundary=periodic_boundary,
-                           adaptive_mesh_data= adaptive_mesh_data)
+    # Returning final 3D Cylindrical Mesh object
+    return CylindricalMesh(r_nodes           = radial_coordinates,
+                           theta_nodes       = theta_coordinates,
+                           z_nodes           = axial_coordinates,
+                           periodic_boundary = periodic_boundary,
+                           adaptive_mesh_data = mesh_data)

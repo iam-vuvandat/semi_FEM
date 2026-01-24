@@ -31,7 +31,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
 
-        
 if __name__ == "__main__":
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)

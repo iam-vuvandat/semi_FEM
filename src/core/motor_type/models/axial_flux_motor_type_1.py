@@ -13,209 +13,159 @@ import pyvista as pv
 import math
 pi = math.pi
 
-# Init Axial Flux Motor : single stator, single rotor, parallel slot, surface mount magnet, surface radial
 class AxialFluxMotorType1:
     def __init__(self,
-                 # radial_stator_parameter
-                 slot_number = 15,
-                 stator_lam_dia = 150 * 1e-3,
-                 stator_bore_dia = 50 * 1e-3,
-                 slot_opening = 5 * 1e-3,
-                 wdg_extension_inner = 0,
-                 wdg_extension_outer = 0,
-                 # radial_rotor_parameter
-                 pole_number = 10,
-                 rotor_lam_dia = 150 * 1e-3,
-                 magnet_arc = 140,
-                 magnet_embed_depth = 5 * 1e-3, 
-                 magnet_depth = 40 * 1e-3,
-                 magnet_segments = 1,
-                 banding_depth = 0 * 1e-3,
-                 shaft_dia = 0 * 1e-3,
-                 shaft_hole_diameter = 50 * 1e-3,
-                 # linear_stator_parameter 
-                 slot_width = 7 * 1e-3,
-                 slot_depth = 15 * 1e-3,
-                 slot_corner_radius = 0, # deg
-                 tooth_tip_depth = 2 * 1e-3,
-                 tooth_tip_angle = 30, # deg
-                 stator_length = 25 * 1e-3,
-                 # linear_rotor_parameter 
-                 airgap = 2 * 1e-3,
-                 magnet_length = 4 * 1e-3,    
-                 rotor_length = 6 * 1e-3,    
-                 # winding  
-                 phase = 3,
-                 turns = 50,
-                 throw = 1,
-                 parallel_path = 1,
-                 winding_layer = 2,
-                 winding_type = "concentrated",
-                 winding_matrix = None,
-                 # Material
-                 air = "default",
-                 magnet_type = "N30UH",
-                 iron_type = "M350-50A",
-                 # shaft speed
-                 shaft_speed = 3000,
-                 # equation type
-                 system_variable = "magnetic_potential"):
+                 geometry_data      = None,
+                 winding_data       = None,
+                 adaptive_mesh_data = None,
+                 air_material       = "default",
+                 magnet_material    = "N30UH",
+                 iron_material      = "M350-50A",
+                 shaft_speed        = 3000,
+                 system_variable    = "magnetic_potential"):
         
-        self.motor_type ="axial_flux_motor_type_1"
-        # --- Gán Radial Stator Parameters ---
-        self.slot_number = slot_number
-        self.stator_lam_dia = stator_lam_dia
-        self.stator_bore_dia = stator_bore_dia
-        self.slot_opening = slot_opening
-        self.wdg_extension_inner = wdg_extension_inner
-        self.wdg_extension_outer = wdg_extension_outer
+        # --- Basic Identification ---
+        self.motor_type = "axial_flux_motor_type_1"
+        self.shaft_speed = shaft_speed
+        self.system_variable = system_variable
 
-        # --- Gán Radial Rotor Parameters ---
-        self.pole_number = pole_number
-        self.rotor_lam_dia = rotor_lam_dia
-        self.magnet_arc = magnet_arc
-        self.magnet_embed_depth = magnet_embed_depth
-        self.magnet_depth = magnet_depth
-        self.magnet_segments = magnet_segments
-        self.banding_depth = banding_depth
-        self.shaft_dia = shaft_dia
-        self.shaft_hole_diameter = shaft_hole_diameter
+        # --- Initialize Geometry Container ---
+        if geometry_data is None:
+            self.geometry_data = self.initialize_default_geometry()
+        else:
+            self.geometry_data = geometry_data
 
-        # --- Gán Linear Stator Parameters ---
-        self.slot_width = slot_width
-        self.slot_depth = slot_depth
-        self.slot_corner_radius = slot_corner_radius
-        self.tooth_tip_depth = tooth_tip_depth
-        self.tooth_tip_angle = tooth_tip_angle
-        self.stator_length = stator_length
+        # --- Initialize Winding Container ---
+        if winding_data is None:
+            self.winding_data = Container(
+                phase_number   = 3,
+                turns_number   = 50,
+                coil_throw     = 1,
+                parallel_path  = 1,
+                winding_layer  = 2,
+                winding_type   = "concentrated"
+            )
+        else:
+            self.winding_data = winding_data
 
-        # --- Gán Linear Rotor Parameters ---
-        self.airgap = airgap
-        self.magnet_length = magnet_length
-        self.rotor_length = rotor_length
+        # --- Initialize Mesh Container ---
+        if adaptive_mesh_data is None:
+            self.adaptive_mesh_data = self.initialize_default_adaptive_mesh()
+        else:
+            self.adaptive_mesh_data = adaptive_mesh_data
 
-        # --- Gán Winding Parameters ---
-        self.phase = phase
-        self.turns = turns
-        self.throw = throw
-        self.parallel_path = parallel_path
-        self.winding_layer = winding_layer
-        self.winding_type = winding_type
-        self.winding_matrix = winding_matrix
+        # --- External Objects & Databases ---
+        self.material_database = MaterialDataBase(
+            air         = air_material,
+            magnet_type = magnet_material,
+            iron_type   = iron_material
+        )
+        
+        # --- Internal Simulation States ---
+        self.geometry           = None
+        self.mesh               = None
+        self.reluctance_network = None
+        self.record             = Container()
+        self.symmetry_factor    = None
+        self.winding_matrix     = None
 
-        # Hệ số tuần hoàn 
-        self.symmetry_factor = None
+        # --- Immediate Calculations ---
         self.find_symmetry_factor()
-
-        # Ma trận dây quấn
-        self.winding_matrix = None
         self.find_winding_matrix()
 
-        # Vật liệu 
-        self.material_database = MaterialDataBase(air=air,
-    
-                                                  magnet_type= magnet_type,
-                                                  iron_type= iron_type)
+    def initialize_default_geometry(self):
+        """Creates a default geometry structure with Stator and Rotor containers"""
+        geo = Container()
         
-        #speed 
-        self.shaft_speed = shaft_speed
-
-        # equation_type
-        self.system_variable = system_variable
+        # Stator Parameters
+        geo.stator = Container()
+        geo.stator.slot_number                 = 15
+        geo.stator.stator_lamination_diameter  = 150 * 1e-3
+        geo.stator.stator_bore_diameter        = 50 * 1e-3
+        geo.stator.slot_opening_width          = 5 * 1e-3
+        geo.stator.winding_extension_inner     = 0
+        geo.stator.winding_extension_outer     = 0
+        geo.stator.slot_width                  = 7 * 1e-3
+        geo.stator.slot_depth                  = 15 * 1e-3
+        geo.stator.slot_corner_radius          = 0
+        geo.stator.tooth_tip_depth             = 2 * 1e-3
+        geo.stator.tooth_tip_angle             = 30
+        geo.stator.stator_yoke_length          = 25 * 1e-3
         
-        self.geometry = None
-        self.mesh     = None
-        self.reluctance_network = None
-        self.record = Container()
-        self.adaptive_mesh_data = Container(n_r_in =2,
-                                            n_r_1                  =3,
-                                            n_r_2                  =6,
-                                            n_r_3                  =3,
-                                            n_r_out                =2,
-                                            n_theta                =70,
-                                            n_z_in_air             =2,
-                                            n_z_rotor_yoke         =3,
-                                            n_z_magnet             =3,
-                                            n_z_airgap             =3,
-                                            n_z_tooth_tip_1        =3,
-                                            n_z_tooth_tip_2        =3,
-                                            n_z_tooth_body         =6, 
-                                            n_z_stator_yoke        =3,
-                                            n_z_out_air            =2,
-                                            use_symmetry_factor    =True,
-                                            periodic_boundary      =True)
+        # Rotor Parameters
+        geo.rotor = Container()
+        geo.rotor.pole_number                  = 10
+        geo.rotor.rotor_lamination_diameter    = 150 * 1e-3
+        geo.rotor.magnet_arc_degree            = 140
+        geo.rotor.magnet_embedded_depth        = 5 * 1e-3
+        geo.rotor.magnet_depth                 = 40 * 1e-3
+        geo.rotor.magnet_segments              = 1
+        geo.rotor.banding_depth                = 0 * 1e-3
+        geo.rotor.shaft_diameter               = 0 * 1e-3
+        geo.rotor.shaft_hole_diameter          = 50 * 1e-3
+        geo.rotor.airgap_length                = 2 * 1e-3
+        geo.rotor.magnet_axial_length          = 4 * 1e-3
+        geo.rotor.rotor_yoke_axial_length      = 6 * 1e-3
+        
+        return geo
 
+    def initialize_default_adaptive_mesh(self):
+        """Initializes default discretization parameters for the 3D solver"""
+        return Container(
+            nodes_radial_inner      = 2,
+            nodes_radial_region_1   = 3,
+            nodes_radial_region_2   = 6,
+            nodes_radial_region_3   = 3,
+            nodes_radial_outer      = 2,
+            nodes_tangential_theta  = 70,
+            nodes_axial_inner_air   = 2,
+            nodes_axial_rotor_yoke  = 3,
+            nodes_axial_magnet      = 3,
+            nodes_axial_airgap      = 3,
+            nodes_axial_tooth_tip_1 = 3,
+            nodes_axial_tooth_tip_2 = 3,
+            nodes_axial_tooth_body  = 6,
+            nodes_axial_stator_yoke = 3,
+            nodes_axial_outer_air   = 2,
+            use_symmetry_factor     = True,
+            periodic_boundary       = True
+        )
+
+    # --- Utility Methods ---
     def reload(self):
-        reload(motor= self)
+        """Reloads the motor state by clearing geometry and mesh"""
+        reload(motor=self)
 
     def find_symmetry_factor(self):
-        symmetry_data = find_symmetry_factor(motor= self)
+        """Calculates the machine symmetry factor based on geometry"""
+        symmetry_data = find_symmetry_factor(motor=self)
         self.symmetry_factor = symmetry_data.symmetry_factor
 
-
     def find_winding_matrix(self):
+        """Generates the winding layout matrix"""
         winding_data = find_winding_matrix(motor=self)
         self.winding_matrix = winding_data.winding_matrix
 
-
-
-    def create_geometry(self,
-                        rotor_angle_offset = 0,
-                        stator_angle_offset = 0,
-                        create_rotor_yoke = True,
-                        create_magnet = True,
-                        create_tooth = True,
-                        create_stator_yoke = True):
-        
-        self.geometry = create_geometry(motor=self,
-                                        rotor_angle_offset=rotor_angle_offset,
-                                        stator_angle_offset=stator_angle_offset,
-                                        create_rotor_yoke=create_rotor_yoke,
-                                        create_magnet=create_magnet,
-                                        create_tooth=create_tooth,
-                                        create_stator_yoke=create_stator_yoke)
-                                        
-    
+    def create_geometry(self, **kwargs):
+        """Constructs the 3D CAD representation of the motor"""
+        self.geometry = create_geometry(motor=self, **kwargs)
 
     def create_adaptive_mesh(self):
+        """Generates the 3D computational mesh"""
         self.mesh = create_adaptive_mesh(motor=self)
-        
+
     def create_reluctance_network(self):
-        self.reluctance_network = ReluctanceNetwork(motor = self,
-                                                    geometry=self.geometry,
-                                                    mesh = self.mesh)
-    
-    def rotate_rotor(self,n_step):
-        rotate_rotor(motor = self,
-                     n_step= n_step)
+        """Initializes the 3D General Reluctance Network solver"""
+        self.reluctance_network = ReluctanceNetwork(
+            motor    = self,
+            geometry = self.geometry,
+            mesh     = self.mesh
+        )
 
-    def show(self, show_geometry=True, show_mesh=True):
-        pv.set_plot_theme("document")
-        pl = pv.Plotter(window_size=[1400, 1000])
-        pl.set_background("white")
-        
-        has_content = False
-
-        if show_geometry:
-            if hasattr(self, 'geometry') and self.geometry is not None:
-                self.geometry.show(plotter=pl, show_axes=True)
-                has_content = True
-            else:
-                print("[WARNING] Geometry data is missing.")
-
-        if show_mesh:
-            if hasattr(self, 'mesh') and self.mesh is not None:
-                self.mesh.show(plotter=pl, show_edges=True)
-                has_content = True
-            else:
-                print("[WARNING] Mesh data is missing.")
-
-        if has_content:
-            pl.add_text("AXIAL FLUX MOTOR SIMULATION", position='upper_right', font_size=10, color='black')
-            pl.view_isometric()
-            pl.show()
-        else:
-            print("[ERROR] Nothing to show.")
+    def rotate_rotor(self, n_step):
+        """Updates rotor position and boundary conditions for a time step"""
+        rotate_rotor(motor=self, n_step=n_step)
 
     def display(self):
+        """Wrapper for external motor display utility"""
         show_motor(motor=self)

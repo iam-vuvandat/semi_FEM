@@ -13,7 +13,6 @@ def init_ui(mesh_tab=None):
     main_layout = QHBoxLayout(mesh_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
     
-    # Splitter with 1:3 ratio
     splitter = QSplitter(Qt.Horizontal)
 
     # --- 1. LEFT PANEL: CONFIGURATION (Ratio 1) ---
@@ -29,27 +28,25 @@ def init_ui(mesh_tab=None):
     config_layout = QVBoxLayout(config_widget)
     config_layout.setSpacing(15)
 
-    # Define groups following the classic style
+    # Define groups following the new naming convention
     groups = {
         "logic":   create_classic_group("Mesh Logic & Flags"),
-        "r_div":   create_classic_group("Radial Discretization (n_r)"),
-        "t_div":   create_classic_group("Tangential Discretization (n_theta)"),
-        "z_div":   create_classic_group("Axial Discretization (n_z)"),
+        "r_div":   create_classic_group("Radial Discretization (Nodes)"),
+        "t_div":   create_classic_group("Tangential Discretization (Nodes)"),
+        "z_div":   create_classic_group("Axial Discretization (Nodes)"),
         "others":  create_classic_group("Other Parameters")
     }
 
-    # Map for layouts
     layouts = {key: gb.layout() for key, gb in groups.items()}
 
-    # Automatic sorting and binding
+    # Automatic sorting and binding based on new long-form names
     for attr_name, value in vars(mesh_data).items():
         if attr_name.startswith('_'): continue
         
-        # Format label: 'n_z_airgap' -> 'Z Airgap'
-        display_name = attr_name.replace('n_', '').replace('_', ' ').title()
+        # Format label: 'nodes_axial_airgap' -> 'Axial Airgap'
+        display_name = attr_name.replace('nodes_', '').replace('_', ' ').title()
         
-        # Use bind_input (unit_factor=1 for divisions)
-        # Note: bind_input returns the QLineEdit or QCheckBox
+        # Bind input (unit_factor=1 for discretization counts)
         input_widget = bind_input(
             motor=mesh_data, 
             attr_name=attr_name, 
@@ -57,14 +54,14 @@ def init_ui(mesh_tab=None):
             callback=lambda: update_mesh_summary(mesh_tab, motor, mesh_data)
         )
 
-        # Smart classification
+        # Smart classification logic updated for new naming
         if isinstance(value, bool):
             layouts["logic"].addRow(f"{display_name}:", input_widget)
-        elif attr_name.startswith('n_r'):
+        elif 'radial' in attr_name:
             layouts["r_div"].addRow(f"{display_name}:", input_widget)
-        elif attr_name.startswith('n_theta'):
+        elif 'tangential' in attr_name:
             layouts["t_div"].addRow(f"{display_name}:", input_widget)
-        elif attr_name.startswith('n_z'):
+        elif 'axial' in attr_name:
             layouts["z_div"].addRow(f"{display_name}:", input_widget)
         else:
             layouts["others"].addRow(f"{display_name}:", input_widget)
@@ -82,71 +79,64 @@ def init_ui(mesh_tab=None):
     right_container = QFrame()
     right_layout = QVBoxLayout(right_container)
     
-    # Info Label (Classic text style)
-    mesh_tab.summary_label = QLabel("Mesh statistics will appear here...")
-    mesh_tab.summary_label.setAlignment(Qt.AlignTop)
-    mesh_tab.summary_label.setStyleSheet("font-family: 'Segoe UI'; font-size: 10pt; color: #333;")
+    # Summary Dashboard
+    mesh_tab.summary_label = QLabel("Analyzing mesh structure...")
+    mesh_tab.summary_label.setStyleSheet("font-family: 'Consolas', monospace; font-size: 10pt; background: #fff; border: 1px solid #ddd; padding: 10px;")
     right_layout.addWidget(mesh_tab.summary_label)
 
-    # Placeholder for the 3D Plotter
+    # 3D Viewport
     mesh_tab.plot_area = QFrame()
     mesh_tab.plot_area.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-    mesh_tab.plot_area.setStyleSheet("background-color: #f0f0f0;") # Classic light gray
-    plot_layout = QVBoxLayout(mesh_tab.plot_area)
-    plot_layout.addWidget(QLabel("3D MESH VIEWPORT", alignment=Qt.AlignCenter))
+    mesh_tab.plot_area.setStyleSheet("background-color: #f0f0f0;")
     
     right_layout.addWidget(mesh_tab.plot_area, stretch=1)
 
-    # Manual mesh generation button (Classic style)
-    mesh_tab.btn_generate = QPushButton("Generate Reluctance Network")
-    mesh_tab.btn_generate.setFixedHeight(30)
+    # Action Button
+    mesh_tab.btn_generate = QPushButton("Update Reluctance Network Mesh")
+    mesh_tab.btn_generate.setFixedHeight(35)
+    mesh_tab.btn_generate.setStyleSheet("font-weight: bold;")
     mesh_tab.btn_generate.clicked.connect(motor.create_adaptive_mesh)
     right_layout.addWidget(mesh_tab.btn_generate)
 
-    # Set up Splitter
     splitter.addWidget(left_container)
     splitter.addWidget(right_container)
-    splitter.setStretchFactor(0, 1) # Ratio 1
-    splitter.setStretchFactor(1, 3) # Ratio 3
+    splitter.setStretchFactor(0, 1) 
+    splitter.setStretchFactor(1, 3) 
     
     main_layout.addWidget(splitter)
     
-    # Initial summary update
     update_mesh_summary(mesh_tab, motor, mesh_data)
-
     return None
 
 def create_classic_group(title):
-    """Helper to create a GroupBox with a bold centered title similar to Geometry tab"""
-    group = QGroupBox()
+    group = QGroupBox(title)
     layout = QFormLayout(group)
     layout.setLabelAlignment(Qt.AlignLeft)
-    layout.setFormAlignment(Qt.AlignTop)
-    
-    # Customizing GroupBox title appearance to match Geometry tab "Radial Parameters"
-    group.setTitle(title)
-    group.setStyleSheet("QGroupBox { font-weight: bold; }")
+    group.setStyleSheet("QGroupBox { font-weight: bold; color: #2c3e50; }")
     return group
 
 def update_mesh_summary(tab, motor, data):
-    """Update statistics on the right panel"""
+    """Calculates node counts using the new naming convention"""
     try:
         attrs = vars(data)
-        nr = sum([v for k, v in attrs.items() if k.startswith('n_r') and isinstance(v, int)])
-        nz = sum([v for k, v in attrs.items() if k.startswith('n_z') and isinstance(v, int)])
-        nt = getattr(data, 'n_theta', 0)
+        # Sum nodes in each direction using new 'nodes_' prefix
+        nr = sum([v for k, v in attrs.items() if 'radial' in k and isinstance(v, int)])
+        nz = sum([v for k, v in attrs.items() if 'axial' in k and isinstance(v, int)])
+        nt = getattr(data, 'nodes_tangential_theta', 0)
         
-        total = (nr + 1) * (nt + 1) * (nz + 1)
+        # Total nodes in a cylindrical mesh
+        # Calculation: $N_{total} = (N_r + 1) \times (N_{\theta} + 1) \times (N_z + 1)$
+        total_nodes = (nr + 1) * (nt + 1) * (nz + 1)
         
         info = (
-            f"<b>MESH ANALYSIS</b><br>"
-            f"Symmetry Factor: {motor.symmetry_factor}<br>"
+            f"<b>3D MESH STATISTICS</b><br>"
+            f"Symmetry Multiplier: {motor.symmetry_factor}<br>"
             f"Radial Nodes: {nr + 1}<br>"
             f"Tangential Nodes: {nt + 1}<br>"
             f"Axial Nodes: {nz + 1}<br>"
             f"--------------------------<br>"
-            f"<b>Total Nodes: {total:,}</b>"
+            f"<b style='color: #e67e22;'>Total Nodes: {total_nodes:,}</b>"
         )
         tab.summary_label.setText(info)
-    except:
-        tab.summary_label.setText("Error calculating mesh statistics.")
+    except Exception as e:
+        tab.summary_label.setText(f"Error: {str(e)}")

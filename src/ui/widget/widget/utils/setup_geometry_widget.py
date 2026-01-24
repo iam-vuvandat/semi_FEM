@@ -1,5 +1,6 @@
 import paths
-from src.ui.widget.geometry.geometry_for_axial_flux_motor_type_1.geometry_for_axial_flux_motor_type_1 import GeometryForAxialFluxType1
+from src.ui.widget.geometry.geometry import Geometry
+from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 
 def setup_geometry_widget(widget):
     if widget.main_window.motor is not None:
@@ -13,7 +14,9 @@ def setup_geometry_widget(widget):
         widget.geometry_tab = None
 
     if motor_type == "axial_flux_motor_type_1":
-        widget.geometry_tab = GeometryForAxialFluxType1(parent_widget=widget)
+        widget.main_window.motor = AxialFluxMotorType1()
+    
+    widget.geometry_tab = Geometry(parent_widget=widget)
     
     if widget.geometry_tab is not None:
         widget.insertTab(0, widget.geometry_tab, "Geometry")

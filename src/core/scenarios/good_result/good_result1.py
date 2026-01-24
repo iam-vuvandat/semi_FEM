@@ -10,67 +10,96 @@ import matplotlib.pyplot as plt
 import math
 pi = math.pi
 
-re_create_motor = True
-re_solve = True
-plot = False
+# --- Configuration ---
+re_create_motor = False
+re_solve        = True
+plot            = False
 show_reluctance = True
-filename = "motor_ngon_1"
+filename        = "motor_ngon_1"
 
+# --- Motor Initialization ---
 if not re_create_motor:
-    aft = motor_io.load_motor(filename= filename)
+    # Load motor from storage
+    aft = motor_io.load_motor(filename=filename)
     if re_solve:
+        # Clear light elements list to force re-computation in solver
         aft.reluctance_network.list_elements_lite = None
 else:
-    aft = AxialFluxMotorType1(magnet_length= 3.0 * 1e-3,
-                              airgap=1.0 * 1e-3,
-                              stator_length = 25* 1e-3,
-                              rotor_length = 10 * 1e-3)
+    # Initialize new motor with refactored nested Container structure
+    aft = AxialFluxMotorType1()
     
+    # Execute CAD and Mesh generation
     aft.create_geometry()
-
     aft.create_adaptive_mesh()
     
+    # Initialize the Reluctance Network solver
     aft.create_reluctance_network()
-    motor_io.save_motor(motor_obj=aft,filename=filename)
+    
+    # Save the initialized object state
+    motor_io.save_motor(motor_obj=aft, filename=filename)
 
+# --- Simulation & Solver Loop ---
 if re_solve:
-    n_theta = aft.mesh.adaptive_mesh_data.n_theta - 1 
-    n_step_shift =6
-    n_step_solve = int(n_theta // n_step_shift)
-    n_step_solve = 1
+    # Access n_theta through the new nested adaptive_mesh_data container
+    nodes_tangential = aft.mesh.adaptive_mesh_data.nodes_tangential_theta
+    n_theta_steps = nodes_tangential - 1 
+    
+    n_step_shift = 6
+    # Calculate simulation steps based on tangential resolution
+    n_step_solve = int(n_theta_steps // n_step_shift)
+    
+    # For quick testing, we can override to 1 step
+    n_step_solve = 3 
+    
+    # Initialize linkage array: 3 phases + 1 row for position
     flux_linkage = np.zeros((4, n_step_solve))
     
     for i in tqdm(range(n_step_solve), desc="Solving & Rotating"):
-        aft.reluctance_network.solve(method = "adaptive_broyden",
-              max_iteration=100,
-              max_relative_residual = 0.05,
-              material_relax=0.2, 
-              damping_factor = 1.0,   
-              debug = True)
+        # Run the non-linear MBGRN solver
+        aft.reluctance_network.solve(
+            method                = "adaptive_broyden",
+            max_iteration         = 100,
+            max_relative_residual = 0.05,
+            material_relax        = 0.2, 
+            damping_factor        = 1.0,   
+            debug                 = True
+        )
         
         if n_step_solve != 1:
+            # Rotate rotor based on shift steps
             aft.rotate_rotor(n_step=n_step_shift)
+            
+            # Retrieve flux linkage results
             data_out = aft.reluctance_network.get_flux_linkage().flux_linkage
             flux_linkage[:, i] = data_out.flatten()
-            aft.record.flux_linkage = flux_linkage
-            shaft_speed = aft.shaft_speed #rpm
-            shaft_speed *= 2*pi / 60 # rad/s
-            aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed
             
-    motor_io.save_motor(motor_obj=aft,filename=filename)
+            # Store results in the record container
+            aft.record.flux_linkage = flux_linkage
+            
+            # Convert RPM to Rad/s for Back-EMF calculation
+            shaft_speed_rad_s = aft.shaft_speed * (2 * pi / 60)
+            
+            # Compute Back-EMF using periodic derivative
+            aft.record.back_emf_phase = periodic_derivative(data=flux_linkage).derivative * shaft_speed_rad_s
+            
+    # Final save of the solved motor state
+    motor_io.save_motor(motor_obj=aft, filename=filename)
 
+# --- Result Visualization ---
 if plot:
-    flux_linkage=aft.record.flux_linkage
-    back_emf_data = aft.record.back_emf_phase
-    theta = flux_linkage[-1, :]
-    psi_data = flux_linkage[:-1, :]
+    flux_linkage   = aft.record.flux_linkage
+    back_emf_data  = aft.record.back_emf_phase
+    
+    theta_position = flux_linkage[-1, :]   # Last row is Rotor Position
+    psi_phases     = flux_linkage[:-1, :]  # Rows 0-2 are Flux Linkages
 
+    # Plot Flux Linkage
     fig, ax = plt.subplots(figsize=(10, 6))
     labels = ['Phase A', 'Phase B', 'Phase C']
     colors = ['red', 'green', 'blue']
 
-    for j in range(psi_data.shape[0]):
-        ax.plot(theta, psi_data[j, :], label=labels[j], color=colors[j], linewidth=1.5)
+    for j in range(psi_phases.shape[0]):
+        ax.plot(theta_position, psi_phases[j, :], label=labels[j], color=colors[j], linewidth=1.5)
 
     ax.set_xlabel("Rotor Position (Degree)")
     ax.set_ylabel("Flux Linkage (Wb)")
@@ -80,12 +109,12 @@ if plot:
     plt.tight_layout()
     plt.show()
 
-    theta_emf = back_emf_data[-1, :]  # Hàng cuối là Theta
-    bemf_phases = back_emf_data[:-1, :]  # Các hàng trên là Phase A, B, C
+    # Plot Back-EMF
+    theta_emf    = back_emf_data[-1, :] # Last row is position in Rad
+    bemf_phases  = back_emf_data[:-1, :] # Phase A, B, C
 
     fig2, ax2 = plt.subplots(figsize=(10, 6))
     labels = ['Back-EMF Phase A', 'Back-EMF Phase B', 'Back-EMF Phase C']
-    colors = ['red', 'green', 'blue']
 
     for j in range(bemf_phases.shape[0]):
         ax2.plot(theta_emf, bemf_phases[j, :], label=labels[j], color=colors[j], linewidth=1.5)
@@ -98,11 +127,8 @@ if plot:
     plt.tight_layout()
     plt.show()
 
+# --- 3. Final Model Check ---
 if show_reluctance:
+    # Display the final CAD and simulation status
     aft.geometry.show()
     aft.display()
-    
-
-
-
-
