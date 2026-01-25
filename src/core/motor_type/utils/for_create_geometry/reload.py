@@ -12,5 +12,5 @@ def reload(motor):
                           create_stator_yoke = True)
     motor.mesh     = None
     motor.create_adaptive_mesh()
-    #motor.reluctance_network = None
+    motor.reluctance_network = None
 

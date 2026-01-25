@@ -1,4 +1,4 @@
-import paths  # Module quản lý đường dẫn dự án
+import paths 
 import sys
 import ctypes
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QTabWidget, QApplication, 
@@ -21,7 +21,6 @@ class MainWindow(QMainWindow):
         self.widget = None
 
         self.reload()
-        
     
     def reload(self):
         self.main_menu = MainMenu(main_window=self)
@@ -40,4 +39,9 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
+
+
+
+
+
 

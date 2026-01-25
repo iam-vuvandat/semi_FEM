@@ -1,21 +1,42 @@
-import os
-print(os.environ.get("ANSYSEM_ROOT231"))
+import paths
+import sys
+import multiprocessing
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 
-# Sử dụng thư viện mới theo khuyến nghị của thông báo Warning
-from ansys.aedt.core import Desktop, Maxwell2d
+# Import từ cấu trúc dự án của bạn
+from src.ui.main_window.core.main_window import MainWindow
 
-# Khởi tạo phiên làm việc Desktop trước
-# version="2023.1" tương ứng với bản 2023 R1 bạn vừa cài
-with Desktop(version="2023.1", non_graphical=False, new_session=True):
-    # Khởi tạo Maxwell2d bên trong khối with Desktop
-    m2d = Maxwell2d()
+if __name__ == "__main__":
+    # 1. BẮT BUỘC: Hỗ trợ đa tiến trình khi đóng gói EXE
+    # Đảm bảo các tác vụ tính toán máy điện không làm khởi động lại App vô hạn
+    multiprocessing.freeze_support()
+
+    # 2. Cấu hình High DPI Scaling (Tối ưu cho màn hình Surface Pro 5)
+    # Phải đặt TRƯỚC khi khởi tạo QApplication
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
+    # 3. Khởi tạo ứng dụng Qt
+    app = QApplication(sys.argv)
     
-    # Kiểm tra phiên bản
-    print(f"Đã kết nối thành công với Maxwell phiên bản: {m2d.aedt_version_id}")
+    # Thiết lập Font chữ hệ thống (Giữ nguyên cấu hình của bạn)
+    app.setFont(QFont("Segoe UI", 9))
+
+    # 4. Khởi tạo và hiển thị cửa sổ chính
+    window = MainWindow()
     
-    # Chèn một thiết kế mới để test
-    m2d.insert_design("Motor_Simulation_Test")
+    # Thiết lập trạng thái cửa sổ phóng to tối đa
+    window.setWindowState(Qt.WindowMaximized)
+    window.show()
+
+    # 5. Vòng lặp sự kiện
+    # Mọi lệnh print() trong các module khác sẽ hiển thị tại Terminal khi App đang chạy
+    sys.exit(app.exec_())
+
+    """
     
-    # Mã của bạn sẽ tiếp tục ở đây...
+    pyinstaller --console --clean --name "semiFEM_Solver" --collect-submodules scipy --collect-all pyvista --collect-all vtk --collect-all pyvistaqt --hidden-import scipy.sparse.csgraph._validation --hidden-import scipy.special._cdflib main.py
     
-# Khi thoát khỏi khối 'with', Desktop sẽ tự động được giải phóng (release)
+    """
