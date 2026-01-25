@@ -11,6 +11,7 @@ from src.core.core_class.utils.for_reluctance_network.rotate_reluctance_network 
 from src.core.core_class.utils.for_reluctance_network.set_reluctance_at_zero import set_reluctance_at_zero
 from src.core.core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 from src.core.core_class.utils.for_reluctance_network.access_elements import access_elements
+from src.core.core_class.utils.for_reluctance_network.display_reluctance_network import display_reluctance_network
 
 # Solver Core
 from src.core.solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
@@ -25,7 +26,8 @@ class ReluctanceNetwork:
                  mesh = None,
                  loop_flux = None,
                  magnetic_potential = None,
-                 winding_current = None,):
+                 winding_current = None,
+                 callback = None):
         
         self.current_position = 0.0
         self.symmetry_factor = motor.symmetry_factor
@@ -46,8 +48,11 @@ class ReluctanceNetwork:
         self.loop_flux = system_variable_data.loop_flux
 
         self.elements = None
-        self.elements = create_elements(self)
+        self.elements = self.create_elements(callback = callback)
         self.list_elements_lite = None
+
+    def create_elements(self,callback = None):
+        return create_elements(reluctance_network= self, callback = callback)
 
     def add_elements_lite(self):
         add_elements_lite(reluctance_network = self)
@@ -126,4 +131,7 @@ class ReluctanceNetwork:
              use_symmetry_factor = True):
         show_reluctance_network(reluctance_network=self,
                                 use_symmetry_factor = use_symmetry_factor)
+        
+    def display(self,plotter = None):
+        return display_reluctance_network(reluctance_network=self, plotter = plotter)
     

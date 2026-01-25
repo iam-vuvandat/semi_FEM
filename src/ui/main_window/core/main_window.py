@@ -22,14 +22,13 @@ class MainWindow(QMainWindow):
 
         self.reload()
         
-        
+    
     def reload(self):
         self.main_menu = MainMenu(main_window=self)
         self.setMenuBar(self.main_menu)
 
         self.widget = Widget(main_window=self)
         self.setCentralWidget(self.widget)
-
 
 if __name__ == "__main__":
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -41,3 +40,4 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
+

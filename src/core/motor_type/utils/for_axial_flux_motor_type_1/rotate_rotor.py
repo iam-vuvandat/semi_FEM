@@ -3,27 +3,31 @@ import numpy as np
 def rotate_rotor(motor, n_step):
     """
     Rotates the rotor layers within the Reluctance Network by a specified number of steps.
-    Updated to use the refactored adaptive_mesh_data structure.
+    Restored original variable names: n_z_in_air, n_z_rotor_yoke, n_z_magnet.
     """
-    # 1. Access the mesh data container from the motor's mesh object
-    # Since CylindricalMesh now stores the refactored Container
-    adaptive_mesh_data = motor.mesh.adaptive_mesh_data
+    # 1. Truy cập container adaptive_mesh_data từ đối tượng mesh của motor
+    # Dữ liệu này đã được đóng gói trong quá trình refactor AxialFluxMotorType1
+    mesh_data = motor.mesh.adaptive_mesh_data
     
-    # 2. Extract discretization parameters using long-form names
-    nodes_axial_inner_air   = adaptive_mesh_data.nodes_axial_inner_air
-    nodes_axial_rotor_yoke  = adaptive_mesh_data.nodes_axial_rotor_yoke
-    nodes_axial_magnet      = adaptive_mesh_data.nodes_axial_magnet
+    # 2. Trích xuất các tham số chia lưới theo tên gốc
+    n_z_in_air      = mesh_data.n_z_in_air
+    n_z_rotor_yoke  = mesh_data.n_z_rotor_yoke
+    n_z_magnet      = mesh_data.n_z_magnet
 
-    # 3. Calculate the number of axial layers to be rotated
-    # The logic (sum of nodes - 3) is preserved exactly as original
-    number_of_layers_to_rotate = (nodes_axial_inner_air + 
-                                  nodes_axial_rotor_yoke + 
-                                  nodes_axial_magnet - 3)
+    # 3. Tính toán số lượng lớp (layers) theo phương trục Z cần được xoay
+    # Công thức được bảo toàn: $N_{layers} = n_{z,in\_air} + n_{z,rotor\_yoke} + n_{z,magnet} - 3$
+    number_of_layers_to_rotate = (n_z_in_air + 
+                                  n_z_rotor_yoke + 
+                                  n_z_magnet - 3)
     
-    # 4. Generate the range of Z-axis indices that belong to the rotor assembly
+    # 4. Tạo dải chỉ số Z thuộc về cụm Rotor
     z_indices_to_rotate = np.arange(number_of_layers_to_rotate)
     
-    # 5. Execute the rotation in the Reluctance Network solver core
+    # 5. Thực thi việc xoay trong lõi bộ giải Reluctance Network
     reluctance_network = motor.reluctance_network
-    reluctance_network.rotate(z_indices = z_indices_to_rotate,
-                              n_step    = n_step)
+    
+    if reluctance_network is not None:
+        reluctance_network.rotate(z_indices = z_indices_to_rotate,
+                                  n_step    = n_step)
+    else:
+        print("[WARNING] Reluctance Network is not initialized. Cannot rotate.")

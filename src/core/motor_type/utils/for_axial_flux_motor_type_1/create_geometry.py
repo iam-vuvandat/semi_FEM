@@ -1,11 +1,8 @@
 import trimesh
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import art3d
 import math 
 pi = math.pi
 
-from src.core.motor_type.utils.for_create_geometry.create_cylinder import create_cylinder
 from src.core.motor_type.utils.for_create_geometry.create_tube import create_tube
 from src.core.motor_type.utils.for_create_geometry.create_cylindrical_shell_segment import create_cylindrical_shell_segment
 from src.core.motor_type.utils.for_create_geometry.create_smart_poligon import create_smart_polygon
@@ -26,36 +23,37 @@ def create_geometry(motor,
     
     geometry = []
     
-    # Access nested containers for clean mapping
+    # Truy cập các container chứa tham số nguyên bản
     stator = motor.geometry_data.stator
     rotor  = motor.geometry_data.rotor
     
-    # --- Component 1: Rotor Yoke ---
-    # Using refactored rotor axial length and diameters
+    # --- Thành phần 1: Rotor Yoke ---
+    # Sử dụng tên gốc: rotor_length thay cho rotor_yoke_axial_length
     rotor_yoke_mesh = create_tube(inner_radius=rotor.shaft_hole_diameter/2,
-                                  outer_radius=rotor.rotor_lamination_diameter/2,
-                                  height = rotor.rotor_yoke_axial_length)
+                                  outer_radius=rotor.rotor_lam_dia/2,
+                                  height = rotor.rotor_length)
     
     rotor_yoke_template = Segment(mesh= rotor_yoke_mesh,
                                   material = "iron",
                                   magnet_source= 0.0)
                                   
-    if create_rotor_yoke == True:
+    if create_rotor_yoke:
         geometry.append(rotor_yoke_template)
 
-    # --- Component 2: Permanent Magnets ---
+    # --- Thành phần 2: Nam châm vĩnh cửu ---
     pole_number = rotor.pole_number
     pole_arc = 2*pi / pole_number
-    magnet_open_arc = pole_arc * rotor.magnet_arc_degree / 180
+    # magnet_arc thay cho magnet_arc_degree
+    magnet_open_arc = pole_arc * rotor.magnet_arc / 180
     
-    magnet_z_offset = rotor.rotor_yoke_axial_length
-    magnet_height = rotor.magnet_axial_length
+    magnet_z_offset = rotor.rotor_length
+    magnet_height = rotor.magnet_length # magnet_length thay cho magnet_axial_length
     
     magnet_coercivity = motor.material_database.magnet.coercivity
     magnet_source = magnet_coercivity * magnet_height
     
-    # Calculating radii based on embedding depth
-    magnet_outer_radius = rotor.rotor_lamination_diameter/2 - rotor.magnet_embedded_depth
+    # magnet_embed_depth thay cho magnet_embedded_depth
+    magnet_outer_radius = rotor.rotor_lam_dia/2 - rotor.magnet_embed_depth
     magnet_inner_radius = magnet_outer_radius - rotor.magnet_depth
 
     for i in range(int(pole_number)):
@@ -72,31 +70,30 @@ def create_geometry(motor,
                                   magnet_source= magnet_source,
                                   magnetization_direction=np.array([0,0,sign]))
                                   
-        if create_magnet == True:
+        if create_magnet:
             geometry.append(magnet_template)
     
-    # --- Component 3: Tooth Tip (Part 1 - Constant Width) ---
-    # Calculating Z offsets based on axial stack
-    z_tooth_tip_1 = rotor.rotor_yoke_axial_length + rotor.magnet_axial_length + rotor.airgap_length
+    # --- Thành phần 3: Miệng răng (Phần 1 - Bề rộng không đổi) ---
+    # airgap thay cho airgap_length
+    z_tooth_tip_1 = rotor.rotor_length + rotor.magnet_length + rotor.airgap
     z_tooth_tip_2 = z_tooth_tip_1 + stator.tooth_tip_depth
     
-    # Inner arc calculations
     C_in = rotor.shaft_hole_diameter * pi
     C_in_per_slot = C_in / stator.slot_number
-    C_in_1 = C_in_per_slot - stator.slot_opening_width
+    # slot_opening thay cho slot_opening_width
+    C_in_1 = C_in_per_slot - stator.slot_opening
     angle_in_1 = 2 * np.atan(C_in_1 / rotor.shaft_hole_diameter)
 
     arc_in_1 = create_arc(rotor.shaft_hole_diameter/2,
                           start_rad= stator_angle_offset - angle_in_1/2,
                           end_rad=stator_angle_offset + angle_in_1/2)
     
-    # Outer arc calculations
-    C_out = stator.stator_lamination_diameter * pi
+    C_out = stator.stator_lam_dia * pi
     C_out_per_slot = C_out / stator.slot_number
-    C_out_1 = C_out_per_slot - stator.slot_opening_width
-    angle_out_1 = 2 * np.atan(C_out_1 / stator.stator_lamination_diameter)
+    C_out_1 = C_out_per_slot - stator.slot_opening
+    angle_out_1 = 2 * np.atan(C_out_1 / stator.stator_lam_dia)
     
-    arc_out_1 = create_arc(radius= stator.stator_lamination_diameter/2,
+    arc_out_1 = create_arc(radius= stator.stator_lam_dia/2,
                            start_rad= stator_angle_offset - angle_out_1/2,
                            end_rad= stator_angle_offset + angle_out_1/2)
     
@@ -109,24 +106,23 @@ def create_geometry(motor,
     for i in range(int(stator.slot_number)):
         mesh_rotated = rotate_mesh_z(mesh_1, i * 2 * pi / stator.slot_number)
         tooth_tip_rotated = Segment(mesh=mesh_rotated, material="iron")
-        if create_tooth == True:
+        if create_tooth:
             geometry.append(tooth_tip_rotated)
             
-    # --- Component 4: Tooth Tip (Part 2 - Transition/Loft) ---
-    # Trigonometric logic for tip angle transition
-    w1 = (1/2) * (stator.slot_width - stator.slot_opening_width)
+    # --- Thành phần 4: Miệng răng (Phần 2 - Đoạn vát/Loft) ---
+    w1 = (1/2) * (stator.slot_width - stator.slot_opening)
     h1 = w1 * np.tan(np.radians(stator.tooth_tip_angle))
     z_tooth_tip_3 = z_tooth_tip_2 + h1
     
     C_in_2 = C_in_per_slot - stator.slot_width
-    angle_in_2 = 2 * np.atan(C_in_2 / stator.stator_bore_diameter)
-    arc_in_2 = create_arc(radius= stator.stator_bore_diameter / 2,
+    angle_in_2 = 2 * np.atan(C_in_2 / stator.stator_bore_dia)
+    arc_in_2 = create_arc(radius= stator.stator_bore_dia / 2,
                           start_rad= stator_angle_offset - angle_in_2/2,
                           end_rad= stator_angle_offset + angle_in_2/2)
     
     C_out_2 = C_out_per_slot - stator.slot_width
-    angle_out_2 = 2 * np.atan(C_out_2 / stator.stator_lamination_diameter)
-    arc_out_2 = create_arc(radius= stator.stator_lamination_diameter/2,
+    angle_out_2 = 2 * np.atan(C_out_2 / stator.stator_lam_dia)
+    arc_out_2 = create_arc(radius= stator.stator_lam_dia/2,
                            start_rad= stator_angle_offset - angle_out_2/2,
                            end_rad= stator_angle_offset + angle_out_2/2)
     
@@ -140,11 +136,11 @@ def create_geometry(motor,
     for i in range(int(stator.slot_number)):
         mesh2_rotated = rotate_mesh_z(mesh = mesh2,
                                       angle_rad= i * 2 * pi / stator.slot_number)
-        if create_tooth == True:
+        if create_tooth:
             geometry.append(Segment(mesh=mesh2_rotated, material="iron"))
 
-    # --- Component 5: Tooth Body (Winding Section) ---
-    z_offset_4 = z_tooth_tip_3 + (stator.slot_depth - h1) # Logic preserved: total slot depth
+    # --- Thành phần 5: Thân răng (Phần quấn dây) ---
+    z_offset_4 = z_tooth_tip_3 + (stator.slot_depth - h1)
     mesh_3 = extrude_polygon_between_z(polygon=polygon2,
                                        z1 = z_tooth_tip_3,
                                        z2= z_offset_4)
@@ -152,21 +148,22 @@ def create_geometry(motor,
     for i in range(int(stator.slot_number)):
         mesh_3_rotated = rotate_mesh_z(mesh= mesh_3,
                                        angle_rad = i * 2 * pi / stator.slot_number)
-        winding_vector = motor.winding_matrix[i]
-        if create_tooth == True:
+        # Truy cập winding_matrix từ container winding_data
+        winding_vector = motor.winding_data.winding_matrix[i]
+        if create_tooth:
             geometry.append(Segment(mesh=mesh_3_rotated,
                                     material="iron",
                                     winding_vector = winding_vector))
         
-    # --- Component 6: Stator Yoke ---
-    # Final yoke height logic based on total stator length
-    yoke_height = stator.stator_yoke_length - stator.tooth_tip_depth - stator.slot_depth
-    stator_yoke_mesh = create_tube(inner_radius=stator.stator_bore_diameter / 2,
-                                   outer_radius=stator.stator_lamination_diameter / 2,
+    # --- Thành phần 6: Gông Stator ---
+    # stator_length thay cho stator_yoke_length
+    yoke_height = stator.stator_length - stator.tooth_tip_depth - stator.slot_depth
+    stator_yoke_mesh = create_tube(inner_radius=stator.stator_bore_dia / 2,
+                                   outer_radius=stator.stator_lam_dia / 2,
                                    height = yoke_height,
                                    z_offset=z_offset_4)
                                    
-    if create_stator_yoke == True:
+    if create_stator_yoke:
         geometry.append(Segment(mesh = stator_yoke_mesh,
                                 material="iron"))
                                 
