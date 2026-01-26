@@ -1,7 +1,7 @@
 import paths 
 import numpy as np
 import math 
-
+from tqdm import tqdm
 pi = math.pi
 
 def analysis_motor(motor,
@@ -35,12 +35,17 @@ def analysis_motor(motor,
     # kiểm tra xem động cơ có lưới chưa
     if motor.mesh is None:
         motor.reload()
-
-    # Ép lưới phải có số cell theta tiêu chuẩn 
-    motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell + 1 # số lượng nút = số cell + 1
-    motor.reload()
-    # khởi tạo mạng từ trở: 
-    motor.create_reluctance_network()
+        motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell + 1 # số lượng nút = số cell + 1
+        motor.reload()
+        motor.create_reluctance_network()
+    else:
+        if motor.mesh.adaptive_mesh_data.n_theta == minimum_theta_cell + 1 :
+            pass
+        else:
+            motor.reload()
+            motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell + 1 # số lượng nút = số cell + 1
+            motor.reload()
+            motor.create_reluctance_network()
 
     # Trích xuất số pha
     phase_number = motor.winding_data.phase
@@ -62,7 +67,7 @@ def analysis_motor(motor,
     current_position = motor.reluctance_network.current_position
 
     # quét số lượng cell theo hướng theta:
-    for i in range(minimum_theta_cell):
+    for i in tqdm(range(minimum_theta_cell), desc=" Solving", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=70, ascii=False, colour="red", leave=False, disable=not debug):
         if solve_cogging:
             is_cogging_point = (i < n_point)
         else:
@@ -83,12 +88,13 @@ def analysis_motor(motor,
             if is_cogging_point:
                 pass
             if is_standard_point:
+                motor.reluctance_network.add_elements_lite()
                 index_standard = i // n_step_standard
                 if index_standard < n_point:
                     flux_linkage[:,index_standard] = motor.reluctance_network.get_flux_linkage().flux_linkage[:,0]
                 cogging_shifted = 0
 
-        # --- Khung xử lý logic xoay Rotor ---
+       
         if is_cogging_point:
             motor.rotate_rotor(n_step=n_step_cogging)
             cogging_shifted += n_step_cogging
