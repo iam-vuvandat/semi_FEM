@@ -98,12 +98,12 @@ class ReluctanceNetwork:
                                          debug = debug)
     
     def solve(self,
-              method = "fixed_point_iteration",
+              method = "adaptive_broyden",
               load_step = 1,
               max_relative_residual = 0.05,
               max_iteration=50,
               material_relax=0.5, 
-              damping_factor = 0.05,   
+              damping_factor = 1.0,   
               debug = False):
         
         solve(reluctance_network= self,

@@ -1,13 +1,14 @@
 from src.core.solver.utils.fixed_point_iteration_for_magnetic_potential import fix_point_iteration_for_magnetic_potential
 from src.core.solver.utils.adaptive_broyden_iteration_for_magnetic_potential import adaptive_broyden_iteration_for_magnetic_potential
 from src.core.solver.utils.broyden_iteration_for_magnetic_potential import broyden_iteration_for_magnetic_potential
+
 def solve(reluctance_network,
-          method = "fixed_point_iteration",
+          method = "adaptive_broyden",
           load_step = 1,
           max_relative_residual = 0.05,
           max_iteration=50,
           material_relax=0.5, 
-          damping_factor = 0.05,   
+          damping_factor = 1.0,   
           debug = True):
     
     if method == "fixed_point_iteration":

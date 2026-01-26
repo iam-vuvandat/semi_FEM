@@ -1,5 +1,6 @@
-from src.core.motor_type.utils.for_axial_flux_motor_type_1.find_symmetry_factor import find_symmetry_factor
-from src.core.motor_type.utils.for_axial_flux_motor_type_1.find_winding_matrix import find_winding_matrix
+from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
+from src.core.motor_type.utils.for_create_geometry.find_winding_matrix import find_winding_matrix
+from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
 from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
 from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
@@ -8,6 +9,7 @@ from src.core.motor_type.models.Container import Container
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
+from src.core.solver.core.analysis_motor import analysis_motor
 
 import pyvista as pv
 import math
@@ -68,6 +70,7 @@ class AxialFluxMotorType1:
         self.reluctance_network = None
         self.record             = None
         self.symmetry_factor    = None
+        self.cogging_period_mech = None
 
         self.reload()
 
@@ -145,6 +148,10 @@ class AxialFluxMotorType1:
         # Gán kết quả vào đúng container mới
         self.winding_data.winding_matrix = winding_res.winding_matrix
 
+    def find_cogging_period_mech(self):
+        self.cogging_period_mech = find_cogging_period(slots= self.geometry_data.stator.slot_number, 
+                                                       poles = self.geometry_data.rotor.pole_number).period_mech
+
     def create_geometry(self, **kwargs):
         """Tạo mô hình 3D CAD"""
         self.geometry = create_geometry(motor=self, **kwargs)
@@ -169,6 +176,21 @@ class AxialFluxMotorType1:
     def reset_record(self):
         self.record = Container()
 
+    def analysis_motor(self,
+                        max_relative_residual = 0.01,
+                        max_iteration=50,
+                        material_relax=0.4,
+                        solve_cogging = True,
+                        n_point = 30,
+                        debug = True):
+        
+        return analysis_motor(motor = self,
+                   max_relative_residual = max_relative_residual,
+                   max_iteration=max_iteration,
+                   material_relax=material_relax,
+                   solve_cogging = solve_cogging,
+                   n_point = n_point,
+                   debug = debug)
+
     def display(self):
-        """Hiển thị mô hình motor"""
         show_motor(motor=self)

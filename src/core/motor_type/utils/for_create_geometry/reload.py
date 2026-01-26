@@ -2,7 +2,7 @@ def reload(motor):
     motor.find_symmetry_factor()
     motor.find_winding_matrix()
     motor.reset_record()
-
+    motor.find_cogging_period_mech()
     motor.geometry = None
     motor.create_geometry(rotor_angle_offset = 0,
                           stator_angle_offset = 0,
