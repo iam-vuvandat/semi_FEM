@@ -15,10 +15,10 @@ def rotate_rotor(motor, n_step):
     n_z_magnet      = mesh_data.n_z_magnet
 
     # 3. Tính toán số lượng lớp (layers) theo phương trục Z cần được xoay
-    # Công thức được bảo toàn: $N_{layers} = n_{z,in\_air} + n_{z,rotor\_yoke} + n_{z,magnet} - 3$
+    
     number_of_layers_to_rotate = (n_z_in_air + 
                                   n_z_rotor_yoke + 
-                                  n_z_magnet - 3)
+                                  n_z_magnet )
     
     # 4. Tạo dải chỉ số Z thuộc về cụm Rotor
     z_indices_to_rotate = np.arange(number_of_layers_to_rotate)

@@ -3,6 +3,8 @@ import numpy as np
 import math 
 from tqdm import tqdm
 pi = math.pi
+from src.core.solver.utils.periodic_derivative import periodic_derivative
+from src.core.solver.utils.duplicate_data import duplicate_data
 
 def analysis_motor(motor,
                    max_relative_residual = 0.01,
@@ -35,15 +37,15 @@ def analysis_motor(motor,
     # kiểm tra xem động cơ có lưới chưa
     if motor.mesh is None:
         motor.reload()
-        motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell + 1 # số lượng nút = số cell + 1
+        motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
         motor.reload()
         motor.create_reluctance_network()
     else:
-        if motor.mesh.adaptive_mesh_data.n_theta == minimum_theta_cell + 1 :
+        if motor.mesh.adaptive_mesh_data.n_theta == minimum_theta_cell :
             pass
         else:
             motor.reload()
-            motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell + 1 # số lượng nút = số cell + 1
+            motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
             motor.reload()
             motor.create_reluctance_network()
 
@@ -51,8 +53,10 @@ def analysis_motor(motor,
     phase_number = motor.winding_data.phase
 
     # khởi tạo các mảng rỗng để lưu thông tin (các hàng đầu là dữ liệu từng pha, hàng cuối là vị trí góc (theta))
-    data_size = (phase_number + 1,n_point)
-    flux_linkage = np.zeros(data_size)
+    
+    flux_linkage = np.zeros((phase_number + 1,n_point))
+    back_emf = np.zeros((phase_number + 1,n_point))
+    mst_data = np.zeros((5,n_point))
     
     # bước xoay cell cogging: 
     n_step_cogging = 1 
@@ -63,8 +67,6 @@ def analysis_motor(motor,
     # theo dõi số bước đã xoay 
     cogging_shifted = 0
 
-    # Tham chiếu đến vị trí rotor: 
-    current_position = motor.reluctance_network.current_position
 
     # quét số lượng cell theo hướng theta:
     for i in tqdm(range(minimum_theta_cell), desc=" Solving", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=70, ascii=False, colour="red", leave=False, disable=not debug):
@@ -86,7 +88,8 @@ def analysis_motor(motor,
                                             debug = debug)
             
             if is_cogging_point:
-                pass
+                mst_data[:,i] = motor.maxwell_stress_tensor().mst_result
+
             if is_standard_point:
                 motor.reluctance_network.add_elements_lite()
                 index_standard = i // n_step_standard
@@ -104,17 +107,21 @@ def analysis_motor(motor,
                 motor.rotate_rotor(n_step=jump_step)
                 cogging_shifted = 0
 
+
+    motor.record.flux_linkage = flux_linkage.copy()
+    # Xác định back emf
+    # Tốc độ quay của trục (đổi sang rad/s)
+    shaft_speed = motor.shaft_speed * (pi/30)
+
     
-    # xử lý symmetry:
-    use_symmetry_factor = motor.mesh.adaptive_mesh_data.use_symmetry_factor
-    if use_symmetry_factor: 
-        symmetry_factor = motor.symmetry_factor
-    else:
-        symmetry_factor = 1.0
+    back_emf = periodic_derivative(data=flux_linkage,half_open_interval= False).derivative * shaft_speed 
+    if motor.mesh.adaptive_mesh_data.use_symmetry_factor is True:
+        back_emf = back_emf * motor.symmetry_factor
 
-    flux_linkage = flux_linkage * symmetry_factor
+    motor.record.back_emf = back_emf.copy()
 
-    motor.record.flux_linkage = flux_linkage
+    mst_data = duplicate_data(data=mst_data,half_open_interval= False).duplicated_data
+    motor.record.mst_data = mst_data.copy()
 
     return None
 

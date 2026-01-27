@@ -1,193 +1,121 @@
-from src.core.motor_type.models.Container import Container
-from src.core.core_class.models.CylindricalMesh import CylindricalMesh
-from dataclasses import dataclass
 import numpy as np
 import math
 
+from src.core.core_class.models.CylindricalMesh import CylindricalMesh
 pi = math.pi
 
 def create_adaptive_mesh(motor):
-    """
-    Generates a 3D cylindrical mesh based on the motor's geometry and discretization parameters.
-    Strictly restored original variable names (e.g., n_r_in, n_z_airgap, stator_lam_dia).
-    """
+    stator = motor.geometry_data.stator
+    rotor = motor.geometry_data.rotor
+    md = motor.adaptive_mesh_data
+
+    def f_c(n):
+        return max(1, int(n))
+
+    rl1 = rotor.rotor_lam_dia / 2 - rotor.magnet_embed_depth - rotor.magnet_depth - rotor.shaft_hole_diameter / 2
+    rl2 = rotor.magnet_depth
+    rl3 = rotor.magnet_embed_depth
     
-    # --- 1. TRUY XUẤT DỮ LIỆU TỪ CONTAINER NGUYÊN BẢN ---
-    stator    = motor.geometry_data.stator
-    rotor     = motor.geometry_data.rotor
-    mesh_data = motor.adaptive_mesh_data
+    if rl1 <= 0: rl1 = 0
+    if rl3 <= 0: rl3 = 0
 
-    # Map lại các tham số chia lưới theo tên gốc
-    n_r_in          = mesh_data.n_r_in
-    n_r_1           = mesh_data.n_r_1
-    n_r_2           = mesh_data.n_r_2
-    n_r_3           = mesh_data.n_r_3
-    n_r_out         = mesh_data.n_r_out
-    n_theta         = mesh_data.n_theta
-    n_z_in_air      = mesh_data.n_z_in_air
-    n_z_rotor_yoke  = mesh_data.n_z_rotor_yoke
-    n_z_magnet      = mesh_data.n_z_magnet
-    n_z_airgap      = mesh_data.n_z_airgap
-    n_z_tooth_tip_1 = mesh_data.n_z_tooth_tip_1
-    n_z_tooth_tip_2 = mesh_data.n_z_tooth_tip_2
-    n_z_tooth_body  = mesh_data.n_z_tooth_body
-    n_z_stator_yoke = mesh_data.n_z_stator_yoke
-    n_z_out_air     = mesh_data.n_z_out_air
-    
-    use_symmetry_factor = mesh_data.use_symmetry_factor
-    periodic_boundary   = mesh_data.periodic_boundary
+    nr_in = f_c(md.n_r_in)
+    nr1 = f_c(md.n_r_1) if rl1 > 0 else 0
+    nr2 = f_c(md.n_r_2)
+    nr3 = f_c(md.n_r_3) if rl3 > 0 else 0
+    nr_out = f_c(md.n_r_out)
+    n_theta = f_c(md.n_theta)
 
-    # --- 2. KIỂM TRA LOGIC CHIA LƯỚI ---
-    # Bỏ qua vùng 3 nếu nam châm không chôn
-    if rotor.magnet_embed_depth == 0:
-        n_r_3 = -1
-
-    # Bỏ qua vùng 1 nếu bán kính trong khớp với lỗ trục
-    if rotor.rotor_lam_dia / 2 - rotor.magnet_embed_depth - rotor.magnet_depth == rotor.shaft_hole_diameter / 2:
-        n_r_1 = -1 
-
-    # --- 3. TẠO TỌA ĐỘ THEO PHƯƠNG XUYÊN TÂM (R) ---
     radial_segments = []
-    
-    # Giới hạn biên radial (Sử dụng tên biến gốc: stator_bore_dia, stator_lam_dia...)
     radial_min = rotor.shaft_hole_diameter/2 if stator.stator_bore_dia > rotor.shaft_hole_diameter else stator.stator_bore_dia/2
-    radial_max = stator.stator_lam_dia/2 if stator.stator_lam_dia > rotor.rotor_lam_dia else rotor.rotor_lam_dia/2
 
-    # Tính toán chiều dài vật lý các vùng
-    radial_length_1 = rotor.rotor_lam_dia / 2 - rotor.magnet_embed_depth - rotor.magnet_depth - rotor.shaft_hole_diameter / 2
-    radial_length_2 = rotor.magnet_depth
-    radial_length_3 = rotor.magnet_embed_depth
+    r_curr = radial_min * 0.9
+    r_inner = np.linspace(r_curr, rotor.shaft_hole_diameter / 2, nr_in + 1)
+    radial_segments.append(r_inner)
+    r_curr = r_inner[-1]
 
-    # Đoạn 1: Radial Inner Air
-    if n_r_in > 0:
-        radial_inner = np.linspace(radial_min * 0.9, rotor.shaft_hole_diameter / 2, n_r_in)
-        radial_segments.append(radial_inner)
-        radial_start_pos_1 = radial_inner[-1]
+    if nr1 > 0:
+        r_reg1 = np.linspace(r_curr, r_curr + rl1, nr1 + 1)
+        radial_segments.append(r_reg1[1:])
+        r_curr = r_reg1[-1]
     else:
-        radial_start_pos_1 = rotor.shaft_hole_diameter / 2
+        r_curr += rl1
 
-    # Đoạn 2: Region 1 (Internal Iron/Air)
-    if n_r_1 > 0:
-        radial_region_1 = np.linspace(radial_start_pos_1, radial_start_pos_1 + radial_length_1, n_r_1)
-        radial_segments.append(radial_region_1[1:])
-        radial_start_pos_2 = radial_region_1[-1]
+    r_reg2 = np.linspace(r_curr, r_curr + rl2, nr2 + 1)
+    radial_segments.append(r_reg2[1:])
+    r_curr = r_reg2[-1]
+
+    if nr3 > 0:
+        r_reg3 = np.linspace(r_curr, r_curr + rl3, nr3 + 1)
+        radial_segments.append(r_reg3[1:])
+        r_curr = r_reg3[-1]
     else:
-        radial_start_pos_2 = radial_start_pos_1 + radial_length_1
+        r_curr += rl3
 
-    # Đoạn 3: Region 2 (Magnet Zone)
-    if n_r_2 > 0:
-        radial_region_2 = np.linspace(radial_start_pos_2, radial_start_pos_2 + radial_length_2, n_r_2)
-        radial_segments.append(radial_region_2[1:])
-        radial_start_pos_3 = radial_region_2[-1]
-    else:
-        radial_start_pos_3 = radial_start_pos_2 + radial_length_2
-
-    # Đoạn 4: Region 3 (Magnet Embedding)
-    if n_r_3 > 0:
-        radial_region_3 = np.linspace(radial_start_pos_3, radial_start_pos_3 + radial_length_3, n_r_3)
-        radial_segments.append(radial_region_3[1:])
-        radial_start_pos_outer = radial_region_3[-1]
-    else:
-        radial_start_pos_outer = radial_start_pos_3 + radial_length_3
-
-    # Đoạn 5: Radial Outer Boundary
-    if n_r_out > 0:
-        radial_outer = np.linspace(radial_start_pos_outer, radial_start_pos_outer * 1.1, n_r_out)
-        radial_segments.append(radial_outer[1:])
-
+    r_outer = np.linspace(r_curr, r_curr * 1.1, nr_out + 1)
+    radial_segments.append(r_outer[1:])
     radial_coordinates = np.concatenate(radial_segments)
 
-    # --- 4. TẠO TỌA ĐỘ THEO PHƯƠNG TIẾP TUYẾN (THETA) ---
-    if use_symmetry_factor: 
-        symmetry_factor = motor.symmetry_factor
-        theta_max = 2 * pi / symmetry_factor
-        theta_coordinates = np.linspace(0, theta_max, n_theta)
+    if md.use_symmetry_factor: 
+        theta_max = 2 * pi / motor.symmetry_factor
+        theta_coordinates = np.linspace(0, theta_max, n_theta + 1)
     else:
-        theta_coordinates = np.linspace(0, 2 * pi, n_theta)
+        theta_coordinates = np.linspace(0, 2 * pi, n_theta + 1)
 
-    # --- 5. TẠO TỌA ĐỘ THEO PHƯƠNG TRỤC (Z) ---
+    sy_h = stator.stator_length - stator.tooth_tip_depth - stator.slot_depth
+    tt_w = (1/2) * (stator.slot_width - stator.slot_opening)
+    tt_h = tt_w * np.tan(np.radians(stator.tooth_tip_angle))
+
+    nz_ia = f_c(md.n_z_in_air)
+    nz_ry = f_c(md.n_z_rotor_yoke)
+    nz_mg = f_c(md.n_z_magnet)
+    nz_ag = f_c(md.n_z_airgap)
+    nz_t1 = f_c(md.n_z_tooth_tip_1)
+    nz_t2 = f_c(md.n_z_tooth_tip_2)
+    nz_tb = f_c(md.n_z_tooth_body)
+    nz_sy = f_c(md.n_z_stator_yoke)
+    nz_oa = f_c(md.n_z_out_air)
+
     axial_segments = []
+    z_ia = np.linspace(-rotor.rotor_length, 0, nz_ia + 1)
+    axial_segments.append(z_ia)
+    z_curr = z_ia[-1]
+
+    z_ry = np.linspace(z_curr, z_curr + rotor.rotor_length, nz_ry + 1)
+    axial_segments.append(z_ry[1:])
+    z_curr = z_ry[-1]
+
+    z_mg = np.linspace(z_curr, z_curr + rotor.magnet_length, nz_mg + 1)
+    axial_segments.append(z_mg[1:])
+    z_curr = z_mg[-1]
+
+    z_ag = np.linspace(z_curr, z_curr + rotor.airgap, nz_ag + 1)
+    axial_segments.append(z_ag[1:])
+    z_curr = z_ag[-1]
+
+    z_t1 = np.linspace(z_curr, z_curr + stator.tooth_tip_depth, nz_t1 + 1)
+    if nz_t1 >= 1:
+        axial_segments.append(z_t1[1:])
+    z_pos_5 = z_t1[-1]
+
+    z_t2 = np.linspace(z_pos_5, z_pos_5 + tt_h, nz_t2 + 1)
+    axial_segments.append(z_t2[1:])
     
-    # Tính toán chiều dài vật lý (Sử dụng tên gốc: stator_length, slot_opening...)
-    stator_yoke_height = stator.stator_length - stator.tooth_tip_depth - stator.slot_depth
-    tip_transition_width = (1/2) * (stator.slot_width - stator.slot_opening)
-    tip_transition_height = tip_transition_width * np.tan(np.radians(stator.tooth_tip_angle))
+    z_tb = np.linspace(z_pos_5, z_pos_5 + stator.slot_depth, nz_tb + 1)
+    axial_segments.append(z_tb[1:])
+    z_curr = z_tb[-1]
 
-    # Z 1. Inner Air
-    if n_z_in_air > 0:
-        axial_inner_air = np.linspace(-rotor.rotor_length, 0, n_z_in_air)
-        axial_segments.append(axial_inner_air)
-        z_start_pos_1 = axial_inner_air[-1]
-    else:
-        z_start_pos_1 = 0
+    z_sy = np.linspace(z_curr, z_curr + sy_h, nz_sy + 1)
+    axial_segments.append(z_sy[1:])
+    z_curr = z_sy[-1]
 
-    # Z 2. Rotor Yoke (rotor_length)
-    if n_z_rotor_yoke > 0:
-        axial_rotor_yoke = np.linspace(z_start_pos_1, z_start_pos_1 + rotor.rotor_length, n_z_rotor_yoke)
-        axial_segments.append(axial_rotor_yoke[1:])
-        z_start_pos_2 = axial_rotor_yoke[-1]
-    else:
-        z_start_pos_2 = z_start_pos_1 + rotor.rotor_length
-
-    # Z 3. Magnet (magnet_length)
-    if n_z_magnet > 0:
-        axial_magnet = np.linspace(z_start_pos_2, z_start_pos_2 + rotor.magnet_length, n_z_magnet)
-        axial_segments.append(axial_magnet[1:])
-        z_start_pos_3 = axial_magnet[-1]
-    else:
-        z_start_pos_3 = z_start_pos_2 + rotor.magnet_length
-
-    # Z 4. Airgap (airgap)
-    if n_z_airgap > 0:
-        axial_airgap = np.linspace(z_start_pos_3, z_start_pos_3 + rotor.airgap, n_z_airgap)
-        axial_segments.append(axial_airgap[1:])
-        z_start_pos_4 = axial_airgap[-1]
-    else:
-        z_start_pos_4 = z_start_pos_3 + rotor.airgap
-
-    # Z 5. Tooth Tip Part 1
-    if n_z_tooth_tip_1 > 0:
-        axial_tip_1 = np.linspace(z_start_pos_4, z_start_pos_4 + stator.tooth_tip_depth, n_z_tooth_tip_1)
-        if n_z_tooth_tip_1 > 1:
-            axial_segments.append(axial_tip_1[1:])
-        z_start_pos_5 = axial_tip_1[-1]
-    else:
-        z_start_pos_5 = z_start_pos_4 + stator.tooth_tip_depth
-        
-    # Z 6. Tooth Tip Part 2 (Transition)
-    if n_z_tooth_tip_2 > 0:
-        axial_tip_2 = np.linspace(z_start_pos_5, z_start_pos_5 + tip_transition_height, n_z_tooth_tip_2)
-        axial_segments.append(axial_tip_2[1:])
-        z_start_pos_6 = axial_tip_2[-1]
-    else:
-        z_start_pos_6 = z_start_pos_5 + tip_transition_height
-        
-    # Z 7. Tooth Body (Winding Section)
-    if n_z_tooth_body > 0:
-        axial_tooth_body = np.linspace(z_start_pos_5, z_start_pos_5 + stator.slot_depth, n_z_tooth_body)
-        axial_segments.append(axial_tooth_body[1:])
-        z_start_pos_7 = axial_tooth_body[-1]
-    else:
-        z_start_pos_7 = z_start_pos_5 + stator.slot_depth
-
-    # Z 8. Stator Yoke
-    if n_z_stator_yoke > 0:
-        axial_stator_yoke = np.linspace(z_start_pos_7, z_start_pos_7 + stator_yoke_height, n_z_stator_yoke)
-        axial_segments.append(axial_stator_yoke[1:])
-        z_start_pos_8 = axial_stator_yoke[-1]
-    else:
-        z_start_pos_8 = z_start_pos_7 + stator_yoke_height
-
-    # Z 9. Outer Air
-    if n_z_out_air > 0:
-        axial_outer_air = np.linspace(z_start_pos_8, z_start_pos_8 + stator_yoke_height, n_z_out_air)
-        axial_segments.append(axial_outer_air[1:])
+    z_oa = np.linspace(z_curr, z_curr + sy_h, nz_oa + 1)
+    axial_segments.append(z_oa[1:])
 
     axial_coordinates = np.concatenate(axial_segments)
     
-    # Trả về đối tượng lưới 3D Cylindrical Mesh
-    return CylindricalMesh(r_nodes           = radial_coordinates,
-                           theta_nodes       = theta_coordinates,
-                           z_nodes           = axial_coordinates,
-                           periodic_boundary = periodic_boundary,
-                           adaptive_mesh_data = mesh_data)
+    return CylindricalMesh(r_nodes = radial_coordinates,
+                           theta_nodes = theta_coordinates,
+                           z_nodes = axial_coordinates,
+                           periodic_boundary = md.periodic_boundary,
+                           adaptive_mesh_data = md)

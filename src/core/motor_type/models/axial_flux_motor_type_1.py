@@ -10,6 +10,7 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh 
 from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 
 import pyvista as pv
 import math
@@ -191,6 +192,9 @@ class AxialFluxMotorType1:
                    solve_cogging = solve_cogging,
                    n_point = n_point,
                    debug = debug)
+
+    def maxwell_stress_tensor(self):
+        return maxwell_stress_tensor(motor = self)
 
     def display(self):
         show_motor(motor=self)
