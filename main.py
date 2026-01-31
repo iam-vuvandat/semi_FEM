@@ -38,5 +38,5 @@ if __name__ == "__main__":
     """
     
     pyinstaller --console --clean --name "semiFEM_Solver" --collect-submodules scipy --collect-all pyvista --collect-all vtk --collect-all pyvistaqt --hidden-import scipy.sparse.csgraph._validation --hidden-import scipy.special._cdflib main.py
-    
+
     """

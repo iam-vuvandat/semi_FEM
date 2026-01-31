@@ -114,21 +114,21 @@ class AxialFluxMotorType1:
     def initialize_default_adaptive_mesh(self):
         """Khởi tạo tham số chia lưới"""
         return Container(
-            n_r_in          = 2,
-            n_r_1           = 3,
-            n_r_2           = 6,
-            n_r_3           = 3,
-            n_r_out         = 2,
-            n_theta         = 70,
-            n_z_in_air      = 2,
+            n_r_in          = 1,
+            n_r_1           = 2,
+            n_r_2           = 4,
+            n_r_3           = 2,
+            n_r_out         = 1,
+            n_theta         = 150,
+            n_z_in_air      = 1,
             n_z_rotor_yoke  = 3,
-            n_z_magnet      = 3,
+            n_z_magnet      = 2,
             n_z_airgap      = 3,
-            n_z_tooth_tip_1 = 3,
+            n_z_tooth_tip_1 = 1,
             n_z_tooth_tip_2 = 3,
-            n_z_tooth_body  = 6,
+            n_z_tooth_body  = 5,
             n_z_stator_yoke = 3,
-            n_z_out_air     = 2,
+            n_z_out_air     = 1,
             use_symmetry_factor = True,
             periodic_boundary   = True
         )

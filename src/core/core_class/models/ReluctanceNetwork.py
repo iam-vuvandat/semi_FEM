@@ -18,7 +18,6 @@ from src.core.solver.core.create_magnetic_potential_equation import create_magne
 from src.core.solver.core.create_loop_flux_equation import create_loop_flux_equation
 from src.core.solver.core.solve import solve
 
-
 class ReluctanceNetwork:
     def __init__(self,
                  motor = None,

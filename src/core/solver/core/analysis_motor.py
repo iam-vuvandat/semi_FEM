@@ -32,7 +32,7 @@ def analysis_motor(motor,
     delta_theta  = cogging_angle / (n_point)
 
     # số lượng cell hướng theta cần thiết: 
-    minimum_theta_cell = math.ceil((symmetry_angle / delta_theta) - epsilon)
+    minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))
 
     # kiểm tra xem động cơ có lưới chưa
     if motor.mesh is None:
@@ -41,7 +41,7 @@ def analysis_motor(motor,
         motor.reload()
         motor.create_reluctance_network()
     else:
-        if motor.mesh.adaptive_mesh_data.n_theta == minimum_theta_cell :
+        if int(motor.mesh.adaptive_mesh_data.n_theta) == minimum_theta_cell :
             pass
         else:
             motor.reload()
@@ -114,13 +114,13 @@ def analysis_motor(motor,
     shaft_speed = motor.shaft_speed * (pi/30)
 
     
-    back_emf = periodic_derivative(data=flux_linkage,half_open_interval= False).derivative * shaft_speed 
+    back_emf = periodic_derivative(data=flux_linkage,half_open_interval= True).derivative * shaft_speed 
     if motor.mesh.adaptive_mesh_data.use_symmetry_factor is True:
         back_emf = back_emf * motor.symmetry_factor
 
     motor.record.back_emf = back_emf.copy()
 
-    mst_data = duplicate_data(data=mst_data,half_open_interval= False).duplicated_data
+    mst_data = duplicate_data(data=mst_data,half_open_interval = True).duplicated_data
     motor.record.mst_data = mst_data.copy()
 
     return None
