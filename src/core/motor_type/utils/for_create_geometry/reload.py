@@ -1,6 +1,6 @@
 def reload(motor):
     motor.find_symmetry_factor()
-    motor.find_winding_matrix()
+    motor.init_winding()
     motor.reset_record()
     motor.find_cogging_period_mech()
     motor.geometry = None

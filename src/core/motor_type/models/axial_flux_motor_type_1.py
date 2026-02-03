@@ -5,12 +5,14 @@ from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
 from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
+from src.core.motor_type.utils.for_winding.init_winding import init_winding
 from src.core.motor_type.models.Container import Container
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
+
 
 import pyvista as pv
 import math
@@ -43,11 +45,14 @@ class AxialFluxMotorType1:
             self.winding_data = Container(
                 phase          = 3,
                 turns          = 50,
+                pole_throw     = 1,
                 throw          = 1,
                 parallel_path  = 1,
                 winding_layer  = 2,
                 winding_type   = "concentrated",
-                winding_matrix = None  # Đóng gói kết quả vào container
+                offset         = 0,
+                winding_matrix = None,
+                slot_matrix    = None
             )
         else:
             self.winding_data = winding_data
@@ -143,11 +148,10 @@ class AxialFluxMotorType1:
         symmetry_data = find_symmetry_factor(motor=self)
         self.symmetry_factor = symmetry_data.symmetry_factor
 
-    def find_winding_matrix(self):
-        """Tính toán ma trận dây quấn và lưu vào winding_data"""
-        winding_res = find_winding_matrix(motor=self)
-        # Gán kết quả vào đúng container mới
-        self.winding_data.winding_matrix = winding_res.winding_matrix
+    def init_winding(self):
+        result = init_winding(motor = self)
+        self.winding_data.winding_matrix = result.winding_matrix
+        self.winding_data.slot_matrix = result.slot_matrix
 
     def find_cogging_period_mech(self):
         self.cogging_period_mech = find_cogging_period(slots= self.geometry_data.stator.slot_number, 

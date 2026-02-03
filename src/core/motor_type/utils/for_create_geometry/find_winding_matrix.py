@@ -1,11 +1,9 @@
 import numpy as np
 
 class Output:
-    """
-    Container class to store the calculated winding matrix.
-    """
-    def __init__(self, winding_matrix = None):
+    def __init__(self, winding_matrix = None, slot_matrix = None):
         self.winding_matrix = winding_matrix
+        self.slot_matrix    = slot_matrix
 
 def find_winding_matrix(motor):
     """
@@ -13,7 +11,7 @@ def find_winding_matrix(motor):
     """
     stator_params = motor.geometry_data.stator
     winding_params = motor.winding_data
-
+    
     winding_type = winding_params.winding_type
     phase = winding_params.phase
     turns = winding_params.turns
