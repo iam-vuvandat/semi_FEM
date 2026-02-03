@@ -1,6 +1,6 @@
 import paths
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
-                             QFrame, QPushButton, QLabel, QTextEdit, QProgressBar, QCheckBox)
+                             QFrame, QPushButton, QLabel, QCheckBox)
 from PyQt5.QtCore import Qt
 from src.ui.widget.widget.utils.bind_input import bind_input
 
@@ -11,67 +11,94 @@ def init_ui(calculation_tab):
     
     calc_data = motor.calculation_data
     
-    main_layout = QHBoxLayout(calculation_tab)
-    splitter = QSplitter(Qt.Horizontal)
+    main_layout = QVBoxLayout(calculation_tab)
+    main_layout.setContentsMargins(10, 10, 10, 10)
+    main_layout.setSpacing(5)
 
-    left_panel = QWidget()
-    left_layout = QVBoxLayout(left_panel)
+    content_splitter = QSplitter(Qt.Horizontal)
 
-    input_frame = QFrame()
-    input_frame.setStyleSheet("background-color: white; border: 1px solid #dee2e6; border-radius: 4px;")
-    form = QFormLayout(input_frame)
+    # --- LEFT PANEL: SETTINGS ---
+    left_widget = QWidget()
+    left_layout = QVBoxLayout(left_widget)
+    left_layout.setContentsMargins(0, 0, 10, 0)
 
-    # Danh sach tham so day du
+    header_label = QLabel("Solver Settings")
+    header_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
+    left_layout.addWidget(header_label)
+
+    form_widget = QWidget()
+    form = QFormLayout(form_widget)
+    form.setLabelAlignment(Qt.AlignLeft)
+    form.setFormAlignment(Qt.AlignLeft)
+    form.setSpacing(10)
+    
+    # Danh sách các thuộc tính cần hiển thị
     inputs = [
-        ("max_relative_residual", "Max Relative Residual"),
-        ("max_iteration", "Max Iteration"),
-        ("material_relax", "Material Relax"),
-        ("n_point", "Number of Points")
+        ("max_relative_residual", "Max Residual:"),
+        ("max_iteration", "Max Iter:"),
+        ("material_relax", "Material Relax:"),
+        ("n_point", "Points:"),
+        ("solve_cogging", "Solve Cogging Torque:"), # Kiểu bool
+        ("debug", "Debug Mode (Verbose):")          # Kiểu bool
     ]
 
-    for attr, label in inputs:
+    for attr, label_text in inputs:
         if hasattr(calc_data, attr):
-            form.addRow(f"{label}:", bind_input(calc_data, attr, 1, lambda: None))
+            current_val = getattr(calc_data, attr)
+            
+            # KIỂM TRA NẾU LÀ DẠNG TRUE/FALSE
+            if isinstance(current_val, bool):
+                checkbox = QCheckBox()
+                checkbox.setChecked(current_val)
+                # Bind dữ liệu: Khi tích/bỏ tích thì cập nhật trực tiếp vào calc_data
+                # Sử dụng lambda với mặc định a=attr để tránh lỗi tham chiếu vòng lặp
+                checkbox.stateChanged.connect(lambda state, a=attr: setattr(calc_data, a, state == Qt.Checked))
+                form.addRow(QLabel(label_text), checkbox)
+                
+                # Lưu tham chiếu vào tab nếu cần truy cập sau này (ví dụ: calculation_tab.check_cogging)
+                setattr(calculation_tab, f"check_{attr}", checkbox)
+            
+            # NẾU LÀ DẠNG SỐ/CHỮ
+            else:
+                line_edit = bind_input(calc_data, attr, 1, lambda: None)
+                line_edit.setFixedWidth(120)
+                form.addRow(QLabel(label_text), line_edit)
 
-    calculation_tab.check_cogging = QCheckBox("Solve Cogging")
-    calculation_tab.check_cogging.setChecked(getattr(calc_data, "solve_cogging", True))
-    calculation_tab.check_cogging.stateChanged.connect(lambda v: setattr(calc_data, "solve_cogging", bool(v)))
-    form.addRow(calculation_tab.check_cogging)
-
-    calculation_tab.check_debug = QCheckBox("Debug Mode")
-    calculation_tab.check_debug.setChecked(getattr(calc_data, "debug", True))
-    calculation_tab.check_debug.stateChanged.connect(lambda v: setattr(calc_data, "debug", bool(v)))
-    form.addRow(calculation_tab.check_debug)
-
-    left_layout.addWidget(QLabel("<b>Solver Settings</b>"))
-    left_layout.addWidget(input_frame)
-
-    calculation_tab.btn_run = QPushButton("Run 3D-MBGRN Solver")
-    calculation_tab.btn_run.setStyleSheet("""
-        QPushButton { background-color: #1976D2; color: white; font-weight: bold; padding: 12px; border-radius: 4px; margin-top: 10px; }
-        QPushButton:hover { background-color: #1565C0; }
-    """)
-    calculation_tab.btn_run.clicked.connect(calculation_tab.run_solver)
+    left_layout.addWidget(form_widget)
     
+    calculation_tab.btn_run = QPushButton("Run Solver")
+    calculation_tab.btn_run.setFixedHeight(30)
+    calculation_tab.btn_run.clicked.connect(calculation_tab.run_solver)
     left_layout.addWidget(calculation_tab.btn_run)
+    
     left_layout.addStretch()
 
-    right_panel = QWidget()
-    right_layout = QVBoxLayout(right_panel)
+    # --- RIGHT PANEL: 3D VIEW ---
+    calculation_tab.viz_container = QFrame()
+    calculation_tab.viz_container.setFrameShape(QFrame.StyledPanel)
+    calculation_tab.viz_container.setStyleSheet("background-color: #ffffff; border: 1px solid #dcdcdc;")
     
-    calculation_tab.progress_bar = QProgressBar()
-    calculation_tab.progress_bar.setValue(0)
+    calculation_tab.viz_layout = QVBoxLayout(calculation_tab.viz_container)
+    calculation_tab.viz_layout.setContentsMargins(0, 0, 0, 0)
+    calculation_tab.viz_layout.setSpacing(0)
+
+    content_splitter.addWidget(left_widget)
+    content_splitter.addWidget(calculation_tab.viz_container)
+    content_splitter.setStretchFactor(1, 4) 
+
+    main_layout.addWidget(content_splitter, 1)
+
+    # --- BOTTOM: STATUS BAR (FIXED HEIGHT) ---
+    status_container = QFrame()
+    status_container.setFixedHeight(30)
+    status_container.setStyleSheet("background-color: #f8f8f8; border-top: 1px solid #dcdcdc;")
+    status_layout = QHBoxLayout(status_container)
+    status_layout.setContentsMargins(10, 0, 10, 0)
+
+    calculation_tab.status_label = QLabel("Status: Ready")
+    calculation_tab.status_label.setStyleSheet("font-size: 13px; color: #333;")
     
-    calculation_tab.log_console = QTextEdit()
-    calculation_tab.log_console.setReadOnly(True)
-    calculation_tab.log_console.setStyleSheet("background-color: #1E1E1E; color: #D4D4D4; font-family: 'Consolas'; font-size: 11pt;")
+    status_layout.addWidget(calculation_tab.status_label)
+    status_layout.addStretch()
 
-    right_layout.addWidget(QLabel("<b>Solver Progress</b>"))
-    right_layout.addWidget(calculation_tab.progress_bar)
-    right_layout.addWidget(QLabel("<b>Analysis Logs</b>"))
-    right_layout.addWidget(calculation_tab.log_console)
-
-    splitter.addWidget(left_panel)
-    splitter.addWidget(right_panel)
-    splitter.setStretchFactor(1, 2)
-    main_layout.addWidget(splitter)
+    main_layout.addWidget(status_container, 0)

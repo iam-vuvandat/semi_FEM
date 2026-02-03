@@ -1,111 +1,156 @@
 import paths
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
-                             QFrame, QComboBox, QLabel, QLineEdit)
-from PyQt5.QtCore import Qt
+                             QFrame, QComboBox, QLabel, QScrollArea, QGroupBox, 
+                             QPushButton, QApplication, QLineEdit)
+from PyQt5.QtCore import Qt, QTimer
 from src.core.material.models.MaterialDataBase import MaterialDataBase
-from src.ui.widget.widget.utils.bind_input import bind_input
 
 def init_ui(input_tab=None):
     if input_tab is None: return None
 
     motor = input_tab.main_window.motor
+    
+    # --- 1. STYLE SHEET "TIÊU CHUẨN VÀNG" (COPY CHUẨN GEOMETRY) ---
+    STYLE_SHEET = """
+        QGroupBox { 
+            font-weight: bold; 
+            border: 1px solid #dee2e6; 
+            border-radius: 4px;
+            margin-top: 15px; 
+            background-color: #ffffff;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 5px;
+            color: #2c3e50;
+        }
+        QLabel {
+            font-size: 13px;
+            color: #34495e;
+        }
+        QLineEdit, QComboBox {
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            padding: 3px;
+        }
+    """
+    input_tab.setStyleSheet(STYLE_SHEET)
+
+    # Layout chính
     main_layout = QHBoxLayout(input_tab)
+    main_layout.setContentsMargins(10, 10, 10, 10)
+    
     splitter = QSplitter(Qt.Horizontal)
 
-    # --- 1. HÀM CẬP NHẬT DATABASE (RECREATE LOGIC) ---
+    # --- 2. HÀM CẬP NHẬT (GLOBAL UPDATE LOGIC) ---
     def update_global_database():
-        """Khởi tạo lại toàn bộ MaterialDataBase cho motor"""
         air_name = input_tab.air_name_edit.text()
         mag_type = input_tab.mag_combo.currentText()
         iron_type = input_tab.iron_combo.currentText()
         
-        # Khởi tạo instance mới của MaterialDataBase
-        # Điều này sẽ tự động tạo các object Air, Magnet, Iron bên trong
+        # Khởi tạo instance mới
         motor.material_database = MaterialDataBase(
             air=air_name, 
             magnet_type=mag_type, 
             iron_type=iron_type
         )
         
-        # Cập nhật thông tin tóm tắt bên phải
-        update_summary_display()
-        print(f"[Material DB] Recreated with: Air={air_name}, Mag={mag_type}, Iron={iron_type}")
+        # Cập nhật hiển thị tóm tắt
+        db = motor.material_database
+        summary = (
+            f"<p><b>AIR MEDIUM:</b><br>{db.air.name} (μr={db.air.relative_permeance})</p>"
+            f"<p><b>HARD MAGNETIC:</b><br>{db.magnet.name}<br>"
+            f" - Mur: {db.magnet.relative_permeance}<br>"
+            f" - Hc: {db.magnet.coercivity} A/m</p>"
+            f"<p><b>SOFT MAGNETIC:</b><br>{db.iron.name}<br>"
+            f" - B-H Data: {len(db.iron.B_H_curve['B_data'])} points</p>"
+        )
+        input_tab.summary_display.setText(summary)
+        QApplication.processEvents()
 
-    # --- 2. PHẦN BÊN TRÁI: CÀI ĐẶT VẬT LIỆU ---
-    left_container = QWidget()
-    left_layout = QVBoxLayout(left_container)
+    # --- 3. PANEL TRÁI: CÀI ĐẶT (SCROLL AREA VỚI GROUP NẰM NGANG) ---
+    left_panel = QWidget()
+    left_layout = QVBoxLayout(left_panel)
+    left_layout.setContentsMargins(0, 0, 10, 0)
+
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QFrame.NoFrame)
     
-    # Tiêu đề
-    header = QLabel("<h3>Global Material Settings</h3>")
-    left_layout.addWidget(header)
+    content_widget = QWidget()
+    content_hbox = QHBoxLayout(content_widget) # Tiêu chuẩn vàng: Group nằm ngang
 
-    # Khung nhập liệu
-    form_frame = QFrame()
-    form_frame.setStyleSheet("background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;")
-    form_layout = QFormLayout(form_frame)
-    form_layout.setContentsMargins(15, 15, 15, 15)
-    form_layout.setSpacing(15)
-
-    # A. Cài đặt không khí (Sử dụng bind_input cho relative_permeance)
-    # Tuy nhiên bạn muốn gán tên/tính chất, ta dùng QLineEdit đơn giản cho tên trước
-    input_tab.air_name_edit = QLineEdit("default")
+    # Group 1: General & Air
+    air_group = QGroupBox("Environment")
+    air_form = QFormLayout(air_group)
+    air_form.setVerticalSpacing(10)
+    input_tab.air_name_edit = QLineEdit("Default Air")
     input_tab.air_name_edit.editingFinished.connect(update_global_database)
-    form_layout.addRow("Air Medium Name:", input_tab.air_name_edit)
+    air_form.addRow("Medium Name:", input_tab.air_name_edit)
+    content_hbox.addWidget(air_group)
 
-    # B. Chọn Nam châm (Dropdown)
+    # Group 2: Core & Magnet
+    mat_group = QGroupBox("Material Selection")
+    mat_form = QFormLayout(mat_group)
+    mat_form.setVerticalSpacing(10)
+
     input_tab.mag_combo = QComboBox()
-    input_tab.mag_combo.addItems(["N30UH", "N35SH", "N42SH"]) # Thêm các loại bạn sẽ định nghĩa
+    input_tab.mag_combo.addItems(["N30UH", "N35SH", "N42SH"])
     input_tab.mag_combo.currentTextChanged.connect(update_global_database)
-    form_layout.addRow("Magnet Grade:", input_tab.mag_combo)
+    mat_form.addRow("Magnet Grade:", input_tab.mag_combo)
 
-    # C. Chọn Sắt (Dropdown)
     input_tab.iron_combo = QComboBox()
     input_tab.iron_combo.addItems(["M350-50A", "M400-50A", "M270-35A"])
     input_tab.iron_combo.currentTextChanged.connect(update_global_database)
-    form_layout.addRow("Iron/Steel Core:", input_tab.iron_combo)
-
-    left_layout.addWidget(form_frame)
-    left_layout.addStretch()
-
-    # --- 3. PHẦN BÊN PHẢI: TÓM TẮT THÔNG SỐ (PHẦN TRỐNG CHO ĐỒ THỊ SAU NÀY) ---
-    right_container = QWidget()
-    right_layout = QVBoxLayout(right_container)
+    mat_form.addRow("Iron Core:", input_tab.iron_combo)
     
-    right_layout.addWidget(QLabel("<h3>Material Summary</h3>"))
+    content_hbox.addWidget(mat_group)
+
+    scroll.setWidget(content_widget)
+    left_layout.addWidget(scroll)
+
+    # --- 4. PANEL PHẢI: SUMMARY & FORCE UPDATE ---
+    right_panel = QFrame()
+    right_layout = QVBoxLayout(right_panel)
+    right_layout.setContentsMargins(0, 0, 0, 0)
+
+    # Group hiển thị tóm tắt
+    summary_group = QGroupBox("Material Properties Summary")
+    summary_layout = QVBoxLayout(summary_group)
     
-    input_tab.summary_label = QLabel("Database not initialized.")
-    input_tab.summary_label.setAlignment(Qt.AlignTop)
-    input_tab.summary_label.setWordWrap(True)
-    input_tab.summary_label.setStyleSheet("""
-        background-color: #ffffff; 
-        border: 2px dashed #bdc3c7; 
-        padding: 20px; 
-        font-family: 'Consolas', monospace;
+    input_tab.summary_display = QLabel("Initializing Database...")
+    input_tab.summary_display.setAlignment(Qt.AlignTop)
+    input_tab.summary_display.setWordWrap(True)
+    input_tab.summary_display.setStyleSheet("background-color: #ffffff; padding: 10px; font-family: 'Segoe UI';")
+    
+    summary_layout.addWidget(input_tab.summary_display)
+    right_layout.addWidget(summary_group)
+
+    # Nút bấm Force Recreate chuẩn Geometry
+    btn_recreate = QPushButton("Force Rebuild Material DB")
+    btn_recreate.setFixedHeight(40)
+    btn_recreate.setStyleSheet("""
+        QPushButton { 
+            font-weight: bold; 
+            background-color: #f0f7fb; 
+            border: 1px solid #c5ddec;
+            border-radius: 4px;
+        }
+        QPushButton:hover { background-color: #e1f0f7; }
     """)
-    
-    right_layout.addWidget(input_tab.summary_label)
-    right_layout.addStretch()
+    btn_recreate.clicked.connect(update_global_database)
+    right_layout.addWidget(btn_recreate)
 
-    def update_summary_display():
-        db = motor.material_database
-        summary = (
-            f"<b>AIR:</b> {db.air.name} (ur={db.air.relative_permeance})<br><br>"
-            f"<b>MAGNET:</b> {db.magnet.name}<br>"
-            f" - Mur: {db.magnet.relative_permeance}<br>"
-            f" - Hc: {db.magnet.coercivity} A/m<br><br>"
-            f"<b>IRON:</b> {db.iron.name}<br>"
-            f" - B-H Data Points: {len(db.iron.B_H_curve['B_data'])} points"
-        )
-        input_tab.summary_label.setText(summary)
-
-    # Thêm vào splitter
-    splitter.addWidget(left_container)
-    splitter.addWidget(right_container)
-    splitter.setStretchFactor(1, 1) # Chia đều 2 bên
+    # Cấu hình Splitter (Tỉ lệ 1:1)
+    splitter.addWidget(left_panel)
+    splitter.addWidget(right_panel)
+    splitter.setStretchFactor(0, 1)
+    splitter.setStretchFactor(1, 1)
     
     main_layout.addWidget(splitter)
 
-    # Khởi tạo database lần đầu khi mở giao diện
-    update_global_database()
+    # Khởi tạo lần đầu sau khi UI sẵn sàng
+    QTimer.singleShot(500, update_global_database)
     
     return None

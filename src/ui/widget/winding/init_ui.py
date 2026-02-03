@@ -1,101 +1,145 @@
 import paths
+import numpy as np
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
-                             QFrame, QComboBox, QLabel, QTableWidget, QTableWidgetItem, QHeaderView)
-from PyQt5.QtCore import Qt
+                             QFrame, QComboBox, QLabel, QScrollArea, QGroupBox, 
+                             QPushButton, QApplication, QTableWidget, QTableWidgetItem, QHeaderView)
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 from src.ui.widget.widget.utils.bind_input import bind_input
 
 def init_ui(winding_tab=None):
     if winding_tab is None: return None
 
-    motor = winding_tab.main_window.motor
+    main_win = winding_tab.main_window
+    motor = main_win.motor
     winding_data = motor.winding_data 
     
-    # Cờ kiểm soát để không reload khi vừa mở giao diện
-    winding_tab._is_init = True 
-    
+    # Thiết lập Layout chính (Giống hệt Geometry)
     main_layout = QHBoxLayout(winding_tab)
-    main_layout.setContentsMargins(15, 15, 15, 15)
+    main_layout.setContentsMargins(10, 10, 10, 10)
+    
     splitter = QSplitter(Qt.Horizontal)
 
-    # --- 1. REFRESH LOGIC ---
-    def refresh_winding_ui():
-        # Chỉ reload khi không phải đang khởi tạo lần đầu
-        if not winding_tab._is_init:
-            motor.reload()
+    # --- HÀM CẬP NHẬT TOÀN HỆ THỐNG ---
+    def global_update():
+        if motor is None: return
         
-        winding_tab._is_init = False
+        # 1. Reload logic lõi
+        motor.reload() 
+        
+        # 2. Cập nhật bảng Ma trận dây quấn
         matrix = winding_data.winding_matrix 
-        
-        if matrix is None:
-            winding_tab.matrix_table.setRowCount(0)
-            return
-
-        rows, cols = matrix.shape
         table = winding_tab.matrix_table
-        table.setRowCount(rows)
-        table.setColumnCount(cols)
-        
-        table.setHorizontalHeaderLabels([f"Phase {chr(65+i)}" for i in range(cols)])
-        table.setVerticalHeaderLabels([f"Slot {i+1}" for i in range(rows)])
+        if matrix is not None:
+            rows, cols = matrix.shape
+            table.setRowCount(rows)
+            table.setColumnCount(cols)
+            table.setHorizontalHeaderLabels([f"Ph {chr(65+i)}" for i in range(cols)])
+            for i in range(rows):
+                for j in range(cols):
+                    val = matrix[i, j]
+                    item = QTableWidgetItem(f"{val:g}")
+                    item.setTextAlignment(Qt.AlignCenter)
+                    if val > 0: item.setBackground(QColor("#FFF59D"))
+                    elif val < 0: item.setBackground(QColor("#81D4FA"))
+                    table.setItem(i, j, item)
+            table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        for i in range(rows):
-            for j in range(cols):
-                val = matrix[i, j]
-                item = QTableWidgetItem(f"{val:g}")
-                item.setTextAlignment(Qt.AlignCenter)
-                if val > 0: item.setBackground(QColor("#FFF59D"))
-                elif val < 0: item.setBackground(QColor("#81D4FA"))
-                table.setItem(i, j, item)
-        
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # 3. Ép giao diện cập nhật
+        QApplication.processEvents()
 
-    # --- 2. LEFT PANEL: CONFIGURATION ---
-    left_container = QWidget()
-    left_layout = QVBoxLayout(left_container)
+    # --- PANEL TRÁI: CONFIGURATION (SCROLL AREA) ---
+    left_panel = QWidget()
+    left_layout = QVBoxLayout(left_panel)
     left_layout.setContentsMargins(0, 0, 10, 0)
+
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QFrame.NoFrame)
     
-    input_frame = QFrame()
-    input_frame.setStyleSheet("background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 6px;")
+    content_widget = QWidget()
+    content_hbox = QHBoxLayout(content_widget) # Các group nằm ngang giống Geometry
+
+    def create_winding_group(title, attributes):
+        group = QGroupBox(title)
+        group.setStyleSheet("""
+            QGroupBox { 
+                font-weight: bold; 
+                border: 1px solid #dee2e6; 
+                border-radius: 4px;
+                margin-top: 15px; 
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px;
+            }
+        """)
+        layout = QFormLayout(group)
+        layout.setVerticalSpacing(10)
+        
+        for attr, label in attributes:
+            if hasattr(winding_data, attr):
+                # Gắn global_update vào để thay đổi là cập nhật ngay
+                input_widget = bind_input(winding_data, attr, 1, global_update)
+                layout.addRow(f"{label}:", input_widget)
+        return group
+
+    # Nhóm 1: Thông số cơ bản
+    topo_attrs = [
+        ("phase", "Phases"),
+        ("winding_layer", "Layers"),
+        ("parallel_path", "Parallel Paths (a)")
+    ]
+    # Nhóm 2: Thông số bối dây
+    coil_attrs = [
+        ("turns", "Turns per Coil"),
+        ("throw", "Coil Throw (y)")
+    ]
+
+    content_hbox.addWidget(create_winding_group("Winding Topology", topo_attrs))
+    content_hbox.addWidget(create_winding_group("Coil Parameters", coil_attrs))
     
-    form = QFormLayout(input_frame)
-    # Tăng khoảng cách để bố cục không bị dày
-    form.setVerticalSpacing(18) 
-    form.setHorizontalSpacing(20)
-    form.setContentsMargins(15, 20, 15, 20)
+    scroll.setWidget(content_widget)
+    left_layout.addWidget(scroll)
 
-    form.addRow("Number of Phases:",    bind_input(winding_data, "phase", 1, refresh_winding_ui))
-    form.addRow("Turns per Coil:",      bind_input(winding_data, "turns", 1, refresh_winding_ui))
-    form.addRow("Coil Throw (y):",      bind_input(winding_data, "throw", 1, refresh_winding_ui))
-    form.addRow("Parallel Paths (a):",  bind_input(winding_data, "parallel_path", 1, refresh_winding_ui))
-    form.addRow("Winding Layers:",      bind_input(winding_data, "winding_layer", 1, refresh_winding_ui))
+    # --- PANEL PHẢI: PREVIEW (MATRIX TABLE) ---
+    right_panel = QFrame()
+    right_layout = QVBoxLayout(right_panel)
+    right_layout.setContentsMargins(0, 0, 0, 0)
 
-    type_combo = QComboBox()
-    type_combo.addItems(["concentrated", "distributed"])
-    type_combo.setCurrentText(winding_data.winding_type)
-    type_combo.currentTextChanged.connect(lambda t: [setattr(winding_data, "winding_type", t), refresh_winding_ui()])
-    form.addRow("Winding Type:", type_combo)
-
-    left_layout.addWidget(QLabel("<b>Winding Configuration</b>"))
-    left_layout.addWidget(input_frame)
-    left_layout.addStretch()
-
-    # --- 3. RIGHT PANEL: MATRIX PREVIEW ---
-    right_container = QWidget()
-    right_layout = QVBoxLayout(right_container)
-    right_layout.setContentsMargins(10, 0, 0, 0)
+    # Tiêu đề bảng giống phong cách Label bên phải của Đạt
+    right_layout.addWidget(QLabel("<b>Winding Matrix Preview</b>"))
     
     winding_tab.matrix_table = QTableWidget()
     winding_tab.matrix_table.setAlternatingRowColors(True)
-    
-    right_layout.addWidget(QLabel("<b>Winding Matrix Preview (Auto-calculated)</b>"))
+    winding_tab.matrix_table.setStyleSheet("border: 1px solid #dee2e6; border-radius: 4px;")
     right_layout.addWidget(winding_tab.matrix_table)
 
-    splitter.addWidget(left_container)
-    splitter.addWidget(right_container)
-    splitter.setStretchFactor(0, 1)
-    splitter.setStretchFactor(1, 2) 
-    main_layout.addWidget(splitter)
+    # Nút Force Recreate chuẩn "Tiêu chuẩn vàng"
+    btn_reload = QPushButton("Force Recalculate Winding")
+    btn_reload.setFixedHeight(40)
+    btn_reload.setStyleSheet("""
+        QPushButton { 
+            font-weight: bold; 
+            background-color: #f0f7fb; 
+            border: 1px solid #c5ddec;
+            border-radius: 4px;
+        }
+        QPushButton:hover { background-color: #e1f0f7; }
+    """)
+    btn_reload.clicked.connect(global_update)
+    right_layout.addWidget(btn_reload)
 
-    refresh_winding_ui()
+    # Cấu hình Splitter
+    splitter.addWidget(left_panel)
+    splitter.addWidget(right_panel)
+    splitter.setStretchFactor(0, 1) 
+    splitter.setStretchFactor(1, 1) 
+    
+    main_layout.addWidget(splitter)
+    
+    # Khởi tạo lần đầu sau 500ms
+    QTimer.singleShot(500, global_update)
+    
     return None

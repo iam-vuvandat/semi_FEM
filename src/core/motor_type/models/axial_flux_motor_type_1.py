@@ -193,9 +193,8 @@ class AxialFluxMotorType1:
     def reset_record(self):
         self.record = Container()
 
-    def analysis_motor(self):
-        
-        return analysis_motor(motor = self)
+    def analysis_motor(self,callback = None):
+        return analysis_motor(motor = self, callback = callback)
 
     def maxwell_stress_tensor(self):
         return maxwell_stress_tensor(motor = self)

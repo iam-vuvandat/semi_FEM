@@ -24,14 +24,13 @@ def create_elements(reluctance_network, debug=True, callback=None):
                     
                     pbar.update(1)
                     
-                    # Phát tín hiệu về UI thông qua callback
                     if callback:
-                        # Tính toán chỉ số hiện tại dựa trên 3 vòng lặp
                         current_index = i_z * (nt * nr) + i_t * nr + i_r + 1
-                        # Gửi phần trăm về ProgressBar mỗi khi xong một rãnh/phần tử
-                        if current_index % 10 == 0 or current_index == total_elements:
+                        # Cap nhat moi khi xong 50 phan tu de toi uu toc do UI
+                        if current_index % 50 == 0 or current_index == total_elements:
                             progress_val = int((current_index / total_elements) * 100)
-                            callback(progress_val)
+                            # Khop voi chu ky callback(message, progress)
+                            callback(f"Creating FVM elements: {current_index}/{total_elements}", progress_val)
                     
     reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
     return elements

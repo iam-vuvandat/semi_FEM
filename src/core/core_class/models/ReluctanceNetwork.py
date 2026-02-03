@@ -125,11 +125,6 @@ class ReluctanceNetwork:
 
     def get_flux_linkage(self):
         return get_flux_linkage(reluctance_network=self)
-
-    def show(self,
-             use_symmetry_factor = True):
-        show_reluctance_network(reluctance_network=self,
-                                use_symmetry_factor = use_symmetry_factor)
         
     def display(self,plotter = None):
         return display_reluctance_network(reluctance_network=self, plotter = plotter)
