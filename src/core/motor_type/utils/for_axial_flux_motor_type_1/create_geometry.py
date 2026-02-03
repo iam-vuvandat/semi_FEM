@@ -26,6 +26,9 @@ def create_geometry(motor,
     # Truy cập các container chứa tham số nguyên bản
     stator = motor.geometry_data.stator
     rotor  = motor.geometry_data.rotor
+    mmf_offset = motor.winding_data.mmf_offset
+
+    rotor_angle_offset+= mmf_offset
     
     # --- Thành phần 1: Rotor Yoke ---
     # Sử dụng tên gốc: rotor_length thay cho rotor_yoke_axial_length

@@ -1,5 +1,5 @@
 from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
-from src.core.motor_type.utils.for_create_geometry.find_winding_matrix import find_winding_matrix
+from src.core.motor_type.utils.for_winding.init_winding import init_winding
 from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
 from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
@@ -12,8 +12,9 @@ from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 
-import pyvista as pv
 import math
+
+
 pi = math.pi
 
 class AxialFluxMotorType1:
@@ -47,7 +48,9 @@ class AxialFluxMotorType1:
                 parallel_path  = 1,
                 winding_layer  = 2,
                 winding_type   = "concentrated",
-                winding_matrix = None  # Đóng gói kết quả vào container
+                mmf_offset     = 0.0,
+                winding_matrix = None,
+                slot_winding   = None
             )
         else:
             self.winding_data = winding_data
@@ -74,6 +77,10 @@ class AxialFluxMotorType1:
         self.cogging_period_mech = None
 
         self.reload()
+
+        self.calculation_data = Container()
+        self.create_calculation_data()
+        
 
     def initialize_default_geometry(self):
         """Khởi tạo cấu trúc hình học với tên biến nguyên bản"""
@@ -132,6 +139,15 @@ class AxialFluxMotorType1:
             use_symmetry_factor = True,
             periodic_boundary   = True
         )
+    
+    def create_calculation_data(self):
+        calculation_data = self.calculation_data
+        calculation_data.max_iteration=50
+        calculation_data.max_relative_residual = 0.01
+        calculation_data.material_relax = 0.4
+        calculation_data.solve_cogging = True
+        calculation_data.n_point = 30
+        calculation_data.debug = True
 
     # --- Utility Methods ---
     def reload(self):
@@ -143,11 +159,11 @@ class AxialFluxMotorType1:
         symmetry_data = find_symmetry_factor(motor=self)
         self.symmetry_factor = symmetry_data.symmetry_factor
 
-    def find_winding_matrix(self):
-        """Tính toán ma trận dây quấn và lưu vào winding_data"""
-        winding_res = find_winding_matrix(motor=self)
-        # Gán kết quả vào đúng container mới
-        self.winding_data.winding_matrix = winding_res.winding_matrix
+    def init_winding(self):
+        result = init_winding(motor= self)
+        self.winding_data.mmf_offset = result.mmf_offset
+        self.winding_data.winding_matrix = result.winding_matrix
+        self.winding_data.slot_matrix = result.slot_matrix
 
     def find_cogging_period_mech(self):
         self.cogging_period_mech = find_cogging_period(slots= self.geometry_data.stator.slot_number, 
@@ -177,21 +193,9 @@ class AxialFluxMotorType1:
     def reset_record(self):
         self.record = Container()
 
-    def analysis_motor(self,
-                        max_relative_residual = 0.01,
-                        max_iteration=50,
-                        material_relax=0.4,
-                        solve_cogging = True,
-                        n_point = 30,
-                        debug = True):
+    def analysis_motor(self):
         
-        return analysis_motor(motor = self,
-                   max_relative_residual = max_relative_residual,
-                   max_iteration=max_iteration,
-                   material_relax=material_relax,
-                   solve_cogging = solve_cogging,
-                   n_point = n_point,
-                   debug = debug)
+        return analysis_motor(motor = self)
 
     def maxwell_stress_tensor(self):
         return maxwell_stress_tensor(motor = self)

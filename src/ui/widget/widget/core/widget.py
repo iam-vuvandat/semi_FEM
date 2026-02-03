@@ -5,6 +5,7 @@ from src.ui.widget.widget.utils.setup_geometry_widget import setup_geometry_widg
 from src.ui.widget.widget.utils.setup_winding_widget import setup_winding_widget
 from src.ui.widget.widget.utils.setup_input_data_widget import setup_input_data_widget
 from src.ui.widget.widget.utils.setup_mesh_widget import setup_mesh_widget
+from src.ui.widget.widget.utils.setup_calculation_widget import setup_calculation_widget
 
 class Widget(QTabWidget):
     def __init__(self, main_window):
@@ -21,6 +22,9 @@ class Widget(QTabWidget):
 
         self.mesh_tab = None
         self.mesh_tab = self.setup_mesh_widget()
+
+        self.calculation_tab = None
+        self.calculation_tab = self.setup_calculation_widget()
     
     def setup_geometry_widget(self):
         return setup_geometry_widget(widget = self)   
@@ -33,3 +37,6 @@ class Widget(QTabWidget):
     
     def setup_mesh_widget(self):
         return setup_mesh_widget(widget = self)
+    
+    def setup_calculation_widget(self):
+        return setup_calculation_widget(widget = self)

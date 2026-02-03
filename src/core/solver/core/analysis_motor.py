@@ -2,18 +2,22 @@ import paths
 import numpy as np
 import math 
 from tqdm import tqdm
+
+
 pi = math.pi
 from src.core.solver.utils.periodic_derivative import periodic_derivative
 from src.core.solver.utils.duplicate_data import duplicate_data
 
-def analysis_motor(motor,
-                   max_relative_residual = 0.01,
-                   max_iteration=50,
-                   material_relax=0.4,
-                   solve_cogging = True,
-                   n_point = 30,
-                   debug = True):
+def analysis_motor(motor):
     
+    calculation_data = motor.calculation_data
+    max_relative_residual = calculation_data.max_relative_residual
+    max_iteration = calculation_data.max_iteration
+    material_relax = calculation_data.material_relax
+    solve_cogging = calculation_data.solve_cogging
+    n_point = calculation_data.n_point
+    debug = calculation_data.debug
+
     # sai số máy
     epsilon = 1e-12
 

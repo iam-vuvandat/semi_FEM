@@ -1,28 +1,41 @@
+import sys
 import ctypes
+import os
 from PyQt5.QtWidgets import QApplication, QStyleFactory
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 
-def general_setup(main_window = None):
-    # 1. Cấu hình App ID để hiển thị icon đúng trên Taskbar Windows
+def general_setup(main_window=None, app=None):
     try:
-        myappid = 'hust.ee.mbgrn.3d.solver.v1'
+        # 1. Định danh App ID để Windows không gộp nhầm với Python
+        myappid = 'semiFEM.v0.0.1'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     except Exception:
         pass
 
+    # 2. Thiết lập đường dẫn tới file .ico
+    # Đảm bảo bạn đã đổi tên logo.png thành logo.ico sau khi convert
+    icon_path = os.path.join('src', 'ui', 'assets', 'logo.ico')
+    
+    if os.path.exists(icon_path):
+        app_icon = QIcon(icon_path)
+    else:
+        # Fallback nếu không tìm thấy file .ico
+        app_icon = QIcon()
+
+    if app is not None:
+        # Thiết lập icon cho toàn bộ ứng dụng
+        app.setWindowIcon(app_icon)
+        # Đồng nhất giao diện Fusion
+        app.setStyle(QStyleFactory.create('Fusion'))
+
     if main_window is not None:
-        # 2. Thiết lập tiêu đề cửa sổ
-        main_window.setWindowTitle("semiFem - 3D MBGRN Solver")
+        # 3. Tiêu đề và Icon cho cửa sổ chính
+        main_window.setWindowTitle("semiFEM")
+        main_window.setWindowIcon(app_icon)
         
-        # 3. TỰ ĐỘNG PHÓNG TO TOÀN MÀN HÌNH
-        # Cách 1: Phóng to cửa sổ nhưng vẫn để lại thanh Taskbar (Khuyên dùng)
+        # 4. Tự động phóng to cửa sổ
         main_window.setWindowState(Qt.WindowMaximized)
         
-        # Cách 2: Toàn màn hình hoàn toàn, che cả thanh Taskbar (Thường dùng cho Game)
-        # main_window.setWindowState(Qt.WindowFullScreen)
-
-        # 4. Thiết lập Style Fusion để giao diện đồng nhất trên mọi máy
-        QApplication.setStyle(QStyleFactory.create('Fusion'))
-        
-        # 5. Thiết lập kích thước tối thiểu (đảm bảo không bị vỡ layout khi thu nhỏ)
+        # 5. Kích thước tối thiểu cho 3D-MBGRN Solver
         main_window.setMinimumSize(1024, 768)

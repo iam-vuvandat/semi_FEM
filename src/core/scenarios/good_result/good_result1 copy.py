@@ -6,18 +6,38 @@ import math
 # Import các thành phần hệ thống
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 from src.core.storage.core import motor_io
-from ui.widget.calculation import calculation
 
 # Thiết lập các tham số điều khiển
-RE_CREATE_MOTOR = False  # True: Tạo mới động cơ | False: Nạp từ file
-RE_SOLVE        = False   # True: Chạy lại Solver | False: Chỉ vẽ dữ liệu cũ
+RE_CREATE_MOTOR = True  # True: Tạo mới động cơ | False: Nạp từ file
+RE_SOLVE        = True   # True: Chạy lại Solver | False: Chỉ vẽ dữ liệu cũ
 SHOW_RELUCTANCE = True  # Hiển thị cấu trúc mạng từ trở
-FILENAME        = "motor_ngon_1"
+FILENAME        = "motor_ngon_2"
 
 # 1. Quản lý đối tượng Motor
 if RE_CREATE_MOTOR:
     print(f">>> Đang tạo mới động cơ...")
     aft = AxialFluxMotorType1()
+
+    aft.adaptive_mesh_data.n_r_in          = 1
+    aft.adaptive_mesh_data.n_r_1           = 1
+    aft.adaptive_mesh_data.n_r_2           = 2
+    aft.adaptive_mesh_data.n_r_3           = 2
+    aft.adaptive_mesh_data.n_r_out         = 1
+    aft.adaptive_mesh_data.n_theta         = 70
+    aft.adaptive_mesh_data.n_z_in_air      = 1
+    aft.adaptive_mesh_data.n_z_rotor_yoke  = 1
+    aft.adaptive_mesh_data.n_z_magnet      = 1
+    aft.adaptive_mesh_data.n_z_airgap      = 1
+    aft.adaptive_mesh_data.n_z_tooth_tip_1 = 1
+    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 2
+    aft.adaptive_mesh_data.n_z_tooth_body  = 3
+    aft.adaptive_mesh_data.n_z_stator_yoke = 1
+    aft.adaptive_mesh_data.n_z_out_air     = 1
+
+    aft.winding_data.turns = 15
+
+    aft.reload()
+
     # Lưu lần đầu để tạo cấu trúc file
     motor_io.save_motor(motor_obj=aft, filename=FILENAME)
 else:
