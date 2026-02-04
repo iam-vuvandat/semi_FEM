@@ -143,8 +143,8 @@ class AxialFluxMotorType1:
     def create_calculation_data(self):
         calculation_data = self.calculation_data
         calculation_data.max_iteration=50
-        calculation_data.max_relative_residual = 0.01
-        calculation_data.material_relax = 0.4
+        calculation_data.max_relative_residual = 0.03
+        calculation_data.material_relax = 0.35
         calculation_data.solve_cogging = True
         calculation_data.n_point = 30
         calculation_data.debug = True
