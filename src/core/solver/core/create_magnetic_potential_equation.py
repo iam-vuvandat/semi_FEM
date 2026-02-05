@@ -70,7 +70,7 @@ def create_magnetic_potential_equation(reluctance_network,
                     diag_val += conductance
                     j_val += (f / r) * direction
 
-
+                    ####
                     K1 = (-r_center / mu_center) * (1/S_center) * dmu_center
                     K2 = (-r_neighbor / mu_neighbor) * (1/S_neighbor) * dmu_neighbor
                     K = K1 + K2

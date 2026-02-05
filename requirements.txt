@@ -17,6 +17,7 @@ pyvistaqt
 PyQt5
 pyglet<2
 imageio
+pyvista pyaedt[graphics]
 
 # --- Specialized Tools ---
 ansys-motorcad-core

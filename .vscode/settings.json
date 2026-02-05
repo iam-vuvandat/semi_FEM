@@ -4,7 +4,6 @@
                           "**/*.pyc":  true,
                           "**/*.pyo":  true,
                           "**/*.pyd":  true,
-                          "**/*.venv":  true,
                           "**/*.env":  true,
                           "**/*.project_root":  true,
                           "**/*.gitignore":  true,
