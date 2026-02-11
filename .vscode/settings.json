@@ -4,10 +4,6 @@
                           "**/*.pyc":  true,
                           "**/*.pyo":  true,
                           "**/*.pyd":  true,
-                          "**/*.env":  true,
-                          "**/*.project_root":  true,
-                          "**/*.gitignore":  true,
-                          "**/*.bat":  true,
                           "**/*.ini":  true
                       },
     "files.autoSave":  "afterDelay",
@@ -16,11 +12,5 @@
     "editor.suggestOnTriggerCharacters":  true,
     "python.languageServer":  "Pylance",
     "python.analysis.autoImportCompletions":  true,
-    "explorer.compactFolders":  false,
-    "python.defaultInterpreterPath":  "${workspaceFolder}/.venv/Scripts/python.exe",
-    "python.terminal.activateEnvironment":  true,
-    "python.envFile":  "${workspaceFolder}/.env",
-    "python.analysis.extraPaths":  [
-                                       "./src"
-                                   ]
+    "explorer.compactFolders":  false
 }
