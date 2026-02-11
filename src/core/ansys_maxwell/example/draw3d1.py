@@ -19,9 +19,6 @@ time.sleep(5)
 m3d.solution_type = "Transient"
 time.sleep(5)
 
-# Rotor
-moving_band = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, -0.1], radius=1.0, height=0.2)
-m3d.modeler[moving_band].name = "moving_band"
 # Rotor Yoke 
 
 rotor_base = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, -0.1], radius=1.0, height=0.1)
@@ -87,6 +84,11 @@ for i in range(len(new_pole)):
 
 time.sleep(5)
 
+
+# Moving Band
+moving_band = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, -0.1], radius=1.0, height=0.2)
+m3d.modeler[moving_band].name = "moving_band"
+
 assignment = moving_band
 coordinate_system = "Global"
 axis = "Z"
@@ -104,3 +106,19 @@ motion_setup = m3d.assign_rotate_motion(
     has_rotation_limits=has_rotation_limits,
     angular_velocity=angular_velocity
 )
+
+# Airgap Band
+airgap_band = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, 0.1], radius=1.0, height=0.05)
+m3d.modeler[airgap_band].name = "airgap_band"
+
+# Stator
+stator_base = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, 0.15], radius=1.0, height=0.1)
+stator_hole = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, 0.15], radius=0.5, height=0.1)
+m3d.modeler.subtract(blank_list=[stator_base], tool_list=[stator_hole], keep_originals=False)
+m3d.modeler[stator_base].material_name = "steel_1008"
+m3d.modeler[stator_base].name = "stator_yoke"
+
+# Padding Region
+region = m3d.modeler.create_region(pad_value=30, pad_type="Percentage Offset")
+
+m3d.assign_insulating(assignment=[region])
