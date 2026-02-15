@@ -192,44 +192,111 @@ C_out_per_slot = C_out / slot_number
 C_out_tooth_tip = C_out_per_slot - slot_width
 angle_out_tooth_tip = 2 * np.arctan(C_out_tooth_tip / stator_lam_dia)
 
-# --- 1. Tạo mặt Top ---
-p1_in = [stator_bore_dia/2 * np.cos(-angle_in_tooth_tip/2), stator_bore_dia/2 * np.sin(-angle_in_tooth_tip/2), z_top_surface]
-p2_in = [stator_bore_dia/2, 0, z_top_surface] 
-p3_in = [stator_bore_dia/2 * np.cos(angle_in_tooth_tip/2), stator_bore_dia/2 * np.sin(angle_in_tooth_tip/2), z_top_surface]
-arc_in = m3d.modeler.create_polyline(points=[p1_in, p2_in, p3_in], segment_type="Arc")
+### tooth tip 1 
+tooth_tip_1_base = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, offset_z0], radius=stator_outer_radius, height=tooth_tip_depth)
+tooth_tip_1_hole = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, offset_z0], radius=stator_inner_radius, height=tooth_tip_depth)
+m3d.modeler.subtract(blank_list=[tooth_tip_1_base], tool_list=[tooth_tip_1_hole], keep_originals=False)
+m3d.modeler[tooth_tip_1_base].material_name = "steel_1008"
 
-p1_out = [stator_lam_dia/2 * np.cos(-angle_out_tooth_tip/2), stator_lam_dia/2 * np.sin(-angle_out_tooth_tip/2), z_top_surface]
-p2_out = [stator_lam_dia/2, 0, z_top_surface]
-p3_out = [stator_lam_dia/2 * np.cos(angle_out_tooth_tip/2), stator_lam_dia/2 * np.sin(angle_out_tooth_tip/2), z_top_surface]
-arc_out = m3d.modeler.create_polyline(points=[p1_out, p2_out, p3_out], segment_type="Arc")
+slot_arc = 360 / slot_number
+half_slot_opening = slot_opening / 2
 
-# Nối 2 cung thành mặt Top
-top_res = m3d.modeler.connect([arc_in, arc_out])
-top_surface_sheet = top_res[0] if isinstance(top_res, list) else top_res
+knife_1 = m3d.modeler.create_box(origin=[0, -half_slot_opening, offset_z0], sizes=[stator_outer_radius * 1.5, slot_opening, tooth_tip_depth])
+m3d.modeler.rotate(knife_1, axis="Z", angle=slot_arc / 2)
 
-# --- 2. Tạo mặt Bottom ---
-p1_in_b = [stator_bore_dia/2 * np.cos(-angle_in_tooth_tip/2), stator_bore_dia/2 * np.sin(-angle_in_tooth_tip/2), z_bottom_surface]
+knife_2 = m3d.modeler.create_box(origin=[0, -half_slot_opening, offset_z0], sizes=[stator_outer_radius * 1.5, slot_opening, tooth_tip_depth])
+m3d.modeler.rotate(knife_2, axis="Z", angle=-slot_arc / 2)
+
+m3d.modeler.subtract(blank_list=[tooth_tip_1_base], tool_list=[knife_1, knife_2], keep_originals=False)
+tooth_tip_segments = m3d.modeler.separate_bodies(tooth_tip_1_base)
+
+if tooth_tip_segments[0].volume <= tooth_tip_segments[1].volume:
+    m3d.modeler.delete(tooth_tip_segments[1])
+    tooth_tip_1 = tooth_tip_segments[0]
+else:
+    m3d.modeler.delete(tooth_tip_segments[0])
+    tooth_tip_1 = tooth_tip_segments[1]
+m3d.modeler[tooth_tip_1].name = "tooth_tip_1"
+
+### tooth_tip_2 (Vát cạnh rãnh, giữ nguyên bán kính)
+z_bottom_surface = offset_z0 + tooth_tip_depth
+w1 = (1/2) * (slot_width - slot_opening)
+h1 = w1 * np.tan(np.radians(tooth_tip_angle))
+z_top_surface = z_bottom_surface + h1
+
+# 1. Vẽ mặt đáy của Tip 2 (Sheet Bottom) dựa trên slot_opening
+C_in_per_slot = (stator_bore_dia * pi) / slot_number
+angle_in_mouth = 2 * np.arctan((C_in_per_slot - slot_opening) / stator_bore_dia)
+angle_out_mouth = 2 * np.arctan(((stator_lam_dia * pi / slot_number) - slot_opening) / stator_lam_dia)
+
+p1_in_b = [stator_bore_dia/2 * np.cos(-angle_in_mouth/2), stator_bore_dia/2 * np.sin(-angle_in_mouth/2), z_bottom_surface]
 p2_in_b = [stator_bore_dia/2, 0, z_bottom_surface]
-p3_in_b = [stator_bore_dia/2 * np.cos(angle_in_tooth_tip/2), stator_bore_dia/2 * np.sin(angle_in_tooth_tip/2), z_bottom_surface]
+p3_in_b = [stator_bore_dia/2 * np.cos(angle_in_mouth/2), stator_bore_dia/2 * np.sin(angle_in_mouth/2), z_bottom_surface]
 arc_in_b = m3d.modeler.create_polyline(points=[p1_in_b, p2_in_b, p3_in_b], segment_type="Arc")
 
-p1_out_b = [stator_lam_dia/2 * np.cos(-angle_out_tooth_tip/2), stator_lam_dia/2 * np.sin(-angle_out_tooth_tip/2), z_bottom_surface]
+p1_out_b = [stator_lam_dia/2 * np.cos(-angle_out_mouth/2), stator_lam_dia/2 * np.sin(-angle_out_mouth/2), z_bottom_surface]
 p2_out_b = [stator_lam_dia/2, 0, z_bottom_surface]
-p3_out_b = [stator_lam_dia/2 * np.cos(angle_out_tooth_tip/2), stator_lam_dia/2 * np.sin(angle_out_tooth_tip/2), z_bottom_surface]
+p3_out_b = [stator_lam_dia/2 * np.cos(angle_out_mouth/2), stator_lam_dia/2 * np.sin(angle_out_mouth/2), z_bottom_surface]
 arc_out_b = m3d.modeler.create_polyline(points=[p1_out_b, p2_out_b, p3_out_b], segment_type="Arc")
 
-# Nối 2 cung thành mặt Bottom
-bot_res = m3d.modeler.connect([arc_in_b, arc_out_b])
-bottom_surface_sheet = bot_res[0] if isinstance(bot_res, list) else bot_res
+res_b = m3d.modeler.connect([arc_in_b, arc_out_b])
+bottom_sheet = res_b[0] if isinstance(res_b, list) else res_b
 
-# --- 3. Tạo khối Loft tooth_tip_2 ---
-# Quan trọng: Đổi tên mặt trước khi connect để Maxwell dễ quản lý
-m3d.modeler[top_surface_sheet].name = "top_temp"
-m3d.modeler[bottom_surface_sheet].name = "bottom_temp"
+# 2. Vẽ mặt đỉnh của Tip 2 (Sheet Top) dựa trên slot_width
+angle_in_slot = 2 * np.arctan((C_in_per_slot - slot_width) / stator_bore_dia)
+angle_out_slot = 2 * np.arctan(((stator_lam_dia * pi / slot_number) - slot_width) / stator_lam_dia)
 
-tip2_res = m3d.modeler.connect(["bottom_temp", "top_temp"])
-tooth_tip_2 = tip2_res[0] if isinstance(tip2_res, list) else tip2_res
+p1_in_t = [stator_bore_dia/2 * np.cos(-angle_in_slot/2), stator_bore_dia/2 * np.sin(-angle_in_slot/2), z_top_surface]
+p2_in_t = [stator_bore_dia/2, 0, z_top_surface]
+p3_in_t = [stator_bore_dia/2 * np.cos(angle_in_slot/2), stator_bore_dia/2 * np.sin(angle_in_slot/2), z_top_surface]
+arc_in_t = m3d.modeler.create_polyline(points=[p1_in_t, p2_in_t, p3_in_t], segment_type="Arc")
+
+p1_out_t = [stator_lam_dia/2 * np.cos(-angle_out_slot/2), stator_lam_dia/2 * np.sin(-angle_out_slot/2), z_top_surface]
+p2_out_t = [stator_lam_dia/2, 0, z_top_surface]
+p3_out_t = [stator_lam_dia/2 * np.cos(angle_out_slot/2), stator_lam_dia/2 * np.sin(angle_out_slot/2), z_top_surface]
+arc_out_t = m3d.modeler.create_polyline(points=[p1_out_t, p2_out_t, p3_out_t], segment_type="Arc")
+
+res_t = m3d.modeler.connect([arc_in_t, arc_out_t])
+top_sheet = res_t[0] if isinstance(res_t, list) else res_t
+
+# 3. Tạo khối Tip 2
+res_tip2 = m3d.modeler.connect([bottom_sheet, top_sheet])
+tooth_tip_2 = res_tip2[0] if isinstance(res_tip2, list) else res_tip2
 m3d.modeler[tooth_tip_2].name = "tooth_tip_2"
+
+### tooth_body
+tooth_body_length = slot_depth - h1
+
+# Lấy mặt Z-max của tooth_tip_2 để kéo thân răng
+all_faces_tip2 = m3d.modeler.get_object_faces("tooth_tip_2")
+top_face_id = None
+z_max_tip2 = -1e9
+for f_id in all_faces_tip2:
+    v_ids = m3d.modeler.get_face_vertices(f_id)
+    if v_ids:
+        z_val = m3d.modeler.get_vertex_position(v_ids[0])[2]
+        if z_val > z_max_tip2:
+            z_max_tip2 = z_val
+            top_face_id = f_id
+
+res_body_sheet = m3d.modeler.create_object_from_face(assignment=top_face_id)
+body_sheet = res_body_sheet[0] if isinstance(res_body_sheet, list) else res_body_sheet
+
+sweep_body = m3d.modeler.sweep_along_vector(assignment=body_sheet, sweep_vector=[0, 0, tooth_body_length])
+tooth_body = sweep_body[0] if isinstance(sweep_body, list) else sweep_body
+m3d.modeler[tooth_body].name = "tooth_body"
+
+# --- Gộp các thành phần thành 'tooth' và nhân bản ---
+m3d.modeler.unite(["tooth_tip_1", "tooth_tip_2", "tooth_body"])
+m3d.modeler["tooth_tip_1"].name = "tooth"
+m3d.modeler["tooth"].material_name = "steel_1008"
+
+m3d.modeler.duplicate_around_axis(
+    assignment="tooth",
+    axis="Z",
+    angle=360/slot_number,
+    clones=slot_number
+)
 m3d.modeler.duplicate_around_axis(
     assignment=tooth_tip_2,
     axis="Z",
