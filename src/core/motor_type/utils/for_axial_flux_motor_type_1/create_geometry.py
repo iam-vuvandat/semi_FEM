@@ -85,7 +85,7 @@ def create_geometry(motor,
     C_in_per_slot = C_in / stator.slot_number
     # slot_opening thay cho slot_opening_width
     C_in_1 = C_in_per_slot - stator.slot_opening
-    angle_in_1 = 2 * np.atan(C_in_1 / rotor.shaft_hole_diameter)
+    angle_in_1 = 2 * np.arctan(C_in_1 / rotor.shaft_hole_diameter)
 
     arc_in_1 = create_arc(rotor.shaft_hole_diameter/2,
                           start_rad= stator_angle_offset - angle_in_1/2,
@@ -94,7 +94,7 @@ def create_geometry(motor,
     C_out = stator.stator_lam_dia * pi
     C_out_per_slot = C_out / stator.slot_number
     C_out_1 = C_out_per_slot - stator.slot_opening
-    angle_out_1 = 2 * np.atan(C_out_1 / stator.stator_lam_dia)
+    angle_out_1 = 2 * np.arctan(C_out_1 / stator.stator_lam_dia)
     
     arc_out_1 = create_arc(radius= stator.stator_lam_dia/2,
                            start_rad= stator_angle_offset - angle_out_1/2,
@@ -118,13 +118,13 @@ def create_geometry(motor,
     z_tooth_tip_3 = z_tooth_tip_2 + h1
     
     C_in_2 = C_in_per_slot - stator.slot_width
-    angle_in_2 = 2 * np.atan(C_in_2 / stator.stator_bore_dia)
+    angle_in_2 = 2 * np.arctan(C_in_2 / stator.stator_bore_dia)
     arc_in_2 = create_arc(radius= stator.stator_bore_dia / 2,
                           start_rad= stator_angle_offset - angle_in_2/2,
                           end_rad= stator_angle_offset + angle_in_2/2)
     
     C_out_2 = C_out_per_slot - stator.slot_width
-    angle_out_2 = 2 * np.atan(C_out_2 / stator.stator_lam_dia)
+    angle_out_2 = 2 * np.arctan(C_out_2 / stator.stator_lam_dia)
     arc_out_2 = create_arc(radius= stator.stator_lam_dia/2,
                            start_rad= stator_angle_offset - angle_out_2/2,
                            end_rad= stator_angle_offset + angle_out_2/2)
