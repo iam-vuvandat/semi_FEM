@@ -18,3 +18,4 @@ pywin32; sys_platform == "win32"
 tqdm>=4.65
 pympler>=1.0
 pyinstaller>=5.13
+swat-em==0.6.3
