@@ -270,7 +270,7 @@ mesh_targets = [
     and "Sheet" not in obj      
 ]
 
-maximum_element_length = magnet_length
+maximum_element_length = magnet_length *2 
 m3d.mesh.assign_length_mesh(
     assignment=mesh_targets,
     maximum_length=f"{maximum_element_length}mm",
