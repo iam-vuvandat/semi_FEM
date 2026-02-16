@@ -51,7 +51,7 @@ def init_ui(winding_tab=None):
             "Layout Plot (Linear)":        ("plot", "fig_layout"),
             "Polar Plot (Circular)":       ("plot", "fig_polar"),
             "Star of Slots (Phasors)":     ("plot", "fig_star"),
-            "MMF Distribution":            ("plot", "fig_mmk"),
+            "MMF Distribution":            ("plot", "fig_mmf"),
             "Winding Factors":             ("plot", "fig_wf")
         }
         

@@ -52,7 +52,7 @@ class AxialFluxMotorType1:
                 fig_layout     = None,
                 fig_polar      = None,
                 fig_star       = None,
-                fig_mmk        = None,
+                fig_mmf        = None,
                 fig_wf         = None
             )
         else:
@@ -170,7 +170,7 @@ class AxialFluxMotorType1:
         self.winding_data.fig_layout = result.fig_layout
         self.winding_data.fig_polar  = result.fig_polar
         self.winding_data.fig_star   = result.fig_star
-        self.winding_data.fig_mmk    = result.fig_mmk
+        self.winding_data.fig_mmf    = result.fig_mmf
         self.winding_data.fig_wf     = result.fig_wf
 
     def find_cogging_period_mech(self):
