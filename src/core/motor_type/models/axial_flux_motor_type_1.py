@@ -167,11 +167,11 @@ class AxialFluxMotorType1:
         self.winding_data.mmf_offset = 0.0
         self.winding_data.winding_matrix = result.tooth_matrix
         self.winding_data.slot_matrix = result.winding_matrix
-        self.fig_layout = result.fig_layout
-        self.fig_polar  = result.fig_polar
-        self.fig_star   = result.fig_star
-        self.fig_mmk    = result.fig_mmk
-        self.fig_wf     = result.fig_wf
+        self.winding_data.fig_layout = result.fig_layout
+        self.winding_data.fig_polar  = result.fig_polar
+        self.winding_data.fig_star   = result.fig_star
+        self.winding_data.fig_mmk    = result.fig_mmk
+        self.winding_data.fig_wf     = result.fig_wf
 
     def find_cogging_period_mech(self):
         self.cogging_period_mech = find_cogging_period(slots= self.geometry_data.stator.slot_number, 
