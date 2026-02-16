@@ -1,5 +1,5 @@
 from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
-from src.core.motor_type.utils.for_winding.init_winding import init_winding
+from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
 from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
 from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
@@ -11,7 +11,6 @@ from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
-
 import math
 
 
@@ -47,10 +46,14 @@ class AxialFluxMotorType1:
                 throw          = 1,
                 parallel_path  = 1,
                 winding_layer  = 2,
-                winding_type   = "concentrated",
                 mmf_offset     = 0.0,
                 winding_matrix = None,
-                slot_winding   = None
+                slot_winding   = None,
+                fig_layout     = None,
+                fig_polar      = None,
+                fig_star       = None,
+                fig_mmk        = None,
+                fig_wf         = None
             )
         else:
             self.winding_data = winding_data
@@ -160,10 +163,15 @@ class AxialFluxMotorType1:
         self.symmetry_factor = symmetry_data.symmetry_factor
 
     def init_winding(self):
-        result = init_winding(motor= self)
-        self.winding_data.mmf_offset = result.mmf_offset
-        self.winding_data.winding_matrix = result.winding_matrix
-        self.winding_data.slot_matrix = result.slot_matrix
+        result = generate_motor_winding_analysis(motor= self, debug= False)
+        self.winding_data.mmf_offset = 0.0
+        self.winding_data.winding_matrix = result.tooth_matrix
+        self.winding_data.slot_matrix = result.winding_matrix
+        self.fig_layout = result.fig_layout
+        self.fig_polar  = result.fig_polar
+        self.fig_star   = result.fig_star
+        self.fig_mmk    = result.fig_mmk
+        self.fig_wf     = result.fig_wf
 
     def find_cogging_period_mech(self):
         self.cogging_period_mech = find_cogging_period(slots= self.geometry_data.stator.slot_number, 

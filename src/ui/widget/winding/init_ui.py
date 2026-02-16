@@ -1,10 +1,12 @@
-import paths
+import sys
 import numpy as np
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
-                             QFrame, QComboBox, QLabel, QScrollArea, QGroupBox, 
-                             QPushButton, QApplication, QTableWidget, QTableWidgetItem, QHeaderView)
+                             QFrame, QLabel, QScrollArea, QGroupBox, 
+                             QApplication, QTableWidget, QTableWidgetItem, QHeaderView)
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
+
+# Giả sử đường dẫn import này đúng trong dự án của bạn
 from src.ui.widget.widget.utils.bind_input import bind_input
 
 def init_ui(winding_tab=None):
@@ -14,7 +16,7 @@ def init_ui(winding_tab=None):
     motor = main_win.motor
     winding_data = motor.winding_data 
     
-    # Thiết lập Layout chính (Giống hệt Geometry)
+    # Thiết lập Layout chính
     main_layout = QHBoxLayout(winding_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
     
@@ -24,26 +26,41 @@ def init_ui(winding_tab=None):
     def global_update():
         if motor is None: return
         
-        # 1. Reload logic lõi
+        # 1. Reload logic lõi (Goi init_winding moi ben trong motor.reload())
         motor.reload() 
         
         # 2. Cập nhật bảng Ma trận dây quấn
         matrix = winding_data.winding_matrix 
         table = winding_tab.matrix_table
+        
         if matrix is not None:
+            # Matrix gio la (Slot x Phase)
             rows, cols = matrix.shape
             table.setRowCount(rows)
             table.setColumnCount(cols)
             table.setHorizontalHeaderLabels([f"Ph {chr(65+i)}" for i in range(cols)])
+            table.setVerticalHeaderLabels([f"Slot {i+1}" for i in range(rows)])
+
             for i in range(rows):
                 for j in range(cols):
                     val = matrix[i, j]
+                    # Hien thi gia tri Ampe-vong
                     item = QTableWidgetItem(f"{val:g}")
                     item.setTextAlignment(Qt.AlignCenter)
-                    if val > 0: item.setBackground(QColor("#FFF59D"))
-                    elif val < 0: item.setBackground(QColor("#81D4FA"))
+                    
+                    # To mau cho truc quan: Duong (Vang nhat), Am (Xanh nhat)
+                    if val > 0: 
+                        item.setBackground(QColor("#FFF59D")) 
+                    elif val < 0: 
+                        item.setBackground(QColor("#81D4FA")) 
+                    else:
+                        item.setBackground(QColor("#FFFFFF")) 
+
                     table.setItem(i, j, item)
-            table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            
+            # Tu dong gian cot
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(QHeaderView.Stretch)
 
         # 3. Ép giao diện cập nhật
         QApplication.processEvents()
@@ -58,7 +75,7 @@ def init_ui(winding_tab=None):
     scroll.setFrameShape(QFrame.NoFrame)
     
     content_widget = QWidget()
-    content_hbox = QHBoxLayout(content_widget) # Các group nằm ngang giống Geometry
+    content_vbox = QVBoxLayout(content_widget) 
 
     def create_winding_group(title, attributes):
         group = QGroupBox(title)
@@ -67,7 +84,7 @@ def init_ui(winding_tab=None):
                 font-weight: bold; 
                 border: 1px solid #dee2e6; 
                 border-radius: 4px;
-                margin-top: 15px; 
+                margin-top: 10px; 
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
@@ -78,27 +95,29 @@ def init_ui(winding_tab=None):
         layout = QFormLayout(group)
         layout.setVerticalSpacing(10)
         
-        for attr, label in attributes:
-            if hasattr(winding_data, attr):
-                # Gắn global_update vào để thay đổi là cập nhật ngay
-                input_widget = bind_input(winding_data, attr, 1, global_update)
-                layout.addRow(f"{label}:", input_widget)
+        for attr_name, label_text in attributes:
+            if hasattr(winding_data, attr_name):
+                # Bind input vao data, khi thay doi se goi global_update
+                input_widget = bind_input(winding_data, attr_name, 1, global_update)
+                layout.addRow(f"{label_text}:", input_widget)
         return group
 
     # Nhóm 1: Thông số cơ bản
     topo_attrs = [
-        ("phase", "Phases"),
+        ("phase", "Phases (m)"),
         ("winding_layer", "Layers"),
         ("parallel_path", "Parallel Paths (a)")
     ]
+    
     # Nhóm 2: Thông số bối dây
     coil_attrs = [
-        ("turns", "Turns per Coil"),
-        ("throw", "Coil Throw (y)")
+        ("turns", "Turns per Coil (Nc)"),
+        ("throw", "Coil Throw (y)") 
     ]
 
-    content_hbox.addWidget(create_winding_group("Winding Topology", topo_attrs))
-    content_hbox.addWidget(create_winding_group("Coil Parameters", coil_attrs))
+    content_vbox.addWidget(create_winding_group("Winding Topology", topo_attrs))
+    content_vbox.addWidget(create_winding_group("Coil Parameters", coil_attrs))
+    content_vbox.addStretch()
     
     scroll.setWidget(content_widget)
     left_layout.addWidget(scroll)
@@ -108,34 +127,22 @@ def init_ui(winding_tab=None):
     right_layout = QVBoxLayout(right_panel)
     right_layout.setContentsMargins(0, 0, 0, 0)
 
-    # Tiêu đề bảng giống phong cách Label bên phải của Đạt
-    right_layout.addWidget(QLabel("<b>Winding Matrix Preview</b>"))
+    # Label tiêu đề
+    right_layout.addWidget(QLabel("<b>Winding Matrix Preview (Ampe-turns)</b>"))
     
+    # Bảng hiển thị
     winding_tab.matrix_table = QTableWidget()
     winding_tab.matrix_table.setAlternatingRowColors(True)
     winding_tab.matrix_table.setStyleSheet("border: 1px solid #dee2e6; border-radius: 4px;")
     right_layout.addWidget(winding_tab.matrix_table)
 
-    # Nút Force Recreate chuẩn "Tiêu chuẩn vàng"
-    btn_reload = QPushButton("Force Recalculate Winding")
-    btn_reload.setFixedHeight(40)
-    btn_reload.setStyleSheet("""
-        QPushButton { 
-            font-weight: bold; 
-            background-color: #f0f7fb; 
-            border: 1px solid #c5ddec;
-            border-radius: 4px;
-        }
-        QPushButton:hover { background-color: #e1f0f7; }
-    """)
-    btn_reload.clicked.connect(global_update)
-    right_layout.addWidget(btn_reload)
+    # Đã loại bỏ nút Force Recalculate tại đây
 
     # Cấu hình Splitter
     splitter.addWidget(left_panel)
     splitter.addWidget(right_panel)
     splitter.setStretchFactor(0, 1) 
-    splitter.setStretchFactor(1, 1) 
+    splitter.setStretchFactor(1, 2) 
     
     main_layout.addWidget(splitter)
     
