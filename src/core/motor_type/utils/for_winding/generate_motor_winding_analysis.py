@@ -66,7 +66,7 @@ def generate_motor_winding_analysis(motor, debug=False) -> Output:
     layers = motor.winding_data.winding_layer
     m = 3 
     turns = getattr(motor.winding_data, 'turns', 1)
-    res = [800, 800] # Giam do phan giai de hien thi mượt hon tren Surface
+    res = [800, 800] 
 
     wdg = datamodel()
     wdg.set_machinedata(Q=Q, p=P//2, m=m)
@@ -100,7 +100,6 @@ def generate_motor_winding_analysis(motor, debug=False) -> Output:
         periodicity_t=wdg.get_periodicity_t()
     )
 
-    # Thiet lap show=debug de hien thi cua so khi can thiet
     output_data.fig_layout = wdg.plot_layout(filename=os.path.join(figure_dir, 'layout.png'), res=res, show=debug)
     output_data.fig_polar = wdg.plot_polar_layout(filename=os.path.join(figure_dir, 'polar.png'), res=res, draw_poles=True, show=debug)
     output_data.fig_star = wdg.plot_star(filename=os.path.join(figure_dir, 'star.png'), res=res, ForceX=True, show=debug)
@@ -109,7 +108,15 @@ def generate_motor_winding_analysis(motor, debug=False) -> Output:
     output_data.fig_overhang = wdg.plot_overhang(filename=os.path.join(figure_dir, 'overhang.png'), res=res, show=debug)
 
     if debug:
-        plt.show() # Lenh nay se chan luong de ban xem cac cua so do thi da mo
+        print("\n" + "="*30)
+        print("DEBUG: WINDING MATRICES (Slot x Phase)")
+        print("-" * 30)
+        print("1. WINDING MATRIX:")
+        print(output_data.winding_matrix)
+        print("\n2. TOOTH MATRIX:")
+        print(output_data.tooth_matrix)
+        print("="*30 + "\n")
+        plt.show() 
 
     return output_data
 
@@ -120,8 +127,8 @@ if __name__ == "__main__":
 
     class MockMotor:
         def __init__(self):
-            self.geometry_data = Container(stator=Container(slot_number=12), rotor=Container(pole_number=10))
-            self.winding_data = Container(throw=1, winding_layer=2, turns=50)
+            self.geometry_data = Container(stator=Container(slot_number=15), rotor=Container(pole_number=6))
+            self.winding_data = Container(throw=7, winding_layer=2, turns=15)
 
     print("--- DANG CHAY TEST: DO THI SE HIEN RA VA LUU VAO DATA/FIGURE ---")
     result = generate_motor_winding_analysis(MockMotor(), debug=True)

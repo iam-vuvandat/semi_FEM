@@ -11,9 +11,8 @@ from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell_copy import export_to_maxwell
 import math
-
-
 pi = math.pi
 
 class AxialFluxMotorType1:
@@ -22,8 +21,8 @@ class AxialFluxMotorType1:
                  winding_data       = None,
                  adaptive_mesh_data = None,
                  air_material       = "default",
-                 magnet_material    = "N30UH",
-                 iron_material      = "M350-50A",
+                 magnet_material    = "NdFe30",
+                 iron_material      = "steel_1008",
                  shaft_speed        = 3000,
                  system_variable    = "magnetic_potential"):
         
@@ -42,7 +41,7 @@ class AxialFluxMotorType1:
         if winding_data is None:
             self.winding_data = Container(
                 phase          = 3,
-                turns          = 50,
+                turns          = 15,
                 throw          = 1,
                 parallel_path  = 1,
                 winding_layer  = 2,
@@ -83,6 +82,9 @@ class AxialFluxMotorType1:
 
         self.calculation_data = Container()
         self.create_calculation_data()
+
+        # Maxwell export option
+        self.maxwell_export_option = self.maxwell_export_option()
         
 
     def initialize_default_geometry(self):
@@ -209,3 +211,9 @@ class AxialFluxMotorType1:
 
     def display(self):
         show_motor(motor=self)
+
+    def export_to_maxwell(self):
+        return export_to_maxwell(motor = self)
+    
+    def maxwell_export_option(self):
+        self.maxwell_export_option = Container()

@@ -257,6 +257,10 @@ stator_yoke_hole = m3d.modeler.create_cylinder(
 m3d.modeler.subtract(blank_list=[stator_yoke], tool_list=[stator_yoke_hole], keep_originals=False)
 m3d.modeler[stator_yoke].name = "stator_yoke"
 m3d.modeler[stator_yoke].material_name = "steel_1008"
+
+# winding
+
+
 # Outer Region
 region = m3d.modeler.create_region(pad_value=30, pad_type="Percentage Offset")
 m3d.assign_insulating(assignment=[region])
@@ -304,6 +308,7 @@ setup.props["SmoothBHCurve"] = False
 
 setup.update()
 m3d.save_project()
+
 # Run
-m3d.analyze_setup(setup_name)
+#m3d.analyze_setup(setup_name)
 
