@@ -6,7 +6,6 @@ from PyQt5.QtCore import QTimer
 def display_reluctance_network(reluctance_network, plotter=None):
     if reluctance_network is None: return
 
-    # --- HÀM TRỢ GIÚP NỘI BỘ (Tiêu chuẩn vàng) ---
     def _process_grid_indices(grid):
         if grid.n_points == 0: return 0, 0, 0
         centers = grid.cell_centers().points
@@ -20,7 +19,6 @@ def display_reluctance_network(reluctance_network, plotter=None):
         grid.cell_data["idx_k"] = np.searchsorted(u_z, np.round(z, DEC))
         return len(u_r), len(u_th), len(u_z)
 
-    # Chuẩn bị dữ liệu lưới
     history = getattr(reluctance_network, 'list_elements_lite', [])
     grid_sector = reluctance_network.mesh.to_pyvista_grid()
     dim_sector = _process_grid_indices(grid_sector)
@@ -46,7 +44,6 @@ def display_reluctance_network(reluctance_network, plotter=None):
             self.bmap_mode = True
             self.use_symmetry = False
             
-            # Cắt lớp logic (Masking OR giống show_motor)
             self.show_i = self.show_j = self.show_k = False
             self.pos_i, self.pos_j, self.pos_k = dim_full[0]//2, 0, dim_full[2]//2
             self.max_i, self.max_j, self.max_k = dim_full
@@ -54,15 +51,14 @@ def display_reluctance_network(reluctance_network, plotter=None):
             self.timer = QTimer()
             self.timer.timeout.connect(self.next_frame)
             
-            # Tối ưu thanh B-Map (Khắc phục image_ed995e.png)
             self.sargs = dict(
                 title="Flux Density (T)", 
-                title_font_size=14,      # Giảm font title để không bị đè
-                label_font_size=12,      # Giảm font số
+                title_font_size=14,
+                label_font_size=12,
                 n_labels=6, 
                 fmt="%.2f", 
                 vertical=True, 
-                position_x=0.82,         # Dịch vào trong để không bị mất góc
+                position_x=0.82,
                 position_y=0.15, 
                 height=0.7, 
                 width=0.05, 
@@ -70,6 +66,12 @@ def display_reluctance_network(reluctance_network, plotter=None):
                 shadow=False
             )
             self.colors_net = {0: "#444444", 1: "#1976D2", 2: "#FF3333", 3: "#FF9900", 4: "#3366FF"}
+            self.colors_hex = [
+                "#0000ff", "#0049ff", "#0092ff", "#00dbff",
+                "#00ffdb", "#00ff92", "#00ff49", "#00ff00",
+                "#49ff00", "#92ff00", "#dbff00", "#ffdb00",
+                "#ff9200", "#ff4900", "#ff0000"
+            ]
 
         @property
         def active_grid(self): return grid_full if (self.use_symmetry and sym_factor > 1) else grid_sector
@@ -108,7 +110,6 @@ def display_reluctance_network(reluctance_network, plotter=None):
             grid.cell_data["MatID"] = mat_ids
             grid.cell_data["FluxB"] = b_vals
 
-            # --- LOGIC CẮT LỚP "MASK OR" CHUẨN XÁC ---
             mask = np.zeros(grid.n_cells, dtype=bool)
             has_sel = self.show_i or self.show_j or self.show_k
             if not has_sel: mask[:] = True
@@ -123,13 +124,10 @@ def display_reluctance_network(reluctance_network, plotter=None):
                 self._safe_remove("dynamic_mesh")
                 for mid in range(5): self._safe_remove(f"mat_{mid}")
             elif self.bmap_mode:
-                # Xóa các thành phần vật liệu tĩnh khi chuyển sang B-Map
                 for mid in range(5): self._safe_remove(f"mat_{mid}")
                 target = render_mesh if has_sel else render_mesh.threshold(0.1, scalars="MatID")
                 
-                # GIẢI PHÁP CHỐNG NHÁY THANH MÀU: 
-                # Tắt show_scalar_bar trong add_mesh và dùng pl.add_scalar_bar riêng nếu chưa có
-                pl.add_mesh(target, scalars="FluxB", cmap="jet", clim=[0, 2.0], 
+                pl.add_mesh(target, scalars="FluxB", cmap=self.colors_hex, clim=[0, 2.0], 
                             name="dynamic_mesh", show_scalar_bar=False, reset_camera=False, lighting=False)
                 
                 if not pl.scalar_bars:
@@ -145,7 +143,6 @@ def display_reluctance_network(reluctance_network, plotter=None):
                                     edge_color="#333333", name=f"mat_{mid}", reset_camera=False)
                     except: self._safe_remove(f"mat_{mid}")
             
-            # Cập nhật thông tin HUD (Head-Up Display)
             st = lambda s, p, m: f"ON [{p}/{m-1}]" if s else "OFF"
             info = f"Frame: {self.current_frame} | Sym: {'ON' if self.use_symmetry else 'OFF'}\n" \
                    f"R: {st(self.show_i, self.pos_i, self.max_i)} | Th: {st(self.show_j, self.pos_j, self.max_j)} | Z: {st(self.show_k, self.pos_k, self.max_k)}"
@@ -159,4 +156,5 @@ def display_reluctance_network(reluctance_network, plotter=None):
     pl.viewer_state = ViewerState()
     pl.viewer_state.render()
     pl.reset_camera()
+    pl.set_focus([0, 0, 0])
     return pl.viewer_state
