@@ -2,6 +2,13 @@ import numpy as np
 import math
 from src.core.motor_type.utils.for_create_geometry.rotate_point_z import rotate_point_z
 
+def move_point_along_vector(p_start, p_end, dist):
+    vec = np.array(p_end) - np.array(p_start)
+    norm = np.linalg.norm(vec)
+    if norm < 1e-9:
+        return p_end
+    return (np.array(p_end) + (vec / norm) * dist).tolist()
+
 def create_winding(motor, m3d):
     # 1. Trích xuất dữ liệu hình học
     st_geo = motor.geometry_data.stator
@@ -35,10 +42,13 @@ def create_winding(motor, m3d):
     layers          = int(wdg_data.winding_layer)
     
     delta_z         = (z_yoke - z_top) / (layers + 1)
-    wire_rad        = np.min([sl_width, delta_z]) * 0.25 * 0.82 
+    wire_rad        = np.min([sl_width, delta_z]) * 0.25 * 0.82
+    
+    square_side     = 2 * wire_rad
+    ext_val         = wire_rad 
 
     z_layers = [z_top + (i+1)*delta_z for i in range(layers)]
-    in_dist, out_dist = r_in - 4*wire_rad, r_out + 4*wire_rad
+    in_dist, out_dist = r_in - 1.5 * wire_rad, r_out + 1.5 * wire_rad
 
     # 3. Tính toán ma trận điểm active side
     active_side = np.zeros((layers, int(slot_num), 2, 3))
@@ -64,24 +74,31 @@ def create_winding(motor, m3d):
                     if coil_name in m3d.modeler.object_names: m3d.modeler.delete(coil_name)
 
                     segments = []
-                    s1 = m3d.modeler.create_polyline([p1, p2], name=f"{coil_name}_s1", xsection_type="Circle", xsection_width=2*wire_rad)
+                    p1_s1 = move_point_along_vector(p2, p1, ext_val)
+                    p2_s1 = move_point_along_vector(p1, p2, ext_val)
+                    s1 = m3d.modeler.create_polyline([p1_s1, p2_s1], name=f"{coil_name}_s1", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
                     segments.append(s1.name)
-                    s2 = m3d.modeler.create_polyline([p2, pm_out, p3], segment_type="Arc", name=f"{coil_name}_s2", xsection_type="Circle", xsection_width=2*wire_rad)
+                    
+                    s2 = m3d.modeler.create_polyline([p2, pm_out, p3], segment_type="Arc", name=f"{coil_name}_s2", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
                     segments.append(s2.name)
-                    s3 = m3d.modeler.create_polyline([p3, p4], name=f"{coil_name}_s3", xsection_type="Circle", xsection_width=2*wire_rad)
+                    
+                    p3_s3 = move_point_along_vector(p4, p3, ext_val)
+                    p4_s3 = move_point_along_vector(p3, p4, ext_val)
+                    s3 = m3d.modeler.create_polyline([p3_s3, p4_s3], name=f"{coil_name}_s3", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
                     segments.append(s3.name)
-                    s4 = m3d.modeler.create_polyline([p4, pm_in, p1], segment_type="Arc", name=f"{coil_name}_s4", xsection_type="Circle", xsection_width=2*wire_rad)
+                    
+                    s4 = m3d.modeler.create_polyline([p4, pm_in, p1], segment_type="Arc", name=f"{coil_name}_s4", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
                     segments.append(s4.name)
 
+                    # Hợp nhất các phân đoạn thành 1 bối dây (Solid đơn lump)
                     m3d.modeler.unite(assignment=segments)
                     m3d.modeler[segments[0]].name = coil_name
                     
-                    # Gán vật liệu Copper
-                    m3d.modeler[coil_name].material_name = "copper"
+                    # Gán vật liệu và màu sắc cho từng bối dây
+                    m3d.assign_material(coil_name, "copper")
+                    m3d.modeler[coil_name].color = colors[p_idx % 3]
+                    m3d.modeler[coil_name].transparency = 0.2
                     
                     # Debug Volume
                     coil_volume = m3d.modeler[coil_name].volume
                     print(f"DEBUG: {coil_name} united. Volume: {coil_volume:.4f} mm3")
-                    
-                    m3d.modeler[coil_name].color = colors[p_idx % 3]
-                    m3d.modeler[coil_name].transparency = 0.2

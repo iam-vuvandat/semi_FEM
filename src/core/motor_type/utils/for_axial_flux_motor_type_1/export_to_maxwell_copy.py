@@ -40,12 +40,12 @@ def export_to_maxwell(motor):
     
     create_balloon(pad_value= 10, m3d = m3d)
 
-    """
+    
     # Mesh
     all_objects = m3d.modeler.object_names
     mesh_targets = [
         obj for obj in all_objects 
-        if obj != region              
+        if obj != "region"              
         and "Line" not in obj        
         and "Sheet" not in obj      
     ]
@@ -82,13 +82,17 @@ def export_to_maxwell(motor):
     m3d.save_project()
 
     # Run
-    #m3d.analyze_setup(setup_name)
+    m3d.analyze_setup(setup_name)
 
     return None
 
-    """
+    
+
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
     motor = AxialFluxMotorType1()
     motor.winding_data.throw = 2
     motor.export_to_maxwell()
+
+
+    
