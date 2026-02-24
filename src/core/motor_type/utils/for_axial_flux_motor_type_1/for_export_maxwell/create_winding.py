@@ -20,7 +20,7 @@ def create_winding_section(m3d, section_radius, slot_index, slot_arc, offset_x, 
     m3d.modeler.rotate(assignment=section_name, axis="Z", angle=angle_i)
     return section_name
 
-def get_arc_end_winding_points(r_arc, ang_start, ang_end, z_start, z_end, num_segments=15):
+def get_arc_end_winding_points(r_arc, ang_start, ang_end, z_start, z_end, num_segments=5):
     pts = []
     diff = (ang_end - ang_start + 180) % 360 - 180
     for i in range(num_segments + 1):
@@ -62,7 +62,7 @@ def create_winding(motor, m3d):
     current_function = motor.drive.current_function
     
     # Khống chế bán kính dây dẫn
-    wire_rad = min(sl_depth / (throw + 2), sl_width) * 0.4 * 0.5
+    wire_rad = min(sl_depth / (throw + 2), sl_width) * 0.3 * 0.5
     
     # Tọa độ Z với clearance
     offset_z0 = (ro_geo.rotor_length + ro_geo.magnet_length + ro_geo.airgap) * 1e3
@@ -109,9 +109,9 @@ def create_winding(motor, m3d):
                     # Gom điểm lộ trình
                     raw_points = []
                     raw_points.extend([p1_in, p1_out, p1_out_arc_start])
-                    raw_points.extend(get_arc_end_winding_points(r_arc_out, ang_s, ang_t, z_layers[0], z_layers[1], 15))
+                    raw_points.extend(get_arc_end_winding_points(r_arc_out, ang_s, ang_t, z_layers[0], z_layers[1], 5))
                     raw_points.extend([p2_out_arc_end, p2_out, p2_in, p2_in_arc_start])
-                    raw_points.extend(get_arc_end_winding_points(r_arc_in, ang_t, ang_s, z_layers[1], z_layers[0], 15))
+                    raw_points.extend(get_arc_end_winding_points(r_arc_in, ang_t, ang_s, z_layers[1], z_layers[0], 5))
                     raw_points.append(p1_in)
 
                     # Lọc điểm trùng lặp tránh lỗi CreatePolyline
