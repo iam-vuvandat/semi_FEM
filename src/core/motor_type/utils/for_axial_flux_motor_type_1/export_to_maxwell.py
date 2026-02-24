@@ -91,7 +91,7 @@ def export_to_maxwell(motor):
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
     motor = AxialFluxMotorType1()
-    motor.winding_data.throw = 6
+    motor.winding_data.throw = 1
     motor.export_to_maxwell()
 
 

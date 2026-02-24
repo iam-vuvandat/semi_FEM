@@ -57,6 +57,9 @@ def create_winding(motor, m3d):
     wdg_data = motor.winding_data
     sl_matrix = wdg_data.slot_matrix
     throw, phase, layers = int(wdg_data.throw), int(wdg_data.phase), int(wdg_data.winding_layer)
+
+    # chuỗi kí tự dòng điện trong Drive: 
+    current_function = motor.drive.current_function
     
     # Khống chế bán kính dây dẫn
     wire_rad = min(sl_depth / (throw + 2), sl_width) * 0.4 * 0.5
