@@ -1,3 +1,4 @@
+import paths
 from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
 from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
 from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
@@ -11,7 +12,10 @@ from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
-from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell_copy import export_to_maxwell
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
+
+from src.core.core_class.models.Drive import Drive
+from src.core.core_class.models.Mechanical import Mechanical
 import math
 pi = math.pi
 
@@ -23,15 +27,11 @@ class AxialFluxMotorType1:
                  air_material       = "default",
                  magnet_material    = "NdFe30",
                  iron_material      = "steel_1008",
-                 shaft_speed        = 3000,
                  system_variable    = "magnetic_potential"):
         
-        # --- Basic Identification ---
         self.motor_type = "axial_flux_motor_type_1"
-        self.shaft_speed = shaft_speed
         self.system_variable = system_variable
-
-        # --- Initialize Geometry Container ---
+        self.mechanical = Mechanical()
         if geometry_data is None:
             self.geometry_data = self.initialize_default_geometry()
         else:
@@ -56,6 +56,8 @@ class AxialFluxMotorType1:
             )
         else:
             self.winding_data = winding_data
+
+        
 
         # --- Initialize Mesh Container ---
         if adaptive_mesh_data is None:
@@ -84,8 +86,8 @@ class AxialFluxMotorType1:
         self.create_calculation_data()
 
         # Maxwell export option
-        self.maxwell_export_option = self.maxwell_export_option()
-        
+        self.maxwell_export_option = Container()
+        self.drive = Drive(motor = self)
 
     def initialize_default_geometry(self):
         """Khởi tạo cấu trúc hình học với tên biến nguyên bản"""
@@ -215,5 +217,4 @@ class AxialFluxMotorType1:
     def export_to_maxwell(self):
         return export_to_maxwell(motor = self)
     
-    def maxwell_export_option(self):
-        self.maxwell_export_option = Container()
+    

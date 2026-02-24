@@ -8,9 +8,14 @@ def update_reluctance_network(reluctance_network,
                               delta_mu_max=-1,
                               debug=False):
     
-    reluctance_network.loop_flux = loop_flux
-    reluctance_network.magnetic_potential = magnetic_potential
-    reluctance_network.winding_current = winding_current
+    if loop_flux is not None:
+        reluctance_network.loop_flux = loop_flux
+    
+    if magnetic_potential is not None:
+        reluctance_network.magnetic_potential = magnetic_potential
+        
+    if winding_current is not None:
+        reluctance_network.winding_current = winding_current
 
     iterator = tqdm(reluctance_network.elements.flat, 
                     total=reluctance_network.elements.size, 

@@ -28,7 +28,7 @@ class ReluctanceNetwork:
                  winding_current = None,
                  callback = None):
         
-        self.current_position = 0.0
+        self.mechanical = motor.mechanical
         self.symmetry_factor = motor.symmetry_factor
         self.material_database = motor.material_database
         self.geometry = geometry
