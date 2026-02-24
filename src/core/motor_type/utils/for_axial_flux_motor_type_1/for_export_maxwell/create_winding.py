@@ -2,103 +2,129 @@ import numpy as np
 import math
 from src.core.motor_type.utils.for_create_geometry.rotate_point_z import rotate_point_z
 
-def move_point_along_vector(p_start, p_end, dist):
-    vec = np.array(p_end) - np.array(p_start)
-    norm = np.linalg.norm(vec)
-    if norm < 1e-9:
-        return p_end
-    return (np.array(p_end) + (vec / norm) * dist).tolist()
+def create_winding_section(m3d, section_radius, slot_index, slot_arc, offset_x, z):
+    angle_i = (slot_index * slot_arc) + (slot_arc / 2)
+    z_str = str(round(z, 2)).replace('.', '_')
+    section_name = f"Section_S{slot_index}_Z{z_str}"
+    
+    if section_name in m3d.modeler.object_names:
+        m3d.modeler.delete(section_name)
+    
+    m3d.modeler.create_circle(
+        orientation="YZ",
+        origin=[offset_x, 0, z],
+        radius=section_radius,
+        name=section_name,
+        is_covered=True
+    )
+    m3d.modeler.rotate(assignment=section_name, axis="Z", angle=angle_i)
+    return section_name
+
+def get_arc_end_winding_points(r_arc, ang_start, ang_end, z_start, z_end, num_segments=15):
+    pts = []
+    diff = (ang_end - ang_start + 180) % 360 - 180
+    for i in range(num_segments + 1):
+        t = i / num_segments
+        curr_ang = ang_start + t * diff
+        curr_z = z_start + t * (z_end - z_start)
+        x = r_arc * math.cos(math.radians(curr_ang))
+        y = r_arc * math.sin(math.radians(curr_ang))
+        pts.append([x, y, curr_z])
+    return pts
+
+def remove_duplicate_points(points, tolerance=1e-6):
+    if not points: return []
+    cleaned = [points[0]]
+    for p in points[1:]:
+        if np.linalg.norm(np.array(p) - np.array(cleaned[-1])) > tolerance:
+            cleaned.append(p)
+    return cleaned
 
 def create_winding(motor, m3d):
     # 1. Trích xuất dữ liệu hình học
     st_geo = motor.geometry_data.stator
     ro_geo = motor.geometry_data.rotor
+    slot_num = st_geo.slot_number
+    st_lam_dia = st_geo.stator_lam_dia * 1e3
+    st_bore_dia = st_geo.stator_bore_dia * 1e3
+    sl_width, sl_depth = st_geo.slot_width * 1e3, st_geo.slot_depth * 1e3
     
-    slot_num        = st_geo.slot_number
-    st_lam_dia      = st_geo.stator_lam_dia * 1e3
-    st_bore_dia     = st_geo.stator_bore_dia * 1e3
-    sl_width        = st_geo.slot_width * 1e3
-    sl_opening      = st_geo.slot_opening * 1e3
-    sl_depth        = st_geo.slot_depth * 1e3
-    t_tip_depth     = st_geo.tooth_tip_depth * 1e3
-    t_tip_angle     = st_geo.tooth_tip_angle
-    
-    ro_len          = ro_geo.rotor_length * 1e3
-    mg_len          = ro_geo.magnet_length * 1e3
-    ag              = ro_geo.airgap * 1e3
-
-    offset_z0       = ro_len + mg_len + ag
-    z_top           = offset_z0 + t_tip_depth + (sl_width - sl_opening) * 0.5 * np.tan(np.radians(t_tip_angle))
-    z_yoke          = offset_z0 + t_tip_depth + sl_depth
-    slot_arc        = 360 / slot_num
-    r_out           = st_lam_dia / 2
-    r_in            = st_bore_dia / 2
+    slot_arc = 360 / slot_num
+    r_out, r_in = st_lam_dia / 2, st_bore_dia / 2
+    r_avg = (r_in + r_out) / 2
 
     # 2. Dữ liệu dây quấn
-    wdg_data        = motor.winding_data
-    sl_matrix       = wdg_data.slot_matrix
-    throw           = int(wdg_data.throw)
-    phase           = int(wdg_data.phase)
-    layers          = int(wdg_data.winding_layer)
+    wdg_data = motor.winding_data
+    sl_matrix = wdg_data.slot_matrix
+    throw, phase, layers = int(wdg_data.throw), int(wdg_data.phase), int(wdg_data.winding_layer)
     
-    delta_z         = (z_yoke - z_top) / (layers + 1)
-    wire_rad        = np.min([sl_width, delta_z]) * 0.25 * 0.82
+    # Khống chế bán kính dây dẫn
+    wire_rad = min(sl_depth / (throw + 2), sl_width) * 0.8 * 0.5
     
-    square_side     = 2 * wire_rad
-    ext_val         = wire_rad 
+    # Tọa độ Z với clearance
+    offset_z0 = (ro_geo.rotor_length + ro_geo.magnet_length + ro_geo.airgap) * 1e3
+    clearance = wire_rad * 1.2
+    z_start_layer = offset_z0 + clearance
+    z_end_layer = (offset_z0 + sl_depth) - clearance
+    z_layers = np.linspace(z_start_layer, z_end_layer, layers).tolist() if layers > 1 else [z_start_layer]
 
-    z_layers = [z_top + (i+1)*delta_z for i in range(layers)]
-    in_dist, out_dist = r_in - 1.5 * wire_rad, r_out + 1.5 * wire_rad
-
-    # 3. Tính toán ma trận điểm active side
-    active_side = np.zeros((layers, int(slot_num), 2, 3))
-    for i in range(layers):
-        p_in_ref, p_out_ref = rotate_point_z([in_dist, 0, z_layers[i]], slot_arc/2), rotate_point_z([out_dist, 0, z_layers[i]], slot_arc/2)
-        for j in range(int(slot_num)):
-            active_side[i,j,0] = rotate_point_z(p_in_ref, j*slot_arc)
-            active_side[i,j,1] = rotate_point_z(p_out_ref, j*slot_arc)
+    # HIỆU CHỈNH: Extension bằng 1.5 lần bán kính dây
+    ext = 1.5 * wire_rad
+    r_in_ext, r_out_ext = r_in - ext, r_out + ext
+    
+    # Bán kính cung tròn (đẩy ra thêm một đoạn nhỏ để không chạm vào phần extension)
+    r_arc_in, r_arc_out = r_in_ext - 1.0, r_out_ext + 1.0
 
     if sl_matrix is not None:
-        z_mid, colors = np.mean(z_layers), [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
         
         for p_idx in range(phase):
             for s_idx in range(int(slot_num)):
                 if sl_matrix[s_idx, p_idx] > 0:
                     t_idx = (s_idx + throw) % int(slot_num)
-                    p1, p2, p3, p4 = list(active_side[0, s_idx, 0]), list(active_side[0, s_idx, 1]), list(active_side[1, t_idx, 1]), list(active_side[1, t_idx, 0])
-                    m_theta = (s_idx + throw/2)*slot_arc + slot_arc/2
-                    pm_out = list(rotate_point_z([out_dist + wire_rad, 0, z_mid], m_theta))
-                    pm_in  = list(rotate_point_z([in_dist - wire_rad, 0, z_mid], m_theta))
+                    ang_s = (s_idx * slot_arc) + (slot_arc / 2)
+                    ang_t = (t_idx * slot_arc) + (slot_arc / 2)
+
+                    # Điểm mốc cạnh tác dụng
+                    p1_in  = list(rotate_point_z([r_in_ext, 0, z_layers[0]], ang_s))
+                    p1_out = list(rotate_point_z([r_out_ext, 0, z_layers[0]], ang_s))
+                    p2_out = list(rotate_point_z([r_out_ext, 0, z_layers[1]], ang_t))
+                    p2_in  = list(rotate_point_z([r_in_ext, 0, z_layers[1]], ang_t))
                     
+                    # Điểm nối vào cung tròn
+                    p1_out_arc_start = list(rotate_point_z([r_arc_out, 0, z_layers[0]], ang_s))
+                    p2_out_arc_end   = list(rotate_point_z([r_arc_out, 0, z_layers[1]], ang_t))
+                    p2_in_arc_start  = list(rotate_point_z([r_arc_in, 0, z_layers[1]], ang_t))
+                    p1_in_arc_end    = list(rotate_point_z([r_arc_in, 0, z_layers[0]], ang_s))
+
                     coil_name = f"Coil_Ph{p_idx}_S{s_idx}"
+                    path_name = f"{coil_name}_Path"
+                    
                     if coil_name in m3d.modeler.object_names: m3d.modeler.delete(coil_name)
+                    if path_name in m3d.modeler.object_names: m3d.modeler.delete(path_name)
 
-                    segments = []
-                    p1_s1 = move_point_along_vector(p2, p1, ext_val)
-                    p2_s1 = move_point_along_vector(p1, p2, ext_val)
-                    s1 = m3d.modeler.create_polyline([p1_s1, p2_s1], name=f"{coil_name}_s1", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
-                    segments.append(s1.name)
-                    
-                    s2 = m3d.modeler.create_polyline([p2, pm_out, p3], segment_type="Arc", name=f"{coil_name}_s2", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
-                    segments.append(s2.name)
-                    
-                    p3_s3 = move_point_along_vector(p4, p3, ext_val)
-                    p4_s3 = move_point_along_vector(p3, p4, ext_val)
-                    s3 = m3d.modeler.create_polyline([p3_s3, p4_s3], name=f"{coil_name}_s3", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
-                    segments.append(s3.name)
-                    
-                    s4 = m3d.modeler.create_polyline([p4, pm_in, p1], segment_type="Arc", name=f"{coil_name}_s4", xsection_type="Rectangle", xsection_width=square_side, xsection_height=square_side)
-                    segments.append(s4.name)
+                    # Gom điểm lộ trình
+                    raw_points = []
+                    raw_points.extend([p1_in, p1_out, p1_out_arc_start])
+                    raw_points.extend(get_arc_end_winding_points(r_arc_out, ang_s, ang_t, z_layers[0], z_layers[1], 15))
+                    raw_points.extend([p2_out_arc_end, p2_out, p2_in, p2_in_arc_start])
+                    raw_points.extend(get_arc_end_winding_points(r_arc_in, ang_t, ang_s, z_layers[1], z_layers[0], 15))
+                    raw_points.append(p1_in)
 
-                    # Hợp nhất các phân đoạn thành 1 bối dây (Solid đơn lump)
-                    m3d.modeler.unite(assignment=segments)
-                    m3d.modeler[segments[0]].name = coil_name
+                    # Lọc điểm trùng lặp tránh lỗi CreatePolyline
+                    full_path_points = remove_duplicate_points(raw_points)
+
+                    m3d.modeler.create_polyline(
+                        points=full_path_points,
+                        name=path_name,
+                        close_surface=False,
+                        xsection_type=None
+                    )
                     
-                    # Gán vật liệu và màu sắc cho từng bối dây
-                    m3d.assign_material(coil_name, "copper")
+                    section_name = create_winding_section(m3d, wire_rad, s_idx, slot_arc, r_avg, z_layers[0])
+                    m3d.modeler.sweep_along_path(assignment=section_name, sweep_object=path_name)
+                    
+                    m3d.modeler[section_name].name = coil_name
+                    m3d.assign_material(assignment=coil_name, material="copper")
                     m3d.modeler[coil_name].color = colors[p_idx % 3]
                     m3d.modeler[coil_name].transparency = 0.2
-                    
-                    # Debug Volume
-                    coil_volume = m3d.modeler[coil_name].volume
-                    print(f"DEBUG: {coil_name} united. Volume: {coil_volume:.4f} mm3")
