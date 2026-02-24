@@ -59,7 +59,7 @@ def create_winding(motor, m3d):
     throw, phase, layers = int(wdg_data.throw), int(wdg_data.phase), int(wdg_data.winding_layer)
     
     # Khống chế bán kính dây dẫn
-    wire_rad = min(sl_depth / (throw + 2), sl_width) * 0.8 * 0.5
+    wire_rad = min(sl_depth / (throw + 2), sl_width) * 0.4 * 0.5
     
     # Tọa độ Z với clearance
     offset_z0 = (ro_geo.rotor_length + ro_geo.magnet_length + ro_geo.airgap) * 1e3
