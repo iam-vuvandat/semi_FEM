@@ -82,7 +82,7 @@ def export_to_maxwell(motor):
     m3d.save_project()
 
     # Run
-    m3d.analyze_setup(setup_name)
+    #m3d.analyze_setup(setup_name)
 
     return None
 
