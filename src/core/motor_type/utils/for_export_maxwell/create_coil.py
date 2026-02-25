@@ -1,95 +1,67 @@
+import numpy as np
 import math
+from src.core.motor_type.utils.for_create_geometry.rotate_point_z import rotate_point_z
+from src.core.motor_type.utils.for_export_maxwell.create_conductor import create_conductor
 
-def create_coil(m3d, points, width, current = "2A", conductors_number = 10, shape="3"):
-    # 1. Tao duong dan khep kin (tra ve chuoi)
-    closed_points = points + [points[0]]
-    path_name = m3d.modeler.create_polyline(
-        points=closed_points,
-        close_surface=False
-    )
+def get_semi_circle_points(p_start, p_end, num_segments=15):
+    p_s = np.array(p_start)
+    p_e = np.array(p_end)
+    mid = (p_s + p_e) / 2
+    vec = p_e - p_s
+    dist = np.linalg.norm(vec)
+    r_vec = mid.copy()
+    r_vec[2] = 0
+    side = r_vec / np.linalg.norm(r_vec) if np.linalg.norm(r_vec) > 1e-9 else np.array([0, 1, 0])
+    points = []
+    for i in range(num_segments + 1):
+        theta = (i / num_segments) * math.pi
+        p = p_s * (1 - i/num_segments) + p_e * (i/num_segments)
+        p = p + side * (math.sin(theta) * dist * 0.4)
+        points.append(p.tolist())
+    return points
 
-    # 2. Tinh toan hinh hoc tai trung diem canh dau tien
-    p0 = points[0]
-    p1 = points[1]
-    mid_point = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2]
-    v_dir = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]]
-    
-    if abs(v_dir[0]) < 1e-9 and abs(v_dir[1]) < 1e-9:
-        perp_vec = [0, 1, 0]
-    else:
-        perp_vec = [-v_dir[1], v_dir[0], 0]
-
-    # 3. Tao LCS (Luu y: cs_obj.name la chuoi)
-    cs_obj = m3d.modeler.create_coordinate_system(
-        origin=mid_point,
-        x_pointing=v_dir,
-        y_pointing=perp_vec
-    )
-    m3d.modeler.set_working_coordinate_system(cs_obj.name)
-
-    # 4. Tao tiet dien (tra ve chuoi)
-    if shape == "round":
-        rect_name = m3d.modeler.create_circle(
-            orientation="YZ",
-            origin=[0, 0, 0],
-            radius=width/2,
-            is_covered=True
-        )
-        rect_name2 = m3d.modeler.create_circle(
-            orientation="YZ",
-            origin=[0, 0, 0],
-            radius=width/2,
-            is_covered=True
-        )
-    elif shape in ["triangle", "pentagon", "hexagon"] or (isinstance(shape, int) and shape >= 3 and shape != 4):
-        # Xu ly cac da giac deu (Regular Polygons)
-        sides_map = {"triangle": 3, "pentagon": 5, "hexagon": 6}
-        num_sides = sides_map.get(shape, shape)
+def create_coil(m3d, p1, p2, p3, p4, width=4.0, conductors_number=10, flare_offset=8.0):
+    def get_flared_jog_anchors(pa, pb, offset_val):
+        va, vb = np.array(pa), np.array(pb)
+        m = (va + vb) / 2
         
-        rect_name = m3d.modeler.create_regular_polygon(
-            orientation="YZ",
-            origin=[0, 0, 0],
-            start_dir=[0, width/2, 0],
-            num_sides=num_sides
-        )
-        rect_name2 = m3d.modeler.create_regular_polygon(
-            orientation="YZ",
-            origin=[0, 0, 0],
-            start_dir=[0, width/2, 0],
-            num_sides=num_sides
-        )
-    else:
-        # Truong hop "square", shape=4 hoac bat ky default nao
-        rect_name = m3d.modeler.create_rectangle(
-            orientation="YZ",
-            origin=[0, -width/2, -width/2],
-            sizes=[width, width],
-            is_covered=True
-        )
-        rect_name2 = m3d.modeler.create_rectangle(
-            orientation="YZ",
-            origin=[0, -width/2, -width/2],
-            sizes=[width, width],
-            is_covered=True
-        )
+        # Tinh toan diem p_m1, p_m2 ban dau (chua choai)
+        ratio = 0.2
+        pm1 = m - (vb - va) * (ratio / 2)
+        pm2 = m + (vb - va) * (ratio / 2)
+        
+        # Thuc hien "choai" theo phuong huong tam (Radial)
+        def apply_flare(p, off):
+            r_vec = np.array([p[0], p[1], 0])
+            norm = np.linalg.norm(r_vec)
+            if norm < 1e-9: return p
+            return (p + (r_vec / norm) * off).tolist()
 
-    m3d.modeler.set_working_coordinate_system("Global")
+        return apply_flare(pm1, offset_val), apply_flare(pm2, offset_val)
+
+    # pm_o1, pm_o2: Choai ra ngoai (flare_offset duong)
+    pm_o1, pm_o2 = get_flared_jog_anchors(p2, p3, flare_offset) 
+    # pm_i1, pm_i2: Choai vao trong (flare_offset am)
+    pm_i1, pm_i2 = get_flared_jog_anchors(p4, p1, -flare_offset)
+
+    segments_config = [
+        ([pm_i2, p1, p2, pm_o1], False),       
+        (get_semi_circle_points(pm_o1, pm_o2), False), 
+        ([pm_o2, p3, p4, pm_i1], False),       
+        (get_semi_circle_points(pm_i1, pm_i2), True)   
+    ]
     
-    # 5. Sweep along path
-    m3d.modeler.sweep_along_path(
-        assignment=rect_name, 
-        sweep_object=path_name, 
-        draft_angle=0, 
-        draft_type='Nature', 
-        is_check_face_intersection=False, 
-        twist_angle=0
-    )
-
-    # 6. Gan vat lieu va don dep
-    m3d.assign_material(assignment=rect_name, material="copper")
-    m3d.modeler.delete(path_name)
-
-    # 7. Gán Coil Terminal (Tra ve doi tuong BoundaryObject)
-    coil_terminal_obj = m3d.assign_coil(assignment = rect_name2, conductors_number= conductors_number)
-
-    return rect_name, coil_terminal_obj
+    all_solids = []
+    terminal_rect = None
+    for path, is_term in segments_config:
+        res_solid, res_terminal = create_conductor(m3d=m3d, point_list=path, width=width, create_terminal=is_term)
+        all_solids.append(res_solid)
+        if is_term: terminal_rect = res_terminal
+            
+    if len(all_solids) > 1:
+        m3d.modeler.unite(all_solids)
+    
+    final_solid = all_solids[0]
+    coil_terminal_obj = m3d.assign_coil(assignment=terminal_rect, conductors_number=conductors_number)
+    
+    return final_solid, coil_terminal_obj
