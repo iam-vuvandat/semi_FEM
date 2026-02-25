@@ -1,4 +1,4 @@
-import paths
+
 import os
 import glob
 import time
@@ -12,3 +12,8 @@ def init_window():
         try: os.remove(f)
         except: pass
     time.sleep(1)
+
+if __name__ == "__main__":
+    os.system("taskkill /F /IM ansysedt.exe /T")
+    os.system("taskkill /F /IM AnsysGRPC.exe /T")
+
