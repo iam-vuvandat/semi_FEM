@@ -29,21 +29,13 @@ def analysis_motor(motor, callback = None):
             total_progress = int(sub_progress * 0.15)
             callback(msg, total_progress)
 
-    if motor.mesh is None or motor.reluctance_network is None:
+    if motor.mesh is None:
         motor.reload()
-        motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
-        motor.reload()
-        motor.create_reluctance_network(callback = scaled_callback)
 
-    else:
-        if int(motor.mesh.adaptive_mesh_data.n_theta) != minimum_theta_cell:
-            motor.reload()
-            motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
-            motor.reload()
-            motor.create_reluctance_network(callback = scaled_callback)
-
-      
-
+    motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
+    motor.reload()
+    motor.create_reluctance_network(callback = scaled_callback)
+    
     phase_number = motor.winding_data.phase
     flux_linkage = np.zeros((phase_number + 1, n_point))
     mst_data = np.zeros((5, n_point))

@@ -25,5 +25,7 @@ def create_rotor_yoke(motor,m3d):
     m3d.modeler[rotor_base].material_name = material_name
     m3d.modeler[rotor_base].name = "rotor_yoke"
 
+    return rotor_base
+
 
 

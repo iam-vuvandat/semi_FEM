@@ -55,7 +55,7 @@ def maxwell_stress_tensor(motor):
     mst_result = np.zeros(5)
     
     # 6. Tham chiếu đến vị trí hiện tại
-    mst_result[-1] = motor.reluctance_network.current_position
+    mst_result[-1] = motor.reluctance_network.mechanical.current_position
     
     # 7. Cộng các giá trị vừa tích phân xong: 
     result = result1 + result2 + result3 + result4

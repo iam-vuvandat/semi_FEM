@@ -92,7 +92,9 @@ class Drive:
     def apply_winding_excitation(self):
         """Cập nhật dòng điện vào mạng điện trở từ (MBGRN)."""
         currents = self.calculate_n_phase_currents()
-        self.reluctance_network.update_reluctance_network(winding_current = currents)
+        reluctance_network = self.reluctance_network
+        if reluctance_network is not None: 
+            reluctance_network.update_reluctance_network(winding_current = currents)
 
 # --- Phần chạy thử nghiệm và In kết quả ---
 if __name__ == "__main__":

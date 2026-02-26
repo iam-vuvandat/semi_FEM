@@ -71,3 +71,6 @@ def create_magnet(motor, m3d):
     _, new_pole = m3d.modeler.duplicate_around_axis(assignment=magnet_pole, axis="Z", angle = arc_pole, clones=pole_number)
     for i in range(len(new_pole)):
         m3d.modeler[new_pole[i]].material_name = name_s if i % 2 == 0 else name_n
+
+    all_magnets = [magnet_pole] + list(new_pole)
+    return all_magnets

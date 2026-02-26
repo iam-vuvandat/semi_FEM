@@ -12,6 +12,7 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.cr
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_stator import create_stator
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_winding import create_winding
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_balloon import create_balloon
+from src.core.motor_type.utils.for_export_maxwell.init_solver import init_solver
 
 def export_to_maxwell(motor, callback=None):
     if callback: callback("Initializing Maxwell window", 5)
@@ -23,11 +24,15 @@ def export_to_maxwell(motor, callback=None):
     rotor = motor.geometry_data.rotor
     magnet_length = rotor.magnet_length * 1e3
     
+    segment_created = []
     if callback: callback("Creating rotor yoke", 20)
-    create_rotor_yoke(motor=motor, m3d=m3d)
+    rotor_yoke = create_rotor_yoke(motor=motor, m3d=m3d)
+    print(segment_created)
+    segment_created.append(rotor_yoke)
     
     if callback: callback("Creating magnet", 30)
-    create_magnet(motor=motor, m3d=m3d)
+    magnet_segments =  create_magnet(motor=motor, m3d=m3d)
+    segment_created += magnet_segments
     
     if callback: callback("Creating moving band", 45)
     create_moving_band(motor=motor, m3d=m3d)
@@ -57,29 +62,10 @@ def export_to_maxwell(motor, callback=None):
         name="Global_Core_Mesh"
     )
 
-    setup_name = "Setup1"
-    if setup_name in m3d.setup_names:
-        m3d.delete_setup(setup_name)
-    
     if callback: callback("Creating setup", 90)
-    setup = m3d.create_setup(name=setup_name, setup_type="Transient")
-    
-    setup.props["StopTime"] = "10ms"
-    setup.props["TimeStep"] = "2ms"
-    setup.props["SaveFieldsType"] = "Every N Steps"
-    setup.props["N Steps"] = "1"
-    setup.props["Steps From"] = "0s"
-    setup.props["Steps To"] = "10ms"
-    setup.props["NonlinearSolverResidual"] = "0.005"
-    setup.props["ScalarPotential"] = "Second Order"
-    setup.props["SmoothBHCurve"] = False
-
-    setup.update()
+    init_solver(m3d = m3d, motor = motor)
     m3d.save_project()
 
-    if callback: callback("Running analysis", 95)
-    m3d.analyze_setup(setup_name)
-    
     if callback: callback("Done", 100)
     return None
 

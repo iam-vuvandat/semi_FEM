@@ -56,6 +56,6 @@ def get_flux_linkage(reluctance_network):
     # Tạo vector cột để lưu kết quả và vị trí góc hiện tại của rotor
     flux_linkage_results = np.empty((phase_number + 1, 1))
     flux_linkage_results[:-1, 0] = psi_total * machine_factor
-    flux_linkage_results[-1] = reluctance_network.current_position
+    flux_linkage_results[-1] = reluctance_network.mechanical.current_position
 
     return Output(flux_linkage=flux_linkage_results)
