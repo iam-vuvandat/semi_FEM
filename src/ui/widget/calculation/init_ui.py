@@ -10,11 +10,6 @@ def init_ui(calculation_tab):
     # Đảm bảo các đối tượng dữ liệu tồn tại
     if not hasattr(motor, 'calculation_data'):
         motor.create_calculation_data()
-    
-    # Khởi tạo Drive nếu chưa có (tùy thuộc vào cấu trúc motor của bạn)
-    if not hasattr(motor, 'drive'):
-        from src.core.drive.drive_class import Drive # Giả định đường dẫn class Drive
-        motor.drive = Drive(motor)
         
     calc_data = motor.calculation_data
     drive = motor.drive

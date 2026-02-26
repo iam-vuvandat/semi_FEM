@@ -13,34 +13,43 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.cr
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_winding import create_winding
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_balloon import create_balloon
 
-def export_to_maxwell(motor):
-    
+def export_to_maxwell(motor, callback=None):
+    if callback: callback("Initializing Maxwell window", 5)
     init_window()
-    m3d = init_project(project_name= "AxialFluxMotor_pyaedt", solution_type= "Transient")
+    
+    if callback: callback("Initializing project", 10)
+    m3d = init_project(project_name="AxialFluxMotor_pyaedt", solution_type="Transient")
 
     rotor = motor.geometry_data.rotor
-    magnet_length        = rotor.magnet_length *1e3
+    magnet_length = rotor.magnet_length * 1e3
     
+    if callback: callback("Creating rotor yoke", 20)
+    create_rotor_yoke(motor=motor, m3d=m3d)
+    
+    if callback: callback("Creating magnet", 30)
+    create_magnet(motor=motor, m3d=m3d)
+    
+    if callback: callback("Creating moving band", 45)
+    create_moving_band(motor=motor, m3d=m3d)
+    
+    if callback: callback("Creating stator", 60)
+    create_stator(motor=motor, m3d=m3d)
+    
+    if callback: callback("Creating winding", 75)
+    create_winding(motor=motor, m3d=m3d)
+    
+    create_balloon(pad_value=10, m3d=m3d)
 
-    create_rotor_yoke(motor = motor, m3d = m3d )
-    create_magnet(motor= motor, m3d= m3d)
-    create_moving_band(motor = motor, m3d = m3d)
-    create_stator(motor= motor, m3d = m3d)
-    create_winding(motor= motor, m3d= m3d)
-    
-    create_balloon(pad_value= 10, m3d = m3d)
-
-    
-    # Mesh
     all_objects = m3d.modeler.object_names
     mesh_targets = [
         obj for obj in all_objects 
-        if obj != "region"              
+        if obj != "region"               
         and "Line" not in obj        
         and "Sheet" not in obj      
     ]
 
-    maximum_element_length = magnet_length *2 
+    if callback: callback("Assigning mesh", 85)
+    maximum_element_length = magnet_length * 2 
     m3d.mesh.assign_length_mesh(
         assignment=mesh_targets,
         maximum_length=f"{maximum_element_length}mm",
@@ -48,22 +57,19 @@ def export_to_maxwell(motor):
         name="Global_Core_Mesh"
     )
 
-    # Setup Analysis
     setup_name = "Setup1"
-
     if setup_name in m3d.setup_names:
         m3d.delete_setup(setup_name)
     
+    if callback: callback("Creating setup", 90)
     setup = m3d.create_setup(name=setup_name, setup_type="Transient")
     
     setup.props["StopTime"] = "10ms"
     setup.props["TimeStep"] = "2ms"
-    
     setup.props["SaveFieldsType"] = "Every N Steps"
     setup.props["N Steps"] = "1"
     setup.props["Steps From"] = "0s"
     setup.props["Steps To"] = "10ms"
-
     setup.props["NonlinearSolverResidual"] = "0.005"
     setup.props["ScalarPotential"] = "Second Order"
     setup.props["SmoothBHCurve"] = False
@@ -71,18 +77,14 @@ def export_to_maxwell(motor):
     setup.update()
     m3d.save_project()
 
-    # Run
-    #m3d.analyze_setup(setup_name)
-
-    return None
-
+    if callback: callback("Running analysis", 95)
+    m3d.analyze_setup(setup_name)
     
+    if callback: callback("Done", 100)
+    return None
 
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
     motor = AxialFluxMotorType1()
     motor.winding_data.throw = 1
-    motor.export_to_maxwell()
-
-
-    
+    export_to_maxwell(motor)

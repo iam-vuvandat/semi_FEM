@@ -17,8 +17,5 @@ if __name__ == "__main__":
     window.setWindowState(Qt.WindowMaximized)
     window.show()
     sys.exit(app.exec_())
- 
-# pyinstaller --noconfirm --console --clean --name "semiFEM_Solver" --icon "src/ui/assets/logo.ico" --add-data "src;src" --add-data ".venv;.venv" --collect-submodules scipy --collect-all pyvista --collect-all vtk --collect-all pyvistaqt --hidden-import scipy.sparse.csgraph._validation --hidden-import scipy.special._cdflib main.py
-
-
-
+  
+#pyinstaller --noconfirm --console --clean --name "semiFEM_Solver" --icon "src/ui/assets/logo.ico" --add-data "src;src" --paths "src" --collect-submodules scipy --collect-all pyvista --collect-all vtk --collect-all pyvistaqt --hidden-import scipy.sparse.csgraph._validation --hidden-import scipy.special._cdflib --hidden-import PyQt5.sip --exclude-module PySide2 --exclude-module PySide6 main.py 

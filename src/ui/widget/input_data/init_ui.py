@@ -96,12 +96,12 @@ def init_ui(input_tab=None):
     mat_form.setVerticalSpacing(10)
 
     input_tab.mag_combo = QComboBox()
-    input_tab.mag_combo.addItems(["N30UH", "N35SH", "N42SH"])
+    input_tab.mag_combo.addItems(["NdFe30"])
     input_tab.mag_combo.currentTextChanged.connect(update_global_database)
     mat_form.addRow("Magnet Grade:", input_tab.mag_combo)
 
     input_tab.iron_combo = QComboBox()
-    input_tab.iron_combo.addItems(["M350-50A", "M400-50A", "M270-35A"])
+    input_tab.iron_combo.addItems(["steel_1008"])
     input_tab.iron_combo.currentTextChanged.connect(update_global_database)
     mat_form.addRow("Iron Core:", input_tab.iron_combo)
     

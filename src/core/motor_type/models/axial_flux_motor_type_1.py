@@ -214,7 +214,7 @@ class AxialFluxMotorType1:
     def display(self):
         show_motor(motor=self)
 
-    def export_to_maxwell(self):
-        return export_to_maxwell(motor = self)
+    def export_to_maxwell(self, callback = None):
+        return export_to_maxwell(motor = self, callback = callback)
     
     

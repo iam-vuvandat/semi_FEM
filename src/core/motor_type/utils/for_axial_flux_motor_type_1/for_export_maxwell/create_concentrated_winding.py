@@ -95,10 +95,10 @@ def create_concentrated_winding(m3d,motor):
 
     ## create knife 
     knife_1 = m3d.modeler.create_box(origin=[0, 0, z_winding_bottom], sizes=[stator_outer_radius * 1.06, 0.0001, winding_heigh])
-    m3d.modeler.rotate(knife_1, axis="Z", angle= half_open_arc_slot * 0.93)
+    m3d.modeler.rotate(knife_1, axis="Z", angle= half_open_arc_slot * 0.9)
 
     knife_2 = m3d.modeler.create_box(origin=[0, 0, z_winding_bottom], sizes=[stator_outer_radius * 1.06, 0.0001, winding_heigh])
-    m3d.modeler.rotate(knife_2, axis="Z", angle= -half_open_arc_slot * 0.93)
+    m3d.modeler.rotate(knife_2, axis="Z", angle= -half_open_arc_slot * 0.9)
 
     ## subtract base to knife -> 2 segment
     m3d.modeler.subtract(blank_list=[base1], tool_list=[knife_1, knife_2], keep_originals=False)
@@ -115,12 +115,10 @@ def create_concentrated_winding(m3d,motor):
     ## subtract base to hole and assign material
     m3d.modeler.subtract(blank_list=[winding_base], tool_list=[winding_hole], keep_originals=False)
     m3d.modeler[winding_base].material_name = "copper"
-    print(winding_base)
 
     # create coil terminal
     winding_cross_section = m3d.modeler.create_rectangle(orientation = "ZX", origin = [0, 0, z_winding_bottom], sizes = [winding_heigh, (stator_inner_radius + stator_outer_radius)/2], name = "winding_cross_section")
     m3d.modeler.intersect(assignment = [winding_cross_section,winding_base], keep_originals=True)
-    print(winding_cross_section)
     
     # duplicate winding base
     _, new_winding_base = m3d.modeler.duplicate_around_axis(assignment=winding_base, axis="Z", angle = open_arc_slot, clones=slot_number)
@@ -129,14 +127,10 @@ def create_concentrated_winding(m3d,motor):
     _, new_winding_cross_section = m3d.modeler.duplicate_around_axis(assignment=winding_cross_section, axis="Z", angle = open_arc_slot, clones=slot_number)
     all_winding_cross_section = [winding_cross_section] + new_winding_cross_section
 
-    print(all_winding_bases,all_winding_cross_section)
-    print(len(all_winding_bases), len(all_winding_cross_section))
-
     # create current n phase
     current = []
     for i in range(int(phase)):
         current_phase_i = m3d.assign_winding(winding_type='Current', is_solid=False, current=current_function[i], resistance=0, inductance=0, voltage=0, parallel_branches=1, phase=0, name=f"phase{i+1}")
-        print(current_function[i])
         current.append(current_phase_i)
 
     # create coil and assign to current
@@ -152,4 +146,4 @@ def create_concentrated_winding(m3d,motor):
                 
                 new_coil = m3d.assign_coil(all_winding_cross_section[i], conductors_number= turns * np.abs(tooth_matrix[i,j]), polarity=direction)
                 all_winding_terminal.append(new_coil)
-                m3d.add_winding_coils(assignment = current[j], coils = new_coil.name)
+                m3d.add_winding_coils(assignment = current[j].name, coils = new_coil.name)
