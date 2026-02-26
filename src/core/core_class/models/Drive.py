@@ -35,7 +35,7 @@ class Drive:
     def current_function(self):
         """
         Trả về danh sách các chuỗi biểu thức dòng điện tường minh cho Maxwell 3D.
-        Dạng: I_peak * sin(omega_e * Time + phi)
+        Dạng: I_peak * sin(omega_e * Time + phi) A
         """
         functions = []
         i_peak = self.i_rms * math.sqrt(2)
@@ -57,7 +57,7 @@ class Drive:
             phi = beta_rad + angle_shift + (pi / 2)
             
             # Tạo chuỗi tường minh: Maxwell sẽ sử dụng biến nội tại 'Time'
-            func_str = f"{round(i_peak, 4)} * sin({round(omega_e, 4)} * Time + {round(phi, 4)})"
+            func_str = f"{round(i_peak, 4)} * sin({round(omega_e, 4)} * Time + {round(phi, 4)})A"
             functions.append(func_str)
             
         return functions
