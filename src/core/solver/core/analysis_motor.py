@@ -17,9 +17,9 @@ def analysis_motor(motor, callback = None):
     debug = calculation_data.debug
 
     epsilon = 1e-12
-    symmetry_factor = motor.symmetry_factor
+    symmetry_factor = motor.mechanical.symmetry_factor
     symmetry_angle = 2*pi / symmetry_factor
-    cogging_angle = motor.cogging_period_mech
+    cogging_angle = motor.mechanical.cogging_period_mech
     angle_factor = int(symmetry_angle // cogging_angle) 
     delta_theta  = cogging_angle / (n_point)
     minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))

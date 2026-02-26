@@ -57,7 +57,7 @@ def create_adaptive_mesh(motor):
     radial_coordinates = np.concatenate(radial_segments)
 
     if md.use_symmetry_factor: 
-        theta_max = 2 * pi / motor.symmetry_factor
+        theta_max = 2 * pi / motor.mechanical.symmetry_factor
         theta_coordinates = np.linspace(0, theta_max, n_theta + 1)
     else:
         theta_coordinates = np.linspace(0, 2 * pi, n_theta + 1)

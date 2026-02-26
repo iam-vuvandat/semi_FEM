@@ -5,12 +5,7 @@ from PyQt5.QtCore import Qt
 from src.ui.widget.widget.utils.bind_input import bind_input
 
 def init_ui(calculation_tab):
-    motor = calculation_tab.main_window.motor
-    
-    # Đảm bảo các đối tượng dữ liệu tồn tại
-    if not hasattr(motor, 'calculation_data'):
-        motor.create_calculation_data()
-        
+    motor = calculation_tab.main_window.motor    
     calc_data = motor.calculation_data
     drive = motor.drive
     

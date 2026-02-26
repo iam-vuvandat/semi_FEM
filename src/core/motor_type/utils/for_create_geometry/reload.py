@@ -1,16 +1,15 @@
+from src.core.motor_type.models.Container import Container
+from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
+from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
+
 def reload(motor):
-    motor.find_symmetry_factor()
+
+    motor.mechanical.symmetry_factor = find_symmetry_factor(motor = motor).symmetry_factor
+    motor.mechanical.cogging_period_mech = find_cogging_period(motor = motor).period_mech
+
     motor.init_winding()
-    motor.reset_record()
-    motor.find_cogging_period_mech()
-    motor.geometry = None
-    motor.create_geometry(rotor_angle_offset = 0,
-                          stator_angle_offset = 0,
-                          create_rotor_yoke = True,
-                          create_magnet = True,
-                          create_tooth = True,
-                          create_stator_yoke = True)
-    motor.mesh     = None
+    motor.record = Container()
+    motor.create_geometry()
     motor.create_adaptive_mesh()
     motor.reluctance_network = None
 
