@@ -14,6 +14,7 @@ def analysis_motor(motor, callback = None):
     material_relax = calculation_data.material_relax
     solve_cogging = calculation_data.solve_cogging
     n_point = calculation_data.n_point
+    solve_only_1_step = calculation_data.solve_only_1_step
     debug = calculation_data.debug
 
     epsilon = 1e-12
@@ -44,10 +45,13 @@ def analysis_motor(motor, callback = None):
     n_step_standard = angle_factor
     cogging_shifted = 0
 
-    for i in tqdm(range(minimum_theta_cell), disable=not debug):
+    # XÁC ĐỊNH SỐ BƯỚC GIẢI
+    loop_steps = 1 if solve_only_1_step else minimum_theta_cell
+
+    for i in tqdm(range(loop_steps), disable=not debug):
         if callback:
-            progress_val = int(15 + (i / minimum_theta_cell) * 75)
-            callback(f"Solving FVM step {i+1}/{minimum_theta_cell}", progress_val)
+            progress_val = int(15 + (i / loop_steps) * 75)
+            callback(f"Solving FVM step {i+1}/{loop_steps}", progress_val)
 
         if solve_cogging:
             is_cogging_point = (i < n_point)
@@ -84,6 +88,10 @@ def analysis_motor(motor, callback = None):
                 jump_step = int(n_step_standard - cogging_shifted)
                 motor.rotate_rotor(n_step=jump_step)
                 cogging_shifted = 0
+
+    if solve_only_1_step:
+        if callback: callback("Single step analysis completed", 100)
+        return None
 
     if callback: callback("Post-processing data", 95)
     

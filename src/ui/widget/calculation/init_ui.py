@@ -17,6 +17,7 @@ def init_ui(calculation_tab):
 
     # --- LEFT PANEL: SETTINGS ---
     left_widget = QWidget()
+    calculation_tab.left_panel = left_widget # Gán tham chiếu để vô hiệu hóa khi giải
     left_layout = QVBoxLayout(left_widget)
     left_layout.setContentsMargins(0, 0, 10, 0)
 
@@ -37,6 +38,7 @@ def init_ui(calculation_tab):
         ("material_relax", "Material Relax:"),
         ("n_point", "Points:"),
         ("solve_cogging", "Solve Cogging Torque:"),
+        ("solve_only_1_step", "Solve Only 1 Step:"),
         ("debug", "Debug Mode (Verbose):")
     ]
 
@@ -59,23 +61,19 @@ def init_ui(calculation_tab):
     drive_header.setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 15px; margin-bottom: 5px;")
     form.addRow(drive_header)
 
-    # Hàm cập nhật lại id, iq mỗi khi I_rms hoặc Phase_advanced thay đổi
     def update_drive_logic():
         drive.set_control(drive.i_rms, drive.phase_advanced)
 
-    # Nhập I rms
     line_i_rms = bind_input(drive, "i_rms", 1, update_drive_logic)
     line_i_rms.setFixedWidth(120)
     form.addRow(QLabel("I rms (A):"), line_i_rms)
 
-    # Nhập Phase Advanced
     line_phase = bind_input(drive, "phase_advanced", 1, update_drive_logic)
     line_phase.setFixedWidth(120)
     form.addRow(QLabel("Phase Advanced (deg):"), line_phase)
 
     left_layout.addWidget(form_widget)
     
-    # Nút chạy Solver
     calculation_tab.btn_run = QPushButton("Run Solver")
     calculation_tab.btn_run.setFixedHeight(30)
     calculation_tab.btn_run.clicked.connect(calculation_tab.run_solver)
@@ -98,7 +96,6 @@ def init_ui(calculation_tab):
 
     main_layout.addWidget(content_splitter, 1)
 
-    # --- BOTTOM: STATUS BAR ---
     status_container = QFrame()
     status_container.setFixedHeight(30)
     status_container.setStyleSheet("background-color: #f8f8f8; border-top: 1px solid #dcdcdc;")

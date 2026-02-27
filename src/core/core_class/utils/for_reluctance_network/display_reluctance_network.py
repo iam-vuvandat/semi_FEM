@@ -65,7 +65,7 @@ def display_reluctance_network(reluctance_network, plotter=None):
                 color='black', 
                 shadow=False
             )
-            self.colors_net = {0: "#444444", 1: "#1976D2", 2: "#FF3333", 3: "#FF9900", 4: "#3366FF"}
+            self.colors_net = {0: "#FFFFFF8E", 1: "#A5C5E5", 2: "#BC8E8E", 3: "#FF9900", 4: "#3366FF"}
             self.colors_hex = [
                 "#0000ff", "#0049ff", "#0092ff", "#00dbff",
                 "#00ffdb", "#00ff92", "#00ff49", "#00ff00",

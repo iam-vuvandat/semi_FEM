@@ -108,8 +108,9 @@ class AxialFluxMotorType1:
             max_iteration          = 50,
             max_relative_residual  = 0.01,
             material_relax         = 0.35,
-            solve_cogging          = False,
             n_point                = 21,
+            solve_cogging          = False,
+            solve_only_1_step      = False,
             debug                  = True
             )
                 

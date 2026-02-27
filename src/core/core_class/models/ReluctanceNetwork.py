@@ -26,6 +26,7 @@ class ReluctanceNetwork:
                  loop_flux = None,
                  magnetic_potential = None,
                  winding_current = None,
+                 vectorized_optimization = False,
                  callback = None):
         
         self.mechanical = motor.mechanical
@@ -37,6 +38,7 @@ class ReluctanceNetwork:
         self.loop_flux = loop_flux
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
+        self.vectorized_optimization = vectorized_optimization
         find_geometry_dimension_in_mesh(geometry= geometry,
                                         mesh= mesh)
         
@@ -48,10 +50,16 @@ class ReluctanceNetwork:
 
         self.elements = None
         self.elements = self.create_elements(callback = callback)
+
+        self.vectorized_elements = None
+        
         self.list_elements_lite = None
 
     def create_elements(self,callback = None):
         return create_elements(reluctance_network= self, callback = callback)
+    
+    def create_vectorized_element(self):
+        return None
 
     def add_elements_lite(self):
         add_elements_lite(reluctance_network = self)

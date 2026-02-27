@@ -1,7 +1,7 @@
 import paths
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QToolBar, QAction, QStyle
-from PyQt5.QtCore import QThread, pyqtSignal, QObject
+from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt
 from pyvistaqt import QtInteractor
 from src.ui.widget.calculation.init_ui import init_ui
 
@@ -19,6 +19,7 @@ class SolverWorker(QObject):
             def thread_callback(msg, val=None):
                 self.progress.emit(msg, val if val is not None else -1)
             
+            # Thực hiện giải thuật MBGRN/semi_FEM
             self.motor.analysis_motor(callback=thread_callback)
             self.finished.emit()
         except Exception as e:
@@ -31,6 +32,8 @@ class Calculation(QWidget):
         self.main_window = self.parent_widget.main_window
         self.motor = self.main_window.motor
         
+        # Các tham chiếu UI sẽ được khởi tạo trong init_ui
+        self.left_panel = None 
         self.btn_run = None
         self.status_label = None
         self.viz_layout = None
@@ -43,6 +46,7 @@ class Calculation(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        # Nạp giao diện từ file cấu hình init_ui.py
         init_ui(calculation_tab=self)
         self.plotter = QtInteractor(self.viz_container)
         self.viz_layout.addWidget(self.plotter)
@@ -67,6 +71,7 @@ class Calculation(QWidget):
         
         self.toolbar.addSeparator()
 
+        # Điều khiển cắt lớp cho cấu trúc lăng trụ 3D
         self.add_slice_ui("R", "show_i", "pos_i", "max_i")
         self.add_slice_ui("Th", "show_j", "pos_j", "max_j")
         self.add_slice_ui("Z", "show_k", "pos_k", "max_k")
@@ -123,9 +128,17 @@ class Calculation(QWidget):
                 self.act_play.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
     def run_solver(self):
+        # 1. Làm mới khu vực hiển thị bên phải
+        self.refresh_tab() 
+        
+        # 2. Vô hiệu hóa (làm mờ) bảng chỉnh thông số bên trái
+        if self.left_panel:
+            self.left_panel.setEnabled(False)
+            
         self.btn_run.setEnabled(False)
         self.btn_run.setText("Solving...")
         
+        # Khởi tạo Thread tính toán
         self.thread = QThread()
         self.worker = SolverWorker(self.motor)
         self.worker.moveToThread(self.thread)
@@ -134,6 +147,11 @@ class Calculation(QWidget):
         self.worker.progress.connect(self.on_progress)
         self.worker.finished.connect(self.on_finished)
         self.worker.error.connect(self.on_error)
+        
+        # Tự động dọn dẹp khi kết thúc
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
         
         self.thread.start()
 
@@ -145,35 +163,58 @@ class Calculation(QWidget):
 
     def on_error(self, message):
         self.status_label.setText(f"Error: {message}")
+        
+        # Khôi phục trạng thái bảng điều khiển khi có lỗi
+        if self.left_panel:
+            self.left_panel.setEnabled(True)
+            
         self.btn_run.setEnabled(True)
         self.btn_run.setText("Run Solver")
         self.cleanup_thread()
 
     def on_finished(self):
         self.status_label.setText("Status: Analysis Completed Successfully (100%)")
+        
+        # Khôi phục trạng thái bảng điều khiển khi hoàn thành
+        if self.left_panel:
+            self.left_panel.setEnabled(True)
+            
         self.btn_run.setEnabled(True)
         self.btn_run.setText("Run Solver")
+        
+        # Cập nhật kết quả Mesh 3D mới nhất
+        if self.plotter:
+            self.plotter.clear()
         self.viewer_state = self.motor.reluctance_network.display(plotter=self.plotter)
         self.cleanup_thread()
 
     def cleanup_thread(self):
-        if self.thread:
+        """Dọn dẹp luồng để tránh treo GUI"""
+        if self.thread and self.thread.isRunning():
             self.thread.quit()
             self.thread.wait()
-            self.thread = None
-            self.worker = None
+        self.thread = None
+        self.worker = None
 
     def refresh_tab(self):
-        """Kiểm tra và vẽ lại reluctance_network nếu đã tồn tại"""
+        """Làm mới trạng thái và dọn dẹp vùng hiển thị đồ họa"""
         if self.status_label:
-            self.status_label.setText("Status: Ready")
+            self.status_label.setText("Status: Initializing solver...")
         
-        if self.motor and hasattr(self.motor, 'reluctance_network'):
-            if self.motor.reluctance_network is not None:
-                self.viewer_state = self.motor.reluctance_network.display(plotter=self.plotter)
+        # Dọn sạch các phần tử lăng trụ cũ trên Plotter
+        if self.plotter:
+            self.plotter.clear()
+            self.plotter.render()
+        
+        # Dừng timer render cũ nếu đang chạy
+        if self.viewer_state and hasattr(self.viewer_state, 'timer'):
+            if self.viewer_state.timer.isActive():
+                self.viewer_state.timer.stop()
 
     def closeEvent(self, event):
-        if self.viewer_state and self.viewer_state.timer.isActive():
-            self.viewer_state.timer.stop()
+        """Xử lý đóng cửa sổ an toàn"""
+        if self.viewer_state and hasattr(self.viewer_state, 'timer'):
+            if self.viewer_state.timer.isActive():
+                self.viewer_state.timer.stop()
         self.cleanup_thread()
         super().closeEvent(event)
