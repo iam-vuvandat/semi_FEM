@@ -74,19 +74,19 @@ class AxialFluxMotorType1:
        
         self.adaptive_mesh_data = Container(
             n_r_in          = 1,
-            n_r_1           = 2,
-            n_r_2           = 4,
-            n_r_3           = 2,
+            n_r_1           = 3,
+            n_r_2           = 6,
+            n_r_3           = 3,
             n_r_out         = 1,
             n_theta         = 150,
             n_z_in_air      = 1,
-            n_z_rotor_yoke  = 3,
-            n_z_magnet      = 2,
+            n_z_rotor_yoke  = 4,
+            n_z_magnet      = 3,
             n_z_airgap      = 3,
             n_z_tooth_tip_1 = 1,
-            n_z_tooth_tip_2 = 3,
-            n_z_tooth_body  = 5,
-            n_z_stator_yoke = 3,
+            n_z_tooth_tip_2 = 4,
+            n_z_tooth_body  = 6,
+            n_z_stator_yoke = 4,
             n_z_out_air     = 1,
             use_symmetry_factor = True,
             periodic_boundary   = True
@@ -106,12 +106,12 @@ class AxialFluxMotorType1:
 
         self.calculation_data = Container(
             max_iteration          = 50,
-            max_relative_residual  = 0.01,
+            max_relative_residual  = 0.02,
             material_relax         = 0.35,
-            n_point                = 21,
+            n_point                = 31,
             solve_cogging          = False,
             get_geometric_error    = False,
-            solve_only_1_step      = False,
+            solve_only_1_step      = True,
             debug                  = True
             )
                 

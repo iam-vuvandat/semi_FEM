@@ -1,6 +1,7 @@
 import paths
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QToolBar, QAction, QStyle
+import time
+from PyQt5.QtWidgets import QWidget, QToolBar, QAction, QStyle, QApplication
 from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt
 from pyvistaqt import QtInteractor
 from src.ui.widget.calculation.init_ui import init_ui
@@ -13,15 +14,27 @@ class SolverWorker(QObject):
     def __init__(self, motor):
         super().__init__()
         self.motor = motor
+        self._is_cancelled = False
+        self._last_update = 0
+
+    def cancel(self):
+        self._is_cancelled = True
 
     def run(self):
         try:
             def thread_callback(msg, val=None):
-                self.progress.emit(msg, val if val is not None else -1)
+                if self._is_cancelled:
+                    raise InterruptedError("User cancelled the solver")
+                
+                curr = time.time()
+                if curr - self._last_update > 0.2 or val == 100:
+                    self.progress.emit(msg, val if val is not None else -1)
+                    self._last_update = curr
             
-            # Thực hiện giải thuật MBGRN/semi_FEM
             self.motor.analysis_motor(callback=thread_callback)
             self.finished.emit()
+        except InterruptedError:
+            self.error.emit("Solver stopped by user.")
         except Exception as e:
             self.error.emit(str(e))
 
@@ -32,9 +45,9 @@ class Calculation(QWidget):
         self.main_window = self.parent_widget.main_window
         self.motor = self.main_window.motor
         
-        # Các tham chiếu UI sẽ được khởi tạo trong init_ui
         self.left_panel = None 
         self.btn_run = None
+        self.btn_cancel = None
         self.status_label = None
         self.viz_layout = None
         self.plotter = None
@@ -46,12 +59,14 @@ class Calculation(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Nạp giao diện từ file cấu hình init_ui.py
         init_ui(calculation_tab=self)
         self.plotter = QtInteractor(self.viz_container)
         self.viz_layout.addWidget(self.plotter)
         self.plotter.set_background("white")
         self.init_toolbar()
+        
+        self.btn_run.clicked.connect(self.run_solver)
+        self.btn_cancel.clicked.connect(self.cancel_solver)
 
     def init_toolbar(self):
         self.toolbar = QToolBar()
@@ -71,7 +86,6 @@ class Calculation(QWidget):
         
         self.toolbar.addSeparator()
 
-        # Điều khiển cắt lớp cho cấu trúc lăng trụ 3D
         self.add_slice_ui("R", "show_i", "pos_i", "max_i")
         self.add_slice_ui("Th", "show_j", "pos_j", "max_j")
         self.add_slice_ui("Z", "show_k", "pos_k", "max_k")
@@ -128,17 +142,14 @@ class Calculation(QWidget):
                 self.act_play.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
     def run_solver(self):
-        # 1. Làm mới khu vực hiển thị bên phải
         self.refresh_tab() 
         
-        # 2. Vô hiệu hóa (làm mờ) bảng chỉnh thông số bên trái
-        if self.left_panel:
-            self.left_panel.setEnabled(False)
-            
         self.btn_run.setEnabled(False)
         self.btn_run.setText("Solving...")
+        self.btn_cancel.setEnabled(True)
         
-        # Khởi tạo Thread tính toán
+        QApplication.processEvents()
+
         self.thread = QThread()
         self.worker = SolverWorker(self.motor)
         self.worker.moveToThread(self.thread)
@@ -148,12 +159,17 @@ class Calculation(QWidget):
         self.worker.finished.connect(self.on_finished)
         self.worker.error.connect(self.on_error)
         
-        # Tự động dọn dẹp khi kết thúc
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         
         self.thread.start()
+
+    def cancel_solver(self):
+        if self.worker:
+            self.worker.cancel()
+            self.status_label.setText("Status: Cancelling...")
+            self.btn_cancel.setEnabled(False)
 
     def on_progress(self, msg, val):
         status_text = f"Status: {msg}"
@@ -162,34 +178,25 @@ class Calculation(QWidget):
         self.status_label.setText(status_text)
 
     def on_error(self, message):
-        self.status_label.setText(f"Error: {message}")
-        
-        # Khôi phục trạng thái bảng điều khiển khi có lỗi
-        if self.left_panel:
-            self.left_panel.setEnabled(True)
-            
-        self.btn_run.setEnabled(True)
-        self.btn_run.setText("Run Solver")
+        self.status_label.setText(f"Info: {message}")
+        self.restore_ui_state()
         self.cleanup_thread()
 
     def on_finished(self):
         self.status_label.setText("Status: Analysis Completed Successfully (100%)")
+        self.restore_ui_state()
         
-        # Khôi phục trạng thái bảng điều khiển khi hoàn thành
-        if self.left_panel:
-            self.left_panel.setEnabled(True)
-            
-        self.btn_run.setEnabled(True)
-        self.btn_run.setText("Run Solver")
-        
-        # Cập nhật kết quả Mesh 3D mới nhất
         if self.plotter:
             self.plotter.clear()
         self.viewer_state = self.motor.reluctance_network.display(plotter=self.plotter)
         self.cleanup_thread()
 
+    def restore_ui_state(self):
+        self.btn_run.setEnabled(True)
+        self.btn_run.setText("Run Solver")
+        self.btn_cancel.setEnabled(False)
+
     def cleanup_thread(self):
-        """Dọn dẹp luồng để tránh treo GUI"""
         if self.thread and self.thread.isRunning():
             self.thread.quit()
             self.thread.wait()
@@ -197,22 +204,16 @@ class Calculation(QWidget):
         self.worker = None
 
     def refresh_tab(self):
-        """Làm mới trạng thái và dọn dẹp vùng hiển thị đồ họa"""
         if self.status_label:
             self.status_label.setText("Status: Initializing solver...")
-        
-        # Dọn sạch các phần tử lăng trụ cũ trên Plotter
         if self.plotter:
             self.plotter.clear()
             self.plotter.render()
-        
-        # Dừng timer render cũ nếu đang chạy
         if self.viewer_state and hasattr(self.viewer_state, 'timer'):
             if self.viewer_state.timer.isActive():
                 self.viewer_state.timer.stop()
 
     def closeEvent(self, event):
-        """Xử lý đóng cửa sổ an toàn"""
         if self.viewer_state and hasattr(self.viewer_state, 'timer'):
             if self.viewer_state.timer.isActive():
                 self.viewer_state.timer.stop()

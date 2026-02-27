@@ -54,7 +54,7 @@ def analysis_motor(motor, callback = None):
     for i in tqdm(range(loop_steps), disable=not debug):
         if callback:
             progress_val = int(15 + (i / loop_steps) * 75)
-            callback(f"Solving FVM step {i+1}/{loop_steps}", progress_val)
+            callback(f"Solving step {i+1}/{loop_steps}", progress_val)
 
         if solve_cogging:
             is_cogging_point = (i < n_point)

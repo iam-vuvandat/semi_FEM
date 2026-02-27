@@ -30,7 +30,7 @@ def create_elements(reluctance_network, debug=True, callback=None):
                         if current_index % 50 == 0 or current_index == total_elements:
                             progress_val = int((current_index / total_elements) * 100)
                             # Khop voi chu ky callback(message, progress)
-                            callback(f"Creating FVM elements: {current_index}/{total_elements}", progress_val)
+                            callback(f"Creating elements: {current_index}/{total_elements}", progress_val)
                     
     reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
     return elements

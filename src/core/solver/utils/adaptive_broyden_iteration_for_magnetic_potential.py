@@ -8,8 +8,7 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
                                                        damping_factor=0.5,   
                                                        debug=True):
     
-    ADAPTIVE_FACTOR_1 = 0.2
-    ADAPTIVE_FACTOR_2 = 0.5
+    factor_1 = 0.6 # He so giam material_damping sau moi buoc lap
 
     G_c, Y_c, R_c, B_c, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[94m", "\033[0m"
 
@@ -20,10 +19,8 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
     x_k = reluctance_network.magnetic_potential.data.flatten(order='F')[:-1]
     best_pot_data = reluctance_network.magnetic_potential.data.copy()
     best_phi = float('inf') 
-    prev_step_norm = None
     
     current_relax = material_relax
-    threshold_triggered = False
 
     def compute_system(x_vec, relax):
         reluctance_network.magnetic_potential.data = np.append(x_vec, 0.0).reshape(mag_pot_shape, order='F')
@@ -42,35 +39,19 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
     for j in range(1, max_iteration + 1):
         try:
             lu_obj = splu(B_k)
-            norm_G = norm(B_k, ord=1) 
             delta_x = -lu_obj.solve(F_k)
         except Exception as e:
             if debug: print(f"{R_c}Solver Error: {e}{RESET}")
             break
 
         x_next = x_k + damping_factor * delta_x
-        step_norm_val = np.linalg.norm(delta_x)
         
         F_next, G_next, J_next = compute_system(x_next, current_relax)
         phi_true = np.linalg.norm(F_next) / (np.linalg.norm(J_next) + 1e-12)
 
-        contraction_L = step_norm_val / prev_step_norm if (prev_step_norm and prev_step_norm > 0) else 0.0
-        prev_step_norm = step_norm_val
-
-        relax_changed = False
-        if phi_true < ADAPTIVE_FACTOR_1:
-            if not threshold_triggered:
-                current_relax = material_relax * ADAPTIVE_FACTOR_2
-                threshold_triggered = True
-                relax_changed = True
-            elif contraction_L > 0.9:
-                current_relax *= ADAPTIVE_FACTOR_2
-                relax_changed = True
-
         if debug:
-            # Chọn màu cho dòng dựa trên kết quả
             color = G_c if phi_true <= max_relative_residual else (R_c if phi_true >= best_phi else RESET)
-            print(f"{color}Iteration {j}: relative residual = {phi_true*100:.2f}%, G = {norm_G:.2e}, Relax = {current_relax:.2f}, L = {contraction_L:.2f}{RESET}")
+            print(f"{color}Iteration {j}: relative residual = {phi_true*100:.2f}%, Relax = {current_relax:.4f}{RESET}")
 
         if phi_true <= max_relative_residual:
             best_phi = phi_true
@@ -83,8 +64,9 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
         elif phi_true > best_phi * 2.0:
             break
 
-        if relax_changed:
-             F_next, G_next, J_next = compute_system(x_next, current_relax)
+        # Giam material_damping (current_relax) theo factor_1
+        current_relax *= factor_1
+        F_next, G_next, J_next = compute_system(x_next, current_relax)
 
         B_k = G_next.tocsc() 
         x_k = x_next

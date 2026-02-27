@@ -15,19 +15,17 @@ def init_ui(calculation_tab):
 
     content_splitter = QSplitter(Qt.Horizontal)
 
-    # --- LEFT PANEL: SETTINGS ---
     left_widget = QWidget()
-    calculation_tab.left_panel = left_widget # Gán tham chiếu để vô hiệu hóa khi giải
     left_layout = QVBoxLayout(left_widget)
     left_layout.setContentsMargins(0, 0, 10, 0)
 
     form_widget = QWidget()
+    calculation_tab.left_panel = form_widget 
     form = QFormLayout(form_widget)
     form.setLabelAlignment(Qt.AlignLeft)
     form.setFormAlignment(Qt.AlignLeft)
     form.setSpacing(10)
     
-    # 1. --- SECTION: SOLVER SETTINGS ---
     solver_header = QLabel("Solver Settings")
     solver_header.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
     form.addRow(solver_header)
@@ -57,7 +55,6 @@ def init_ui(calculation_tab):
                 line_edit.setFixedWidth(120)
                 form.addRow(QLabel(label_text), line_edit)
 
-    # 2. --- SECTION: DRIVE SETTINGS ---
     drive_header = QLabel("Drive Settings")
     drive_header.setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 15px; margin-bottom: 5px;")
     form.addRow(drive_header)
@@ -75,14 +72,22 @@ def init_ui(calculation_tab):
 
     left_layout.addWidget(form_widget)
     
+    buttons_layout = QVBoxLayout()
+    buttons_layout.setSpacing(5)
+    
     calculation_tab.btn_run = QPushButton("Run Solver")
     calculation_tab.btn_run.setFixedHeight(30)
-    calculation_tab.btn_run.clicked.connect(calculation_tab.run_solver)
-    left_layout.addWidget(calculation_tab.btn_run)
     
+    calculation_tab.btn_cancel = QPushButton("Cancel")
+    calculation_tab.btn_cancel.setFixedHeight(30)
+    calculation_tab.btn_cancel.setEnabled(False) 
+    
+    buttons_layout.addWidget(calculation_tab.btn_run)
+    buttons_layout.addWidget(calculation_tab.btn_cancel)
+    
+    left_layout.addLayout(buttons_layout)
     left_layout.addStretch()
 
-    # --- RIGHT PANEL: 3D VIEW ---
     calculation_tab.viz_container = QFrame()
     calculation_tab.viz_container.setFrameShape(QFrame.StyledPanel)
     calculation_tab.viz_container.setStyleSheet("background-color: #ffffff; border: 1px solid #dcdcdc;")

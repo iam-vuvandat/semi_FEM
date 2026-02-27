@@ -19,7 +19,7 @@ class Geometry:
         """
         self.geometry = geometry if geometry is not None else []
 
-    def show(self, plotter=None, iron_color="#D3D3D3", magnet_color="#E74C3C", 
+    def show(self, plotter=None, iron_color="#D3D3D3", magnet_color="#3498DB", 
              coil_color="#E67E22", air_color="#E0F7FA", default_color="#3498DB", 
              highlight_color="#FF00FF", show_axes=True):
         """

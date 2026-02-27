@@ -15,7 +15,7 @@ def general_setup(main_window=None, app=None):
 
     # 2. Thiết lập đường dẫn tới file .ico
     # Đảm bảo bạn đã đổi tên logo.png thành logo.ico sau khi convert
-    icon_path = os.path.join('src', 'ui', 'assets', 'logo.ico')
+    icon_path = os.path.join('src', 'ui', 'assets', 'logo.png')
     
     if os.path.exists(icon_path):
         app_icon = QIcon(icon_path)
