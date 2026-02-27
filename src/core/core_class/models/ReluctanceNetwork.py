@@ -34,6 +34,7 @@ class ReluctanceNetwork:
         self.symmetry_factor = motor.mechanical.symmetry_factor
         self.material_database = motor.material_database
         self.geometry = geometry
+        self.geometric_error = 0.0
         self.mesh = mesh
         self.system_variable = motor.system_variable
         self.loop_flux = loop_flux
@@ -137,7 +138,7 @@ class ReluctanceNetwork:
     
 
     def get_geometric_error(self):
-        return get_geometric_error(reluctance_network=self)
+        self.geometric_error = get_geometric_error(reluctance_network=self)
         
     def display(self,plotter = None):
         return display_reluctance_network(reluctance_network=self, plotter = plotter)

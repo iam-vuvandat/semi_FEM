@@ -110,6 +110,7 @@ class AxialFluxMotorType1:
             material_relax         = 0.35,
             n_point                = 21,
             solve_cogging          = False,
+            get_geometric_error    = False,
             solve_only_1_step      = False,
             debug                  = True
             )

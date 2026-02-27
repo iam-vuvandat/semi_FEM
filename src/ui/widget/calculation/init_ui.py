@@ -38,6 +38,7 @@ def init_ui(calculation_tab):
         ("material_relax", "Material Relax:"),
         ("n_point", "Points:"),
         ("solve_cogging", "Solve Cogging Torque:"),
+        ("get_geometric_error", "Get Geometric Error:"),
         ("solve_only_1_step", "Solve Only 1 Step:"),
         ("debug", "Debug Mode (Verbose):")
     ]

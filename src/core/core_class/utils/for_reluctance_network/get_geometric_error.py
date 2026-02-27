@@ -18,6 +18,9 @@ def get_geometric_error(reluctance_network):
         if element.material =="air":
             pass
         else:
-            discreted_solid_volume += element.get_volume
+            discreted_solid_volume += element.get_volume()
+
+    if reluctance_network.mesh.periodic_boundary == True:
+        discreted_solid_volume *= reluctance_network.symmetry_factor
 
     return np.abs((discreted_solid_volume - original_solid_volume)/original_solid_volume)

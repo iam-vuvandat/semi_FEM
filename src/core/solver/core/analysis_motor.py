@@ -15,6 +15,7 @@ def analysis_motor(motor, callback = None):
     solve_cogging = calculation_data.solve_cogging
     n_point = calculation_data.n_point
     solve_only_1_step = calculation_data.solve_only_1_step
+    get_geometric_error = calculation_data.get_geometric_error
     debug = calculation_data.debug
 
     epsilon = 1e-12
@@ -36,6 +37,9 @@ def analysis_motor(motor, callback = None):
     motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
     motor.reload()
     motor.create_reluctance_network(callback = scaled_callback)
+
+    if get_geometric_error:
+        motor.reluctance_network.get_geometric_error()
     
     phase_number = motor.winding_data.phase
     flux_linkage = np.zeros((phase_number + 1, n_point))
@@ -47,7 +51,6 @@ def analysis_motor(motor, callback = None):
 
     # XÁC ĐỊNH SỐ BƯỚC GIẢI
     loop_steps = 1 if solve_only_1_step else minimum_theta_cell
-
     for i in tqdm(range(loop_steps), disable=not debug):
         if callback:
             progress_val = int(15 + (i / loop_steps) * 75)

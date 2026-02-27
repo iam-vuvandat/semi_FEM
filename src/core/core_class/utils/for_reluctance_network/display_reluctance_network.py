@@ -5,6 +5,9 @@ from PyQt5.QtCore import QTimer
 
 def display_reluctance_network(reluctance_network, plotter=None):
     if reluctance_network is None: return
+    
+    geometric_error = reluctance_network.geometric_error
+    total_element = reluctance_network.elements.size
 
     def _process_grid_indices(grid):
         if grid.n_points == 0: return 0, 0, 0
@@ -144,8 +147,14 @@ def display_reluctance_network(reluctance_network, plotter=None):
                     except: self._safe_remove(f"mat_{mid}")
             
             st = lambda s, p, m: f"ON [{p}/{m-1}]" if s else "OFF"
-            info = f"Frame: {self.current_frame} | Sym: {'ON' if self.use_symmetry else 'OFF'}\n" \
+            
+            # Hiển thị thông tin tổng hợp
+            info = f"Frame: {self.current_frame} | Sym: {'ON' if self.use_symmetry else 'OFF'} | Elements: {total_element:,}\n" \
                    f"R: {st(self.show_i, self.pos_i, self.max_i)} | Th: {st(self.show_j, self.pos_j, self.max_j)} | Z: {st(self.show_k, self.pos_k, self.max_k)}"
+            
+            if geometric_error:
+                info += f"\nGeometric Error: {float(geometric_error)*100:.4f}%"
+
             pl.add_text(info, position="upper_left", font_size=9, name="info_text")
             pl.render()
 
