@@ -11,7 +11,6 @@ from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
-
 from src.core.core_class.models.Drive import Drive
 from src.core.core_class.models.Mechanical import Mechanical
 import math
@@ -107,10 +106,10 @@ class AxialFluxMotorType1:
 
         self.calculation_data = Container(
             max_iteration          = 50,
-            max_relative_residual  = 0.005,
+            max_relative_residual  = 0.01,
             material_relax         = 0.35,
             solve_cogging          = False,
-            n_point                = 27,
+            n_point                = 21,
             debug                  = True
             )
                 
