@@ -15,6 +15,8 @@ from src.core.core_class.utils.for_element.find_reluctance_updated import find_r
 from src.core.core_class.utils.for_element.find_own_magnetic_potential import find_own_magnetic_potential
 from src.core.core_class.utils.for_element.find_flat_position import find_flat_position
 from src.core.core_class.utils.for_element.set_element_reluctance_at_zero import set_element_reluctance_at_zero
+from src.core.core_class.utils.for_element.get_volume import get_volume
+
 
 class Element:
     def __init__(self,
@@ -121,3 +123,6 @@ class Element:
 
     def set_reluctance_at_zero(self):
         set_element_reluctance_at_zero(element= self)
+
+    def get_volume(self):
+        return get_vo   lume(element=self)

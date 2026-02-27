@@ -26,18 +26,17 @@ class Segment:
             if self.dimension.size != 3:
                 raise ValueError("Dimension phải là mảng chứa 3 phần tử [r, theta, z]")
 
+
+    @property
+    def volume(self):
+        """Trả về thể tích thực từ đối tượng Trimesh."""
+        if self.mesh is not None:
+            return self.mesh.volume
+        return 0.0
+
+
     def __repr__(self):
         return (f"Segment(mat='{self.material}', "
                 f"dim={self.dimension})")
 
-if __name__ == "__main__":
-    input_dim = [0.005, np.pi/6, 0.1]
-    
-    seg = Segment(material="NDFeB", 
-                  magnet_source=1.2,
-                  dimension=input_dim)
 
-    print("Thông tin Segment:")
-    print(seg)
-    print(f"Dimension Array: {seg.dimension}")
-    print(f"Type: {type(seg.dimension)}")

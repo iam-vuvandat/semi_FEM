@@ -12,6 +12,7 @@ from src.core.core_class.utils.for_reluctance_network.set_reluctance_at_zero imp
 from src.core.core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 from src.core.core_class.utils.for_reluctance_network.access_elements import access_elements
 from src.core.core_class.utils.for_reluctance_network.display_reluctance_network import display_reluctance_network
+from src.core.core_class.utils.for_reluctance_network.get_geometric_error import get_geometric_error
 
 # Solver Core
 from src.core.solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
@@ -133,6 +134,10 @@ class ReluctanceNetwork:
 
     def get_flux_linkage(self):
         return get_flux_linkage(reluctance_network=self)
+    
+
+    def get_geometric_error(self):
+        return get_geometric_error(reluctance_network=self)
         
     def display(self,plotter = None):
         return display_reluctance_network(reluctance_network=self, plotter = plotter)
