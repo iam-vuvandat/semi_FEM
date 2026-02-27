@@ -11,18 +11,12 @@ class ElementInfo:
     magnetization_direction: np.ndarray = field(default_factory=lambda: np.array([0., 0., 1.]))
     winding_vector: np.ndarray = field(default_factory=lambda: np.array([0., 0., 0.]))
     winding_normal: np.ndarray = field(default_factory=lambda: np.array([0., 0., 1.]))
+    volume_error: float = 0.0 # Thêm thông số theo yêu cầu
     
     # --- COORDINATE (2x3) ---
-    # Row 0: Start Coordinate [r_i, t_j, z_k]
-    # Row 1: End Coordinate   [r_i+1, t_j+1, z_k+1]
     coordinate: np.ndarray = field(default_factory=lambda: np.zeros((2, 3)))
 
     # --- DIMENSION (2x3) ---
-    # Col 0: r (radial length)
-    # Col 1: theta (angle in radians)
-    # Col 2: z (axial length)
-    # Row 0: Element Info (Voxel size)
-    # Row 1: Segment Info (Geometry size)
     dimension: np.ndarray = field(default_factory=lambda: np.zeros((2, 3)))
 
 def extract_element_info(position: tuple, 
@@ -51,10 +45,9 @@ def extract_element_info(position: tuple,
 
     # --- 2. ELEMENT DIMENSIONS (Row 0) ---
     d_r = abs(r_next - r_i)
-    d_t = abs(t_next - t_j) # Góc mở (Radian)
+    d_t = abs(t_next - t_j) 
     d_z = abs(z_next - z_k)
     
-    # Tính độ dài cung để tạo Box vật lý cho việc check giao cắt (Intersection)
     r_avg = (r_i + r_next) / 2.0
     grid_arc_len = r_avg * d_t 
 
@@ -66,7 +59,6 @@ def extract_element_info(position: tuple,
     center_y = r_avg * np.sin(t_avg)
     center_z = z_avg
 
-    # Box vật lý dùng mét (cho trimesh)
     voxel_dims = [d_r, grid_arc_len, d_z]
     voxel_mesh = trimesh.creation.box(extents=voxel_dims)
 
@@ -113,6 +105,14 @@ def extract_element_info(position: tuple,
                     max_seg_vol = vol
                     dominant_segment = seg
 
+    # --- TÍNH TOÁN SAI SỐ (VẪN DÙNG BIẾN GỐC CỦA BẠN) ---
+    if dominant_material == "air":
+        # Thiếu hụt (Missing): Có vật liệu nhưng gán là air
+        vol_err = float(occupied_volume)
+    else:
+        # Lồi ra (Overflow): Gán vật liệu nhưng to hơn phần CAD chiếm chỗ
+        vol_err = float(abs(total_voxel_volume - occupied_volume))
+
     # --- HELPER FUNCTIONS ---
     def get_vec(obj, attr):
         val = getattr(obj, attr, None)
@@ -123,34 +123,25 @@ def extract_element_info(position: tuple,
         return float(val) if val is not None else default_val
 
     # --- 5. BUILD DIMENSION MATRIX (2x3) ---
-    
-    # Row 0: Element [r, theta(rad), z]
     row_element = [d_r, d_t, d_z]
-
-    # Row 1: Segment [r, theta(rad), z]
     if dominant_segment is None:
-        row_segment = row_element # Air -> Segment = Element
+        row_segment = row_element
     else:
-        # Nếu segment đã có dimension array (từ hàm find_geometry_dimension_in_mesh)
         if hasattr(dominant_segment, 'dimension') and dominant_segment.dimension is not None:
-             # dominant_segment.dimension chuẩn là [r, theta, z]
              row_segment = dominant_segment.dimension
         else:
-             # Fallback
              seg_r = safe_float(dominant_segment, "r_length", d_r)
              seg_t = safe_float(dominant_segment, "t_length", d_t) 
              seg_z = safe_float(dominant_segment, "z_length", d_z)
              row_segment = [seg_r, seg_t, seg_z]
 
-    dims_array = np.array([
-        row_element,
-        row_segment
-    ], dtype=float)
+    dims_array = np.array([row_element, row_segment], dtype=float)
 
     # --- 6. RETURN ---
     if dominant_segment is None:
         return ElementInfo(
             material="air",
+            volume_error=vol_err,
             coordinate=coord_array,
             dimension=dims_array
         )
@@ -161,6 +152,7 @@ def extract_element_info(position: tuple,
         magnetization_direction=get_vec(dominant_segment, "magnetization_direction"),
         winding_vector=get_vec(dominant_segment, "winding_vector"),
         winding_normal=get_vec(dominant_segment, "winding_normal"),
+        volume_error=vol_err,
         coordinate=coord_array,
         dimension=dims_array
     )

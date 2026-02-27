@@ -27,10 +27,7 @@ class Element:
         self.flat_position = None
         self.geometry = reluctance_network.geometry
         self.material_database = reluctance_network.material_database
-
         self.mesh = reluctance_network.mesh
-        self.geometry = reluctance_network.geometry
-
         self.loop_flux = reluctance_network.loop_flux
         self.magnetic_potential = reluctance_network.magnetic_potential
         self.winding_current = reluctance_network.winding_current
@@ -53,6 +50,7 @@ class Element:
         self.segment_winding_vector = info.winding_vector
         self.winding_normal = info.winding_normal
         self.element_winding_vector = None
+        self.volume_error = info.volume_error
 
         dimension_calculated = find_element_dimension(coordinate=self.coordinate)
         self.length = dimension_calculated.length
