@@ -1,10 +1,13 @@
 import numpy as np 
+from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
+from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
 
 class Mechanical:
     def __init__(self,
-                 shaft_speed = 3000,
-                 current_position = 0.0):
-        self.shaft_speed = float(shaft_speed)
-        self.current_position = float(current_position)
-        cogging_period_mech = 0.0
-        symmetry_factor = 0.0
+                 motor):
+        self.geometry_data = motor.geometry_data
+        self.shaft_speed = 3000.0
+        self.current_position = 0.0
+        self.cogging_period_mech = find_cogging_period(geometry_data = self.geometry_data).period_mech
+        self.symmetry_factor = find_symmetry_factor(geometry_data= self.geometry_data).symmetry_factor
+        

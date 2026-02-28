@@ -14,10 +14,8 @@ def create_system_variable(reluctance_network):
     loop_flux = None
     magnetic_potential = None
 
-    if reluctance_network.system_variable == "loop_flux":
-        loop_flux = LoopFLux(reluctance_network= reluctance_network)
-    else: 
-        magnetic_potential =  create_magnetic_potential(reluctance_network= reluctance_network)
+   
+    magnetic_potential =  create_magnetic_potential(reluctance_network= reluctance_network)
     
     return SystemVariable(loop_flux = loop_flux,
                           magnetic_potential = magnetic_potential)

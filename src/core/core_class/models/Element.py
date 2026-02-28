@@ -28,7 +28,6 @@ class Element:
         self.geometry = reluctance_network.geometry
         self.material_database = reluctance_network.material_database
         self.mesh = reluctance_network.mesh
-        self.loop_flux = reluctance_network.loop_flux
         self.magnetic_potential = reluctance_network.magnetic_potential
         self.winding_current = reluctance_network.winding_current
         self.elements = reluctance_network.elements
@@ -86,20 +85,20 @@ class Element:
         return find_neighbor_elements(element=self).neighbor_elements
 
     def update_element(self, 
-                       loop_flux = None,
                        magnetic_potential=None, 
                        winding_current=None,
+                       update_for_magnetic_potential = False,
+                       update_for_winding_current = False,
                        material_relaxation_factor = 1.0,
                        delta_mu_max=-1):
         
-        if winding_current is not None:
+        if update_for_winding_current:
             self.winding_current = winding_current
             self.winding_source = find_winding_source(element=self).winding_source
             self.magnetic_source = find_branch_magnetic_source(element=self).branch_magnetic_source
 
-        if magnetic_potential is not None or loop_flux is not None:
+        if update_for_magnetic_potential:
             self.magnetic_potential = magnetic_potential
-            self.loop_flux = loop_flux
             self.flux_direct = find_flux_direct(element=self).flux_direct
 
             flux_density = find_flux_density(element=self)

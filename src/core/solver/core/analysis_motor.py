@@ -1,13 +1,21 @@
-import paths 
 import numpy as np
 import math 
 from tqdm import tqdm
 
-pi = math.pi
 from src.core.solver.utils.periodic_derivative import periodic_derivative
 from src.core.solver.utils.duplicate_data import duplicate_data
 
+pi = math.pi
+
 def analysis_motor(motor, callback = None):
+    
+    # Hàm bọc để bảo vệ callback, chỉ lấy tham số đầu tiên (chuỗi văn bản)
+    def setup_callback(msg, *args):
+        if callback:
+            callback(msg)
+
+    motor.state_manager.require(motor, "calculation_data", callback=setup_callback)
+
     calculation_data = motor.calculation_data
     max_relative_residual = calculation_data.max_relative_residual
     max_iteration = calculation_data.max_iteration
@@ -26,21 +34,18 @@ def analysis_motor(motor, callback = None):
     delta_theta  = cogging_angle / (n_point)
     minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))
 
-    def scaled_callback(msg, sub_progress):
-        if callback:
-            total_progress = int(sub_progress * 0.15)
-            callback(msg, total_progress)
+    if motor.adaptive_mesh_data.n_theta != minimum_theta_cell:
+        motor.adaptive_mesh_data.n_theta = minimum_theta_cell
+        motor.state_manager.just_changed("mesh")
 
-    if motor.mesh is None:
-        motor.reload()
-
-    motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
-    motor.reload()
-    motor.create_reluctance_network(callback = scaled_callback)
+    motor.state_manager.require(motor, "mesh", callback=setup_callback)
+    motor.state_manager.require(motor, "reluctance_network", callback=setup_callback)
 
     if get_geometric_error:
         motor.reluctance_network.get_geometric_error()
     
+    motor.state_manager.require(motor, "drive", callback=setup_callback)
+
     phase_number = motor.winding_data.phase
     flux_linkage = np.zeros((phase_number + 1, n_point))
     mst_data = np.zeros((5, n_point))
@@ -49,12 +54,10 @@ def analysis_motor(motor, callback = None):
     n_step_standard = angle_factor
     cogging_shifted = 0
 
-    # XÁC ĐỊNH SỐ BƯỚC GIẢI
     loop_steps = 1 if solve_only_1_step else minimum_theta_cell
     for i in tqdm(range(loop_steps), disable=not debug):
         if callback:
-            progress_val = int(15 + (i / loop_steps) * 75)
-            callback(f"Solving step {i+1}/{loop_steps}", progress_val)
+            callback(f"Solving step {i+1}/{loop_steps}")
 
         if solve_cogging:
             is_cogging_point = (i < n_point)
@@ -93,20 +96,20 @@ def analysis_motor(motor, callback = None):
                 cogging_shifted = 0
 
     if solve_only_1_step:
-        if callback: callback("Single step analysis completed", 100)
+        if callback: callback("Single step analysis completed")
         return None
 
-    if callback: callback("Post-processing data", 95)
+    if callback: callback("Post-processing data...")
     
     motor.record.flux_linkage = flux_linkage.copy()
     shaft_speed = motor.mechanical.shaft_speed * (pi/30)
     back_emf = periodic_derivative(data=flux_linkage, half_open_interval=True).derivative * shaft_speed 
     if motor.mesh.adaptive_mesh_data.use_symmetry_factor:
-        back_emf = back_emf * motor.symmetry_factor
+        back_emf = back_emf * motor.mechanical.symmetry_factor
 
     motor.record.back_emf = back_emf.copy()
     mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data
     motor.record.mst_data = mst_data.copy()
 
-    if callback: callback("Analysis Completed", 100)
+    if callback: callback("Analysis Completed")
     return None

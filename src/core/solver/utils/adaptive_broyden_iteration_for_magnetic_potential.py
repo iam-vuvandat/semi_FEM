@@ -26,6 +26,7 @@ def adaptive_broyden_iteration_for_magnetic_potential(reluctance_network,
         reluctance_network.magnetic_potential.data = np.append(x_vec, 0.0).reshape(mag_pot_shape, order='F')
         reluctance_network.update_reluctance_network(
             magnetic_potential=reluctance_network.magnetic_potential,
+            update_for_magnetic_potential = True,
             material_relaxation_factor=relax, 
             delta_mu_max=-1 
         )

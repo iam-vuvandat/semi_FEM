@@ -1,30 +1,31 @@
-import paths
+import math
+from src.core.motor_type.models.Container import Container
+from src.core.motor_type.models.MotorStateManager import MotorStateManager
+
+# Import các utility thực thi
 from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
 from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
 from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
-from src.core.motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
-from src.core.motor_type.models.Container import Container
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
 from src.core.motor_type.utils.for_show.show_motor import show_motor
-from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
 from src.core.core_class.models.Drive import Drive
 from src.core.core_class.models.Mechanical import Mechanical
-import math
+
 pi = math.pi
 
 class AxialFluxMotorType1:
     def __init__(self):
-        
         self.motor_type = "axial_flux_motor_type_1"
-        self.system_variable = "magnetic_potential"
+        
+        # Bộ quản lý trạng thái (Nắm giữ ready_state bên trong)
+        self.state_manager = MotorStateManager()
 
-        self.mechanical = Mechanical(shaft_speed= 3000.0,
-                                     current_position= 0.0)
-
+        # --- DATA CONTAINERS ---
         self.geometry_data = Container(
             stator = Container(
                 slot_number          = 15,
@@ -39,7 +40,7 @@ class AxialFluxMotorType1:
                 tooth_tip_depth      = 2 * 1e-3,
                 tooth_tip_angle      = 30,
                 stator_length        = 25 * 1e-3
-                ),
+            ),
             rotor = Container(
                 pole_number          = 10,
                 rotor_lam_dia        = 150 * 1e-3,
@@ -53,8 +54,8 @@ class AxialFluxMotorType1:
                 airgap               = 2 * 1e-3,
                 magnet_length        = 4 * 1e-3,
                 rotor_length         = 6 * 1e-3
-                )
             )
+        )
 
         self.winding_data = Container(
             phase          = 3,
@@ -70,7 +71,7 @@ class AxialFluxMotorType1:
             fig_star       = None,
             fig_mmf        = None,
             fig_wf         = None
-            )
+        )
        
         self.adaptive_mesh_data = Container(
             n_r_in          = 1,
@@ -98,12 +99,6 @@ class AxialFluxMotorType1:
             iron_type   = "steel_1008"
         )
 
-        self.material_database = MaterialDataBase(
-            air         = self.material_data.air,
-            magnet_type = self.material_data.magnet_type,
-            iron_type   = self.material_data.iron_type
-        )
-
         self.calculation_data = Container(
             max_iteration          = 50,
             max_relative_residual  = 0.02,
@@ -113,22 +108,60 @@ class AxialFluxMotorType1:
             get_geometric_error    = False,
             solve_only_1_step      = True,
             debug                  = True
-            )
-                
+        )
+
+        self.maxwell_export_option = Container()      
+        
+        # --- EXECUTION ENTITIES ---
         self.geometry           = None
         self.mesh               = None
         self.reluctance_network = None
+        self.drive              = None
+        self.mechanical         = None
+        self.material_database  = None
         self.record             = Container()
 
-        self.reload()
-        self.maxwell_export_option = Container()
-        self.drive = Drive(motor = self)
+    # --- STATE MANAGEMENT BRIDGE ---
+    @property
+    def ready_state(self):
+        """Trả về trạng thái sẵn sàng của các thành phần máy điện."""
+        return self.state_manager.ready_state
 
-    def reload(self):
-        reload(motor=self)
+    def reload(self, 
+               callback=None,
+               reload_winding=False, 
+               reload_material=False, 
+               reload_geometry=False, 
+               reload_mechanical=False, 
+               reload_calculation_data=False, 
+               reload_mesh=False, 
+               reload_reluctance_network=False, 
+               reload_drive=False):
+        """Khởi tạo lại các thành phần cụ thể và thông báo qua callback."""
+        return self.state_manager.reload(
+            motor=self,
+            callback=callback,
+            reload_winding=reload_winding,
+            reload_material=reload_material,
+            reload_geometry=reload_geometry,
+            reload_mechanical=reload_mechanical,
+            reload_calculation_data=reload_calculation_data,
+            reload_mesh=reload_mesh,
+            reload_reluctance_network=reload_reluctance_network,
+            reload_drive=reload_drive
+        )
 
-    def init_winding(self):
-        result = generate_motor_winding_analysis(motor= self, debug= False)
+    def require(self, component_name, callback=None):
+        """Đảm bảo thành phần sẵn sàng bằng cách nạp lại chuỗi phụ thuộc nếu cần."""
+        return self.state_manager.require(motor=self, component_name=component_name, callback=callback)
+    
+    def just_changed(self, component_name):
+        """Đánh dấu một thành phần đã thay đổi dữ liệu đầu vào."""
+        return self.state_manager.just_changed(component_name)
+
+    # --- PHYSICAL CREATION METHODS ---
+    def create_winding(self): 
+        result = generate_motor_winding_analysis(motor=self, debug=False)
         self.winding_data.mmf_offset = 0.0
         self.winding_data.winding_matrix = result.tooth_matrix
         self.winding_data.slot_matrix = result.winding_matrix
@@ -138,33 +171,45 @@ class AxialFluxMotorType1:
         self.winding_data.fig_mmf    = result.fig_mmf
         self.winding_data.fig_wf     = result.fig_wf
 
-    def create_geometry(self, **kwargs):
+    def create_material_database(self): 
+        self.material_database = MaterialDataBase(
+            air         = self.material_data.air,
+            magnet_type = self.material_data.magnet_type,
+            iron_type   = self.material_data.iron_type
+        )
+
+    def create_geometry(self, **kwargs): 
         self.geometry = create_geometry(motor=self, **kwargs)
 
-    def create_adaptive_mesh(self):
+    def create_mechanical(self): 
+        self.mechanical = Mechanical(motor=self)
+
+    def create_adaptive_mesh(self): 
         self.mesh = create_adaptive_mesh(motor=self)
 
-    def create_reluctance_network(self,callback= None):
+    def create_reluctance_network(self, callback=None): 
         self.reluctance_network = ReluctanceNetwork(
             motor    = self,
             geometry = self.geometry,
             mesh     = self.mesh,
-            callback=callback
+            callback = callback
         )
 
+    def create_drive(self): 
+        self.drive = Drive(motor=self)
+
+    # --- ANALYSIS & UTILITIES ---
     def rotate_rotor(self, n_step):
         rotate_rotor(motor=self, n_step=n_step)
     
-    def analysis_motor(self,callback = None):
-        return analysis_motor(motor = self, callback = callback)
+    def analysis_motor(self, callback=None):
+        return analysis_motor(motor=self, callback=callback)
 
     def maxwell_stress_tensor(self):
-        return maxwell_stress_tensor(motor = self)
+        return maxwell_stress_tensor(motor=self)
 
     def display(self):
         show_motor(motor=self)
 
-    def export_to_maxwell(self, callback = None):
-        return export_to_maxwell(motor = self, callback = callback)
-    
-    
+    def export_to_maxwell(self, callback=None):
+        return export_to_maxwell(motor=self, callback=callback)

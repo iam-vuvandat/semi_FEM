@@ -20,14 +20,14 @@ class Output:
         self.slot_reduced = slot_reduced
         self.pole_reduced = pole_reduced
 
-def find_symmetry_factor(motor):
+def find_symmetry_factor(geometry_data):
     """
     Calculates the machine symmetry factor (periodicity) based on Slot and Pole numbers.
     Accesses variables through the new nested geometry_data structure.
     """
     # Accessing parameters through the refactored nested structure
-    stator = motor.geometry_data.stator
-    rotor  = motor.geometry_data.rotor
+    stator =geometry_data.stator
+    rotor  =geometry_data.rotor
 
     slot_number = stator.slot_number # Located in stator container
     pole_number = rotor.pole_number  # Located in rotor container

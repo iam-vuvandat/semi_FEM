@@ -9,15 +9,15 @@ class Output:
     """
     period_mech: float
 
-def find_cogging_period(motor) -> Output:
+def find_cogging_period(geometry_data) -> Output:
     """
     Tính toán chu kỳ cơ khí của mô-men răng khía theo đơn vị Radian.
     
     Công thức:
     T_rad = 2 * pi / LCM(slots, poles)
     """
-    slots = motor.geometry_data.stator.slot_number
-    poles = motor.geometry_data.rotor.pole_number
+    slots = geometry_data.stator.slot_number
+    poles = geometry_data.rotor.pole_number
     if slots <= 0 or poles <= 0:
         raise ValueError("Số rãnh (slots) và số cực (poles) phải là số nguyên dương.")
 
@@ -30,9 +30,3 @@ def find_cogging_period(motor) -> Output:
     
     return Output(period_mech=t_cog_rad)
 
-# --- Kiểm tra nhanh ---
-if __name__ == "__main__":
-    # Ví dụ: Động cơ 12 rãnh, 10 cực -> LCM = 60
-    # Chu kỳ = 2 * pi / 60 = pi / 30 rad (~0.1047 rad)
-    result = calculate_cogging_period(12, 10)
-    print(f"Chu kỳ cơ khí: {result.period_mech:.6f} rad")
