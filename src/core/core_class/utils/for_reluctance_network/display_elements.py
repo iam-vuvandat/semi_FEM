@@ -2,23 +2,26 @@ import sys
 import numpy as np
 import pyvista as pv
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, 
-                             QVBoxLayout, QPushButton, QLabel, QTextEdit, QGridLayout)
+                             QVBoxLayout, QPushButton, QLabel, QTextEdit, 
+                             QGridLayout, QScrollArea)
 from pyvistaqt import QtInteractor
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt
 
 class ElementDebugger(QMainWindow):
     def __init__(self, reluctance_network, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Axial Flux Motor - Full Element Inspector (Large Font)")
-        self.resize(1500, 950) # Tăng kích thước cửa sổ mặc định
+        self.setWindowTitle("Axial Flux Motor - Full Element Inspector (Scrollable)")
+        self.resize(1600, 950)
 
         self.reluctance_network = reluctance_network
         self.elements_3d = reluctance_network.elements
         self.grid = reluctance_network.mesh.to_pyvista_grid()
         
+        # Lấy kích thước mảng 3D
         self.ni, self.nj, self.nk = self.elements_3d.shape
         self.curr_i, self.curr_j, self.curr_k = self.ni // 2, 0, self.nk // 2
 
+        # Gán tọa độ (i, j, k) vào từng cell của PyVista để truy vấn khi click
         idx_i, idx_j, idx_k = np.meshgrid(np.arange(self.ni), np.arange(self.nj), np.arange(self.nk), indexing='ij')
         self.grid.cell_data["idx_i"] = idx_i.flatten(order='F')
         self.grid.cell_data["idx_j"] = idx_j.flatten(order='F')
@@ -33,62 +36,64 @@ class ElementDebugger(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
 
-        # --- LEFT: 3D VIEW ---
+        # --- PHẦN BÊN TRÁI: HIỂN THỊ 3D (2/3 màn hình) ---
         self.plotter = QtInteractor(self)
         main_layout.addWidget(self.plotter.interactor, stretch=2)
 
-        # --- RIGHT: CONTROL & INFO ---
-        control_panel = QWidget()
-        control_layout = QVBoxLayout(control_panel)
-        main_layout.addWidget(control_panel, stretch=1)
+        # --- PHẦN BÊN PHẢI: BẢNG ĐIỀU KHIỂN CÓ THANH CUỘN (1/3 màn hình) ---
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.NoFrame)
+        main_layout.addWidget(scroll_area, stretch=1)
 
-        # Nhãn tọa độ (Cỡ 22px)
-        self.pos_label = QLabel("Position: [0, 0, 0]")
-        self.pos_label.setStyleSheet("font-weight: bold; font-size: 24px; color: #1a5276; margin-bottom: 10px;")
+        # Container bên trong ScrollArea
+        control_container = QWidget()
+        control_layout = QVBoxLayout(control_container)
+        scroll_area.setWidget(control_container)
+
+        # 1. Hiển thị Tọa độ hiện tại
+        self.pos_label = QLabel("Index: [0, 0, 0]")
+        self.pos_label.setStyleSheet("font-weight: bold; font-size: 26px; color: #2E86C1; margin-bottom: 5px;")
         control_layout.addWidget(self.pos_label)
 
-        # Nút điều khiển (Cỡ chữ 18px, padding lớn)
+        # 2. Các nút điều khiển di chuyển R, T, Z
         grid_buttons = QGridLayout()
         control_layout.addLayout(grid_buttons)
-        btn_style = "padding: 15px; font-weight: bold; font-size: 18px; min-width: 80px;"
+        btn_style = "padding: 15px; font-weight: bold; font-size: 16px; background-color: #EBF5FB; border: 1px solid #AED6F1;"
         
-        self.btn_r_plus = QPushButton("R +"); self.btn_r_plus.setStyleSheet(btn_style)
-        self.btn_r_minus = QPushButton("R -"); self.btn_r_minus.setStyleSheet(btn_style)
-        self.btn_t_plus = QPushButton("T +"); self.btn_t_plus.setStyleSheet(btn_style)
-        self.btn_t_minus = QPushButton("T -"); self.btn_t_minus.setStyleSheet(btn_style)
-        self.btn_z_plus = QPushButton("Z +"); self.btn_z_plus.setStyleSheet(btn_style)
-        self.btn_z_minus = QPushButton("Z -"); self.btn_z_minus.setStyleSheet(btn_style)
+        # (Text, di, dj, dk, row, col)
+        nav_configs = [
+            ("R +", 1,0,0, 0,0), ("R -", -1,0,0, 0,1),
+            ("T +", 0,1,0, 1,0), ("T -", 0,-1,0, 1,1),
+            ("Z +", 0,0,1, 2,0), ("Z -", 0,0,-1, 2,1)
+        ]
 
-        self.btn_r_plus.clicked.connect(lambda: self.move_idx(1, 0, 0))
-        self.btn_r_minus.clicked.connect(lambda: self.move_idx(-1, 0, 0))
-        self.btn_t_plus.clicked.connect(lambda: self.move_idx(0, 1, 0))
-        self.btn_t_minus.clicked.connect(lambda: self.move_idx(0, -1, 0))
-        self.btn_z_plus.clicked.connect(lambda: self.move_idx(0, 0, 1))
-        self.btn_z_minus.clicked.connect(lambda: self.move_idx(0, 0, -1))
+        for txt, di, dj, dk, r, c in nav_configs:
+            btn = QPushButton(txt)
+            btn.setStyleSheet(btn_style)
+            btn.clicked.connect(lambda ch, d=(di,dj,dk): self.move_idx(*d))
+            grid_buttons.addWidget(btn, r, c)
 
-        grid_buttons.addWidget(self.btn_r_plus, 0, 0); grid_buttons.addWidget(self.btn_r_minus, 0, 1)
-        grid_buttons.addWidget(self.btn_t_plus, 1, 0); grid_buttons.addWidget(self.btn_t_minus, 1, 1)
-        grid_buttons.addWidget(self.btn_z_plus, 2, 0); grid_buttons.addWidget(self.btn_z_minus, 2, 1)
-
-        # Nhãn tiêu đề thông tin
+        # 3. Khu vực hiển thị thuộc tính chi tiết
         info_title = QLabel("Chi tiết thuộc tính (Attributes):")
-        info_title.setStyleSheet("font-size: 18px; font-weight: bold; margin-top: 15px;")
+        info_title.setStyleSheet("font-size: 20px; font-weight: bold; margin-top: 20px; color: #D35400;")
         control_layout.addWidget(info_title)
 
-        # Bảng thông tin (Cỡ chữ 16px)
         self.info_box = QTextEdit()
         self.info_box.setReadOnly(True)
+        self.info_box.setMinimumHeight(800) # Ép chiều cao tối thiểu lớn để chứa danh sách dài
         self.info_box.setStyleSheet("""
-            background-color: #f4f6f7; 
-            font-family: 'Consolas', 'Courier New'; 
-            font-size: 16px; 
-            color: #212f3d;
-            border: 1px solid #bdc3c7;
+            background-color: #1C2833; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            font-size: 15px; 
+            color: #FDFEFE;
+            border: 2px solid #34495E;
             padding: 10px;
         """)
         control_layout.addWidget(self.info_box)
 
     def _init_mesh_display(self):
+        """Khởi tạo màu sắc vật liệu cho toàn bộ lưới."""
         mat_ids = np.zeros(self.grid.n_cells)
         for i in range(self.ni):
             for j in range(self.nj):
@@ -102,14 +107,15 @@ class ElementDebugger(QMainWindow):
                         elif "coil" in m or "winding" in m: mat_ids[idx] = 3
         
         self.grid.cell_data["MatID"] = mat_ids
-        colors = ["#FFFFFF", "#A5C5E5", "#FF9900", "#BC8E8E"]
+        # Trắng (Air), Xanh (Iron), Cam (Magnet), Nâu (Coil)
+        colors = ["#FFFFFF", "#3498DB", "#E67E22", "#A93226"]
         
         for mid, col in enumerate(colors):
             try:
                 sub = self.grid.threshold([mid, mid], scalars="MatID")
-                op = 0.05 if mid == 0 else 0.7
+                op = 0.05 if mid == 0 else 0.6
                 self.plotter.add_mesh(sub, color=col, opacity=op, show_edges=(mid!=0), 
-                                      edge_color="#444444", name=f"mat_{mid}", pickable=False)
+                                      edge_color="#2C3E50", name=f"mat_{mid}", pickable=False)
             except: pass
 
         self.plotter.view_isometric()
@@ -129,52 +135,57 @@ class ElementDebugger(QMainWindow):
         self.update_selection()
 
     def update_selection(self):
+        """Cập nhật highlight và in tất cả thuộc tính của phần tử."""
         self.pos_label.setText(f"Index: [{self.curr_i}, {self.curr_j}, {self.curr_k}]")
         el = self.elements_3d[self.curr_i, self.curr_j, self.curr_k]
         
         if el is None:
-            self.info_box.setText("No Element Data")
+            self.info_box.setText("No Element Data at this position.")
             return
 
-        def fmt(val, precision=4):
-            if val is None: return "N/A"
-            return np.round(val, precision)
-
-        lines = []
-        lines.append(f"--- [ BASIC INFO ] ---")
-        lines.append(f"material      : {el.material}")
-        lines.append(f"flat_position : {el.flat_position}")
-        lines.append(f"volume_error  : {fmt(el.volume_error, 8)}")
+        lines = [f"--- [ FULL DATA INSPECTION ] ---", ""]
         
-        lines.append(f"\n--- [ GEOMETRY ] ---")
-        lines.append(f"length (dr, dt, dz):\n{fmt(el.length, 6)}")
-        lines.append(f"section_area (Ar, At, Az):\n{fmt(el.section_area, 8)}")
-        lines.append(f"length_ratio  : {fmt(el.length_ratio)}")
-        
-        lines.append(f"\n--- [ MAGNETIC SOURCES ] ---")
-        lines.append(f"winding_current: {fmt(el.winding_current)}")
-        lines.append(f"winding_source (MMF):\n{fmt(el.winding_source)}")
-        lines.append(f"magnet_source (MMF):\n{fmt(el.magnet_source)}")
-        lines.append(f"magnetic_source (Total):\n{fmt(el.magnetic_source)}")
+        # Quét tất cả các thuộc tính của đối tượng element
+        # sorted() để các thuộc tính hiện theo thứ tự bảng chữ cái cho dễ tìm
+        attrs = sorted([a for a in dir(el) if not a.startswith('__')])
 
-        lines.append(f"\n--- [ RELUCTANCE ] ---")
-        lines.append(f"ur (permeability): {fmt(el.relative_permeability, 2)}")
-        lines.append(f"reluctance (Current):\n{fmt(el.reluctance, 2)}")
+        for attr in attrs:
+            val = getattr(el, attr)
+            
+            # Bỏ qua nếu là hàm (method)
+            if callable(val):
+                continue
 
-        lines.append(f"\n--- [ RESULTS ] ---")
-        lines.append(f"B_average: {fmt(el.flux_density_average, 4)} T")
-        lines.append(f"Flux Direct:\n{fmt(el.flux_direct, 8)}")
+            # Xử lý hiển thị dựa trên kiểu dữ liệu
+            if isinstance(val, (int, float, bool, str, np.number)):
+                # Làm tròn 6 chữ số nếu là số thực
+                if isinstance(val, (float, np.floating)):
+                    display_val = f"{val:.6g}"
+                else:
+                    display_val = str(val)
+            elif isinstance(val, (np.ndarray, list, tuple)):
+                # In mảng tường minh (có làm tròn)
+                try:
+                    display_val = f"\n{np.round(val, 6)}"
+                except:
+                    display_val = str(val)
+            else:
+                # Nếu là đối tượng phức tạp (Object)
+                display_val = "Object"
+
+            lines.append(f"{attr:<24}: {display_val}")
 
         self.info_box.setText("\n".join(lines))
 
+        # Highlight cell được chọn
         idx = self.curr_i + self.curr_j*self.ni + self.curr_k*self.ni*self.nj
         selected_cell = self.grid.extract_cells([idx])
-        self.plotter.add_mesh(selected_cell, color="#F1C40F", name="high_light_vol", opacity=1.0) # Sáng vàng rực
-        self.plotter.add_mesh(selected_cell, color="#E74C3C", style='wireframe', line_width=8, name="high_light_wire") # Khung đỏ đậm
+        self.plotter.add_mesh(selected_cell, color="#F1C40F", name="high_light_vol", opacity=1.0)
+        self.plotter.add_mesh(selected_cell, color="#E74C3C", style='wireframe', line_width=10, name="high_light_wire")
 
 def display_elements(reluctance_network):
+    """Hàm tiện ích để gọi debugger từ bên ngoài."""
     app = QApplication.instance() or QApplication(sys.argv)
     window = ElementDebugger(reluctance_network)
     window.show()
     app.exec_()
-    return None

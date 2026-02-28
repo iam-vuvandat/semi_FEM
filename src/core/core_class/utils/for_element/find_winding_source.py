@@ -18,6 +18,7 @@ def find_winding_source(element) :
         element_winding_vector = element.element_winding_vector
     
     winding_source = np.zeros((2,3))
+    
     F = element.winding_current @ element_winding_vector 
     winding_source[0,-1] = F/2
     winding_source[1,-1] = F/2

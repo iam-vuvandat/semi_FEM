@@ -110,6 +110,15 @@ class AxialFluxMotorType1:
             debug                  = True
         )
 
+        self.drive_data = Container(
+            i_rms = 0.0,
+            phase_advanced = 0.0
+        )
+
+        self.mechanical_data = Container(
+            shaft_speed = 3000.0
+        )
+
         self.maxwell_export_option = Container()      
         
         # --- EXECUTION ENTITIES ---
