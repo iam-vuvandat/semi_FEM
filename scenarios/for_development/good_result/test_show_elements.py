@@ -17,16 +17,16 @@ aft.geometry_data.rotor.airgap = 0.1 * 1e-3
 aft.geometry_data.rotor.magnet_length = 0.1 * 1e-3 
 aft.just_changed("geometry")
 
-aft.calculation_data.n_point = 10
+aft.calculation_data.n_point = 30
 aft.calculation_data.max_relative_residual = 0.005
 aft.calculation_data.solve_only_1_step = False
 aft.just_changed("calculation_data")
 
-aft.adaptive_mesh_data.n_r_2 = 1
-aft.adaptive_mesh_data.n_r_1 = 1
-aft.adaptive_mesh_data.n_r_3 = 1
-aft.adaptive_mesh_data.n_z_tooth_body = 1
-aft.adaptive_mesh_data.n_z_tooth_tip_2 = 1
+aft.adaptive_mesh_data.n_r_2 = 6
+aft.adaptive_mesh_data.n_r_1 = 3
+aft.adaptive_mesh_data.n_r_3 = 3
+aft.adaptive_mesh_data.n_z_tooth_body = 6
+aft.adaptive_mesh_data.n_z_tooth_tip_2 = 4
 aft.just_changed("mesh")
 
 aft.drive_data.i_rms = 5

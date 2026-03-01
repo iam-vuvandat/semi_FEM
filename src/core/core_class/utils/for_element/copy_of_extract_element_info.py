@@ -33,49 +33,87 @@ def extract_element_info(position: tuple,
     if not (0 <= i_t < len(t_nodes) - 1): return None
     if not (0 <= i_z < len(z_nodes) - 1): return None
 
-    # --- 1. TÍNH TOÁN TỌA ĐỘ TÂM (CENTER POINT) ---
+    # --- 1. COORDINATE ---
     r_i, r_next = float(r_nodes[i_r]), float(r_nodes[i_r+1])
     t_j, t_next = float(t_nodes[i_t]), float(t_nodes[i_t+1])
     z_k, z_next = float(z_nodes[i_z]), float(z_nodes[i_z+1])
 
-    r_avg = (r_i + r_next) / 2.0
-    t_avg = (t_j + t_next) / 2.0
-    z_avg = (z_k + z_next) / 2.0
+    coord_array = np.array([
+        [r_i, t_j, z_k],
+        [r_next, t_next, z_next]
+    ])
 
-    # Chuyển đổi sang hệ Cartesian (x, y, z) để kiểm tra với Mesh CAD
-    center_x = r_avg * np.cos(t_avg)
-    center_y = r_avg * np.sin(t_avg)
-    center_z = z_avg
-    center_point = np.array([[center_x, center_y, center_z]])
-
-    # Tọa độ đỉnh (phục vụ lưu trữ)
-    coord_array = np.array([[r_i, t_j, z_k], [r_next, t_next, z_next]])
-
-    # --- 2. KÍCH THƯỚC PHẦN TỬ ---
+    # --- 2. ELEMENT DIMENSIONS (Row 0) ---
     d_r = abs(r_next - r_i)
     d_t = abs(t_next - t_j) 
     d_z = abs(z_next - z_k)
-    row_element = [d_r, d_r * d_t, d_z] # d_t ở đây thường là grid_arc_len
+    
+    r_avg = (r_i + r_next) / 2.0
+    grid_arc_len = r_avg * d_t 
 
-    # --- 3. KIỂM TRA ĐIỂM NẰM TRONG MẢNH (POINT-IN-MESH) ---
+    # --- 3. VOXEL INTERSECTION CHECK ---
+    t_avg = (t_j + t_next) / 2.0
+    z_avg = (z_k + z_next) / 2.0
+    
+    center_x = r_avg * np.cos(t_avg)
+    center_y = r_avg * np.sin(t_avg)
+    center_z = z_avg
+
+    voxel_dims = [d_r, grid_arc_len, d_z]
+    voxel_mesh = trimesh.creation.box(extents=voxel_dims)
+
+    rotation_matrix = trimesh.transformations.rotation_matrix(t_avg, [0, 0, 1])
+    translation_matrix = trimesh.transformations.translation_matrix([center_x, center_y, center_z])
+    final_transform = trimesh.transformations.concatenate_matrices(translation_matrix, rotation_matrix)
+    voxel_mesh.apply_transform(final_transform)
+    
+    total_voxel_volume = voxel_mesh.volume
+    vox_bounds = voxel_mesh.bounds 
+
+    # --- 4. FIND DOMINANT SEGMENT ---
     segments_list = geometry.geometry if hasattr(geometry, 'geometry') else geometry
-    dominant_segment = None
+    segment_volumes = {}
+    material_volumes = defaultdict(float)
+    occupied_volume = 0.0
 
     for seg in segments_list:
-        if not hasattr(seg, 'mesh') or seg.mesh is None: 
-            continue
+        if not hasattr(seg, 'mesh') or seg.mesh is None: continue
         
-        # Kiểm tra nhanh bằng Bounding Box trước để tăng tốc
         seg_bounds = seg.mesh.bounds
-        if not (np.all(center_point[0] > seg_bounds[0]) and np.all(center_point[0] < seg_bounds[1])):
+        if not (np.all(vox_bounds[1] > seg_bounds[0]) and np.all(vox_bounds[0] < seg_bounds[1])):
             continue
+            
+        try:
+            intersection = trimesh.boolean.intersection([voxel_mesh, seg.mesh])
+            if intersection.is_volume:
+                vol = intersection.volume
+                if vol > 1e-12:
+                    segment_volumes[seg] = vol
+                    material_volumes[seg.material] += vol
+                    occupied_volume += vol
+        except Exception: continue
 
-        # Kiểm tra điểm nằm trong khối (Sử dụng trimesh.contains)
-        if seg.mesh.contains(center_point):
-            dominant_segment = seg
-            break # Dừng ngay khi tìm thấy mảnh chứa tâm (O(1) logic)
+    material_volumes["air"] = max(0.0, total_voxel_volume - occupied_volume)
+    dominant_material = max(material_volumes, key=material_volumes.get)
+    dominant_segment = None
 
-    # --- 4. TRÍCH XUẤT THUỘC TÍNH ---
+    if dominant_material != "air":
+        max_seg_vol = -1.0
+        for seg, vol in segment_volumes.items():
+            if seg.material == dominant_material:
+                if vol > max_seg_vol:
+                    max_seg_vol = vol
+                    dominant_segment = seg
+
+    # --- TÍNH TOÁN SAI SỐ (VẪN DÙNG BIẾN GỐC CỦA BẠN) ---
+    if dominant_material == "air":
+        # Thiếu hụt (Missing): Có vật liệu nhưng gán là air
+        vol_err = float(occupied_volume)
+    else:
+        # Lồi ra (Overflow): Gán vật liệu nhưng to hơn phần CAD chiếm chỗ
+        vol_err = float(abs(total_voxel_volume - occupied_volume))
+
+    # --- HELPER FUNCTIONS ---
     def get_vec(obj, attr):
         val = getattr(obj, attr, None)
         return np.array(val, dtype=float) if val is not None else np.array([0., 0., 0.])
@@ -84,24 +122,26 @@ def extract_element_info(position: tuple,
         val = getattr(obj, attr, None)
         return float(val) if val is not None else default_val
 
-    # Xử lý ma trận Dimension 2x3
-    if dominant_segment:
+    # --- 5. BUILD DIMENSION MATRIX (2x3) ---
+    row_element = [d_r, d_t, d_z]
+    if dominant_segment is None:
+        row_segment = row_element
+    else:
         if hasattr(dominant_segment, 'dimension') and dominant_segment.dimension is not None:
              row_segment = dominant_segment.dimension
         else:
-             row_segment = [safe_float(dominant_segment, "r_length", d_r),
-                            safe_float(dominant_segment, "t_length", d_r * d_t), 
-                            safe_float(dominant_segment, "z_length", d_z)]
-    else:
-        row_segment = row_element
+             seg_r = safe_float(dominant_segment, "r_length", d_r)
+             seg_t = safe_float(dominant_segment, "t_length", d_t) 
+             seg_z = safe_float(dominant_segment, "z_length", d_z)
+             row_segment = [seg_r, seg_t, seg_z]
 
     dims_array = np.array([row_element, row_segment], dtype=float)
 
-    # --- 5. RETURN ---
+    # --- 6. RETURN ---
     if dominant_segment is None:
         return ElementInfo(
             material="air",
-            volume_error=0.0, # Không tính thể tích nên error mặc định là 0
+            volume_error=vol_err,
             coordinate=coord_array,
             dimension=dims_array
         )
@@ -112,7 +152,7 @@ def extract_element_info(position: tuple,
         magnetization_direction=get_vec(dominant_segment, "magnetization_direction"),
         winding_vector=get_vec(dominant_segment, "winding_vector"),
         winding_normal=get_vec(dominant_segment, "winding_normal"),
-        volume_error=0.0,
+        volume_error=vol_err,
         coordinate=coord_array,
         dimension=dims_array
     )
