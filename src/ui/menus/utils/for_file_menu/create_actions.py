@@ -14,7 +14,7 @@ def create_actions(file_menu):
     def handle_new():
         """Tạo motor mới và làm mới UI"""
         main_window.motor = AxialFluxMotorType1()
-        main_window.motor.reload() 
+        # Không gọi motor.reload(), chỉ reload UI để nhận đối tượng mới
         main_window.reload()
         main_window.statusBar().showMessage("New project initialized.", 3000)
 
@@ -24,22 +24,22 @@ def create_actions(file_menu):
             main_window, "Open Motor Design", "", "MBGRN Files (*.mbgrn)"
         )
         if path:
-            # Sử dụng callback để báo cáo tiến trình load
             def load_cb(msg):
                 main_window.statusBar().showMessage(msg)
-                main_window.repaint() # Ép giao diện cập nhật chữ ngay lập tức
+                main_window.repaint() 
 
             loaded_motor = motor_io.load_motor(filename="", filepath=path, callback=load_cb)
             
             if loaded_motor:
                 main_window.motor = loaded_motor
+                # Làm mới UI để hiển thị dữ liệu từ file vừa nạp
                 main_window.reload()
                 main_window.statusBar().showMessage(f"Successfully loaded: {path}", 5000)
             else:
                 QMessageBox.critical(main_window, "Error", "Failed to load motor data.")
 
     def handle_save():
-        """Lưu motor và cảnh báo không đóng ứng dụng"""
+        """Lưu motor và cảnh báo trên StatusBar"""
         if main_window.motor is None:
             QMessageBox.warning(main_window, "Warning", "Nothing to save!")
             return
@@ -49,17 +49,14 @@ def create_actions(file_menu):
         )
         
         if path:
-            # 1. Hiển thị cảnh báo ngay lập tức
             main_window.statusBar().setStyleSheet("color: red; font-weight: bold;")
             main_window.statusBar().showMessage("SAVING... PLEASE DO NOT CLOSE THE APPLICATION!", 0)
-            main_window.repaint() # Đảm bảo chữ hiện lên trước khi Python bận xử lý lưu file
+            main_window.repaint() 
 
-            # 2. Định nghĩa callback để cập nhật chi tiết (nếu muốn)
             def save_cb(msg):
                 main_window.statusBar().showMessage(f"Saving: {msg}")
                 main_window.repaint()
 
-            # 3. Thực hiện lưu
             success = motor_io.save_motor(
                 main_window.motor, 
                 filename="", 
@@ -67,8 +64,7 @@ def create_actions(file_menu):
                 callback=save_cb
             )
 
-            # 4. Thông báo kết quả cuối cùng
-            main_window.statusBar().setStyleSheet("") # Reset style về mặc định
+            main_window.statusBar().setStyleSheet("") 
             if success:
                 main_window.statusBar().showMessage(f"Project saved successfully: {path}", 5000)
             else:

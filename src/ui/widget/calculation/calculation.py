@@ -68,6 +68,17 @@ class Calculation(QWidget):
         self.btn_run.clicked.connect(self.run_solver)
         self.btn_cancel.clicked.connect(self.cancel_solver)
 
+    def refresh(self):
+        """Kiểm tra trạng thái lỗi thời của chuỗi dữ liệu trước khi giải."""
+        if self.status_label:
+            self.status_label.setText("Status: Checking dependencies...")
+        
+        # Đảm bảo Mesh đã sẵn sàng (kéo theo Winding, Geometry, Material)
+        self.motor.require("mesh")
+        
+        if self.status_label:
+            self.status_label.setText("Status: Ready")
+
     def init_toolbar(self):
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("background: #f0f0f0; border-bottom: 1px solid #dcdcdc;")
@@ -142,11 +153,16 @@ class Calculation(QWidget):
                 self.act_play.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
     def run_solver(self):
-        self.refresh_tab() 
+        # Ép buộc kiểm tra dependencies trước khi chạy
+        self.refresh()
         
         self.btn_run.setEnabled(False)
         self.btn_run.setText("Solving...")
         self.btn_cancel.setEnabled(True)
+        
+        if self.plotter:
+            self.plotter.clear()
+            self.plotter.render()
         
         QApplication.processEvents()
 
@@ -188,6 +204,8 @@ class Calculation(QWidget):
         
         if self.plotter:
             self.plotter.clear()
+        
+        # Hiển thị kết quả B-Map lên Plotter thông qua đối tượng Reluctance Network
         self.viewer_state = self.motor.reluctance_network.display(plotter=self.plotter)
         self.cleanup_thread()
 
@@ -202,16 +220,6 @@ class Calculation(QWidget):
             self.thread.wait()
         self.thread = None
         self.worker = None
-
-    def refresh_tab(self):
-        if self.status_label:
-            self.status_label.setText("Status: Initializing solver...")
-        if self.plotter:
-            self.plotter.clear()
-            self.plotter.render()
-        if self.viewer_state and hasattr(self.viewer_state, 'timer'):
-            if self.viewer_state.timer.isActive():
-                self.viewer_state.timer.stop()
 
     def closeEvent(self, event):
         if self.viewer_state and hasattr(self.viewer_state, 'timer'):

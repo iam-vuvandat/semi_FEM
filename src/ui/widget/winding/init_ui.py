@@ -1,14 +1,12 @@
 import sys
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
                              QFrame, QLabel, QScrollArea, QGroupBox, QComboBox, 
                              QApplication, QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy)
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 
-# Import bind_input từ project của bạn
 from src.ui.widget.widget.utils.bind_input import bind_input
 
 def init_ui(winding_tab=None):
@@ -18,57 +16,13 @@ def init_ui(winding_tab=None):
     motor = main_win.motor
     winding_data = motor.winding_data 
     
-    # --- Layout chính ---
-    main_layout = QHBoxLayout(winding_tab)
-    main_layout.setContentsMargins(10, 10, 10, 10)
-    splitter = QSplitter(Qt.Horizontal)
+    # --- 1. ĐỊNH NGHĨA CÁC HÀM LOGIC TRƯỚC (TRÁNH LỖI REFERENCE) ---
 
-    # --- HÀM CẬP NHẬT GIAO DIỆN ---
-    def global_update():
-        if motor is None: return
-        
-        # 1. Tính toán lại logic lõi
-        motor.reload() 
-        
-        # 2. Cập nhật Panel Phải (Nội dung động)
-        update_right_panel_content()
-        
-        QApplication.processEvents()
+    def clear_layout(layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget(): child.widget().deleteLater()
 
-    # --- LOGIC XỬ LÝ PANEL PHẢI ---
-    def update_right_panel_content():
-        # Lấy chế độ hiển thị từ ComboBox
-        mode = winding_tab.view_selector.currentText()
-        
-        # Xóa widget cũ trong layout nội dung
-        clear_layout(winding_tab.right_content_layout)
-        
-        # Mapping các chế độ với dữ liệu
-        # Dạng tuple: (Loại, Tên thuộc tính trong winding_data)
-        mapping = {
-            "Winding Matrix (Ampe-turns)": ("matrix", "slot_matrix"),    # Ma trận dây quấn
-            "Tooth Matrix (MMF Potential)":("matrix", "winding_matrix"), # Ma trận răng
-            "Layout Plot (Linear)":        ("plot", "fig_layout"),
-            "Polar Plot (Circular)":       ("plot", "fig_polar"),
-            "Star of Slots (Phasors)":     ("plot", "fig_star"),
-            "MMF Distribution":            ("plot", "fig_mmf"),
-            "Winding Factors":             ("plot", "fig_wf")
-        }
-        
-        data_type, attr_name = mapping.get(mode, (None, None))
-        
-        if data_type == "matrix":
-            matrix = getattr(winding_data, attr_name, None)
-            widget = create_matrix_widget(matrix)
-            winding_tab.right_content_layout.addWidget(widget)
-            
-        elif data_type == "plot":
-            # Lấy đối tượng Figure từ motor.winding_data
-            fig = getattr(winding_data, attr_name, None)
-            widget = create_plot_widget(fig)
-            winding_tab.right_content_layout.addWidget(widget)
-
-    # Hàm tạo Widget Bảng Ma trận
     def create_matrix_widget(matrix):
         table = QTableWidget()
         if matrix is not None:
@@ -83,95 +37,139 @@ def init_ui(winding_tab=None):
                     val = matrix[i, j]
                     item = QTableWidgetItem(f"{val:g}")
                     item.setTextAlignment(Qt.AlignCenter)
-                    
-                    # Tô màu trực quan
-                    if val > 0: item.setBackground(QColor("#FFF59D")) # Vàng
-                    elif val < 0: item.setBackground(QColor("#81D4FA")) # Xanh
-                    else: item.setBackground(QColor("#FFFFFF"))
-                    
+                    if val > 0: item.setBackground(QColor("#FFF59D"))
+                    elif val < 0: item.setBackground(QColor("#81D4FA"))
                     table.setItem(i, j, item)
             table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         return table
 
-    # Hàm tạo Widget Đồ thị (Nhúng Matplotlib)
     def create_plot_widget(fig):
         if fig is None:
-            lbl = QLabel("No Data Available. Please modify parameters to calculate.")
+            lbl = QLabel("No Plot Data. Check parameters or Slot/Pole combination.")
             lbl.setAlignment(Qt.AlignCenter)
             return lbl
-        
-        # Tạo Canvas từ Figure có sẵn của SWAT-EM
         canvas = FigureCanvas(fig)
         canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        canvas.updateGeometry()
         return canvas
 
-    # Hàm tiện ích xóa layout cũ
-    def clear_layout(layout):
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+    def update_right_panel_content():
+        if not hasattr(winding_tab, 'view_selector'): return
+        mode = winding_tab.view_selector.currentText()
+        clear_layout(winding_tab.right_content_layout)
+        
+        mapping = {
+            "Winding Matrix (Ampe-turns)": ("matrix", "slot_matrix"),
+            "Tooth Matrix (MMF Potential)":("matrix", "winding_matrix"),
+            "Layout Plot (Linear)":        ("plot", "fig_layout"),
+            "Polar Plot (Circular)":       ("plot", "fig_polar"),
+            "Star of Slots (Phasors)":     ("plot", "fig_star"),
+            "MMF Distribution":            ("plot", "fig_mmf"),
+            "Winding Factors":             ("plot", "fig_wf")
+        }
+        
+        data_type, attr_name = mapping.get(mode, (None, None))
+        if data_type == "matrix":
+            matrix = getattr(winding_data, attr_name, None)
+            widget = create_matrix_widget(matrix)
+            winding_tab.right_content_layout.addWidget(widget)
+        elif data_type == "plot":
+            fig = getattr(winding_data, attr_name, None)
+            widget = create_plot_widget(fig)
+            winding_tab.right_content_layout.addWidget(widget)
 
-    # ==========================
-    # XÂY DỰNG GIAO DIỆN
-    # ==========================
+    def handle_refresh():
+        """Smart Refresh: Chỉ nạp lại nếu dữ liệu lỗi thời."""
+        if motor is None: return
+        # Nếu dữ liệu đã tươi, thoát sớm để tránh lag UI
+        if motor.ready_state.winding_data:
+            update_right_panel_content()
+            return
+            
+        motor.require("winding_data")
+        update_right_panel_content()
 
-    # --- PANEL TRÁI (Configuration) ---
+    def global_update():
+        if motor is None: return
+        motor.just_changed("winding_data")
+        handle_refresh()
+        QApplication.processEvents()
+
+    # --- 2. GÁN THAM CHIẾU VÀO TAB ---
+    winding_tab.refresh = handle_refresh
+    winding_tab.refresh_content = update_right_panel_content
+
+    # --- 3. XÂY DỰNG GIAO DIỆN ---
+    main_layout = QHBoxLayout(winding_tab)
+    main_layout.setContentsMargins(10, 10, 10, 10)
+    
+    splitter = QSplitter(Qt.Horizontal)
+
+    # PANEL TRÁI: Nhập liệu (2 phần)
     left_panel = QWidget()
     left_layout = QVBoxLayout(left_panel)
-    left_layout.setContentsMargins(0, 0, 10, 0)
+    left_layout.setContentsMargins(0, 0, 5, 0)
     
     scroll = QScrollArea()
     scroll.setWidgetResizable(True)
     scroll.setFrameShape(QFrame.NoFrame)
+    scroll.setStyleSheet("QScrollArea { background-color: transparent; }")
+    
     content_widget = QWidget()
     content_vbox = QVBoxLayout(content_widget) 
+    content_vbox.setAlignment(Qt.AlignTop)
 
     def create_group(title, attrs):
         grp = QGroupBox(title)
-        grp.setStyleSheet("QGroupBox { font-weight: bold; border: 1px solid #dee2e6; margin-top: 10px; } QGroupBox::title { left: 10px; }")
+        grp.setStyleSheet("""
+            QGroupBox { 
+                font-weight: bold; border: 1px solid #ccd1d1; 
+                border-radius: 6px; margin-top: 15px; background-color: #fcfcfc;
+            }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #333; }
+        """)
         layout = QFormLayout(grp)
+        layout.setVerticalSpacing(10)
         for attr, lbl in attrs:
             if hasattr(winding_data, attr):
-                # Khi thay đổi input -> Gọi global_update -> Tính lại -> Cập nhật Plot/Matrix
-                layout.addRow(f"{lbl}:", bind_input(winding_data, attr, 1, global_update))
+                # Sử dụng bind_input với hệ số 1.0 cho các thông số dây quấn
+                input_w = bind_input(winding_data, attr, 1.0, global_update)
+                input_w.setFixedWidth(80)
+                layout.addRow(f"{lbl}:", input_w)
         return grp
 
-    content_vbox.addWidget(create_group("Topology", [("phase", "Phases"), ("winding_layer", "Layers"), ("parallel_path", "Parallel Paths")]))
-    content_vbox.addWidget(create_group("Coil Params", [("turns", "Turns/Coil"), ("throw", "Coil Throw")]))
+    content_vbox.addWidget(create_group("Topology", [
+        ("phase", "Phases"), 
+        ("winding_layer", "Layers"), 
+        ("parallel_path", "Parallel Paths")
+    ]))
+    content_vbox.addWidget(create_group("Coil Params", [
+        ("turns", "Turns/Coil"), 
+        ("throw", "Coil Throw")
+    ]))
     content_vbox.addStretch()
+    
     scroll.setWidget(content_widget)
     left_layout.addWidget(scroll)
 
-    # --- PANEL PHẢI (Dynamic View) ---
+    # PANEL PHẢI: Hiển thị (3 phần)
     right_panel = QFrame()
-    right_panel.setFrameShape(QFrame.StyledPanel)
     right_layout = QVBoxLayout(right_panel)
-    right_layout.setContentsMargins(0, 0, 0, 0)
+    right_layout.setContentsMargins(5, 0, 0, 0)
 
-    # 1. Header: Selector
     header_layout = QHBoxLayout()
     header_lbl = QLabel("<b>Display Mode:</b>")
     
     winding_tab.view_selector = QComboBox()
     winding_tab.view_selector.addItems([
-        "Winding Matrix (Ampe-turns)",
-        "Tooth Matrix (MMF Potential)",
-        "Layout Plot (Linear)",
-        "Polar Plot (Circular)",
-        "Star of Slots (Phasors)",
-        "MMF Distribution",
-        "Winding Factors"
+        "Winding Matrix (Ampe-turns)", "Tooth Matrix (MMF Potential)", "Layout Plot (Linear)",
+        "Polar Plot (Circular)", "Star of Slots (Phasors)", "MMF Distribution", "Winding Factors"
     ])
-    # Khi chọn item khác -> Chỉ cần cập nhật nội dung panel phải (không cần tính lại motor)
     winding_tab.view_selector.currentIndexChanged.connect(update_right_panel_content)
     
     header_layout.addWidget(header_lbl)
     header_layout.addWidget(winding_tab.view_selector)
     header_layout.addStretch()
     
-    # 2. Body: Content Area
     winding_tab.right_content_widget = QWidget()
     winding_tab.right_content_layout = QVBoxLayout(winding_tab.right_content_widget)
     winding_tab.right_content_layout.setContentsMargins(0, 10, 0, 0)
@@ -179,14 +177,16 @@ def init_ui(winding_tab=None):
     right_layout.addLayout(header_layout)
     right_layout.addWidget(winding_tab.right_content_widget)
 
-    # --- Kết nối Splitter ---
     splitter.addWidget(left_panel)
     splitter.addWidget(right_panel)
-    splitter.setStretchFactor(0, 1)
-    splitter.setStretchFactor(1, 2)
+    
+    # --- THIẾT LẬP TỈ LỆ 2:3 ---
+    splitter.setSizes([400, 600]) # 400/(400+600) = 2/5 = 40%
+    splitter.setStretchFactor(0, 2)
+    splitter.setStretchFactor(1, 3) 
+    
     main_layout.addWidget(splitter)
     
-    # Khởi chạy lần đầu
-    QTimer.singleShot(500, global_update)
+    QTimer.singleShot(100, handle_refresh)
     
     return None

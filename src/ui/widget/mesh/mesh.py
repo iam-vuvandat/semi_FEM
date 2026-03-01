@@ -15,6 +15,7 @@ class Mesh(QWidget):
         self.main_window = self.parent_widget.main_window
         
         # Các thuộc tính UI sẽ được khởi tạo trong init_ui tùy theo thiết kế của bạn
+        self.plotter = None
         
         # Thiết lập giao diện
         self.init_ui()
@@ -23,10 +24,23 @@ class Mesh(QWidget):
         """Xây dựng giao diện cho tab Mesh"""
         return init_ui(mesh_tab=self)
 
-    def refresh_tab(self):
+    def refresh(self):
         """
-        Làm mới giao diện tab Mesh khi dữ liệu motor thay đổi.
+        Hàm refresh thông minh: 
+        Chỉ thực hiện chia lưới lại nếu thông số Hình học hoặc Mesh Nodes bị thay đổi.
         """
-        # Logic này sẽ được gọi để đồng bộ lại dữ liệu lên UI
-        from src.ui.widget.mesh.init_ui import refresh_mesh_display
-        refresh_mesh_display(self, self.main_window.motor)
+        motor = self.main_window.motor
+        if motor:
+            # 1. Kiểm tra trạng thái: Nếu cờ 'ready_state.mesh' là False,
+            # require sẽ tự động chạy chuỗi Winding -> Geometry -> Mesh.
+            motor.require("mesh")
+            
+            # 2. Cập nhật hiển thị 3D Mesh
+            # Ưu tiên gọi hàm refresh_content được gán trong init_ui
+            if hasattr(self, 'refresh_content'):
+                self.refresh_content()
+            
+            # Giữ lại logic cũ của bạn để đảm bảo tương thích với file init_ui gốc
+            elif hasattr(self, 'plotter'):
+                from src.ui.widget.mesh.init_ui import refresh_mesh_display
+                refresh_mesh_display(self, motor)

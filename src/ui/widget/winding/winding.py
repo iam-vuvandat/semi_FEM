@@ -24,12 +24,23 @@ class Winding(QWidget):
     def init_ui(self):
         return init_ui(winding_tab=self)
 
-    def refresh_tab(self):
+    def refresh(self):
         """
-        Cập nhật lại bảng ma trận dây quấn khi có thay đổi từ tab Geometry 
-        (ví dụ: đổi Slot Number hoặc Pole Number).
+        Kiểm tra trạng thái lỗi thời và cập nhật lại tab Winding.
+        Được gọi tự động khi người dùng click vào Tab này.
         """
-        if hasattr(self, 'matrix_table') and self.matrix_table:
-            from src.ui.widget.winding.init_ui import update_winding_table
-            # Cập nhật lại dữ liệu từ motor vào giao diện bảng
-            update_winding_table(self, self.main_window.motor)
+        motor = self.main_window.motor
+        if motor:
+            # 1. Kiểm tra trạng thái: Nếu bạn vừa sửa số rãnh ở Tab Geometry, 
+            # lệnh require này sẽ tự động chạy lại logic tính toán dây quấn.
+            motor.require("winding_data")
+            
+            # 2. Cập nhật nội dung hiển thị (Ma trận, Đồ thị)
+            # Hàm 'refresh_content' này thường được gán bên trong file init_ui.py
+            if hasattr(self, 'refresh_content'):
+                self.refresh_content()
+            
+            # Giữ lại logic cũ của bạn nếu cần cập nhật bảng cụ thể
+            elif hasattr(self, 'matrix_table') and self.matrix_table:
+                from src.ui.widget.winding.init_ui import update_winding_table
+                update_winding_table(self, motor)

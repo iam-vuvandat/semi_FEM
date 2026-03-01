@@ -17,3 +17,16 @@ class Geometry(QWidget):
 
     def init_ui(self):
         return init_ui(geometry_tab=self)
+
+    def refresh(self):
+        """Kiểm tra trạng thái lỗi thời của property, nếu lỗi thời mới thực hiện nạp lại."""
+        motor = self.main_window.motor
+        if motor:
+            # 1. require() sẽ tự kiểm tra ready_state.geometry
+            # Nếu đã True (không sửa gì) -> nó thoát ngay lập tức, cực nhanh.
+            # Nếu False (vừa sửa input) -> nó tự nạp Winding -> Geometry.
+            motor.require("geometry")
+            
+            # 2. Gọi hàm vẽ lại 3D (hàm này được gán bên trong init_ui)
+            if hasattr(self, "refresh_plot"):
+                self.refresh_plot()

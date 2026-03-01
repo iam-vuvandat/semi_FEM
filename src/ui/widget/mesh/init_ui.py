@@ -4,13 +4,7 @@ from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QForm
                              QFrame, QLabel, QScrollArea, QGroupBox, QApplication)
 from PyQt5.QtCore import Qt, QTimer
 from pyvistaqt import QtInteractor
-
-# Import bind_input từ project của bạn
-try:
-    from src.ui.widget.widget.utils.bind_input import bind_input
-except ImportError:
-    # Hàm dự phòng nếu không tìm thấy module
-    def bind_input(obj, attr, factor, callback): return QWidget()
+from src.ui.widget.widget.utils.bind_input import bind_input
 
 # --- 1. HELPER FUNCTIONS ---
 def create_classic_group(title):
@@ -21,18 +15,11 @@ def create_classic_group(title):
     layout.setContentsMargins(15, 20, 15, 15)
     group.setStyleSheet("""
         QGroupBox { 
-            font-weight: bold; 
-            color: #333;
-            border: 1px solid #ccd1d1; 
-            border-radius: 4px;
+            font-weight: bold; color: #333;
+            border: 1px solid #ccd1d1; border-radius: 4px;
             margin-top: 15px; 
         }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            subcontrol-position: top left;
-            left: 10px;
-            padding: 0 5px;
-        }
+        QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; }
     """)
     return group
 
@@ -40,60 +27,56 @@ def create_classic_group(title):
 def init_ui(mesh_tab=None):
     if mesh_tab is None: return None
 
-    motor = mesh_tab.main_window.motor
+    main_win = mesh_tab.main_window
+    motor = main_win.motor
     mesh_data = motor.adaptive_mesh_data 
     
     main_layout = QHBoxLayout(mesh_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
-    
     splitter = QSplitter(Qt.Horizontal)
 
     # --- INTERNAL LOGIC FUNCTIONS ---
 
-    def on_refresh_clicked():
-        """Vẽ lại lưới Mesh lên PyVista Plotter"""
-        try:
-            if mesh_tab is None: return
-            cur_motor = mesh_tab.main_window.motor
-            
-            # Kiểm tra đối tượng mesh tồn tại trong motor
-            if hasattr(cur_motor, 'mesh') and cur_motor.mesh is not None:
-                mesh_tab.plotter.clear()
-                
-                # GỌI METHOD show() TỪ CLASS CylindricalMesh CỦA BẠN
-                # Không truyền edge_color vì class của bạn đã fix cứng nó rồi
-                cur_motor.mesh.show(
-                    plotter=mesh_tab.plotter,
-                    show_edges=True,
-                    opacity=0.3
-                )
-                
-                # Thiết lập góc nhìn chuẩn cho kỹ sư thiết kế máy điện
-                mesh_tab.plotter.view_xy()
-                mesh_tab.plotter.reset_camera()
-                mesh_tab.plotter.render()
-        except Exception as e:
-            print(f"Lỗi hiển thị Mesh: {e}")
+    def on_redraw():
+        """Chỉ thực hiện vẽ Mesh hiện có trong RAM lên Plotter."""
+        if hasattr(motor, 'mesh') and motor.mesh is not None:
+            mesh_tab.plotter.clear()
+            motor.mesh.show(
+                plotter=mesh_tab.plotter,
+                show_edges=True,
+                opacity=0.3
+            )
+            mesh_tab.plotter.view_xy()
+            mesh_tab.plotter.reset_camera()
+            mesh_tab.plotter.render()
+
+    def handle_refresh():
+        """
+        Hàm refresh thông minh cho việc chuyển Tab:
+        Chỉ thực hiện chia lưới lại nếu StateManager báo dữ liệu đã lỗi thời.
+        """
+        if motor is None: return
+        motor.require("mesh")
+        on_redraw()
+        QApplication.processEvents()
 
     def on_input_changed():
         """
-        CALLBACK QUAN TRỌNG: Được gọi mỗi khi dữ liệu nhập liệu thay đổi.
-        Hàm này chứa motor.reload() để làm mới dữ liệu Mesh.
+        Callback khi người dùng sửa thông số trực tiếp tại tab Mesh:
+        Hạ cờ Mesh và thực hiện tính toán lại ngay lập tức.
         """
-        cur_motor = mesh_tab.main_window.motor
-        
-        # 1. Gọi reload của motor chính để tính toán lại tọa độ lưới
-        if hasattr(cur_motor, 'reload'):
-            cur_motor.reload()
-            
-        # 2. Sau khi motor reload xong, vẽ lại lưới lên giao diện
-        on_refresh_clicked()
+        if motor is None: return
+        motor.just_changed("mesh")
+        handle_refresh()
 
-    # --- UI LAYOUT CONSTRUCTION (LEFT PANEL: INPUTS) ---
+    # Gán vào đối tượng tab để hỗ trợ cơ chế Smart Refresh từ Widget cha
+    mesh_tab.refresh = handle_refresh
+    mesh_tab.refresh_content = on_redraw
+
+    # --- UI LAYOUT CONSTRUCTION (LEFT PANEL) ---
     left_container = QWidget()
     left_layout = QVBoxLayout(left_container)
     left_layout.setContentsMargins(0, 0, 10, 0)
-    left_layout.setSpacing(12)
 
     scroll = QScrollArea()
     scroll.setWidgetResizable(True)
@@ -101,7 +84,6 @@ def init_ui(mesh_tab=None):
     
     config_widget = QWidget()
     config_layout = QVBoxLayout(config_widget)
-    config_layout.setSpacing(15)
 
     groups = {
         "logic":   create_classic_group("Mesh Logic Flags"),
@@ -112,25 +94,23 @@ def init_ui(mesh_tab=None):
     }
     layouts = {key: gb.layout() for key, gb in groups.items()}
 
-    # Tự động bind các thuộc tính và TRUYỀN CALLBACK vào
     for attr_name, value in vars(mesh_data).items():
         if attr_name.startswith('_'): continue
+        
         display_name = attr_name.replace('n_', '').replace('_', ' ').title()
+        is_node_count = attr_name.startswith('n_')
+        unit_factor = 1.0 if is_node_count else 1000.0
         
-        unit_factor = 1 if attr_name.startswith('n_') else (1e3 if any(k in attr_name.lower() for k in ['dia', 'gap', 'length', 'width', 'opening', 'radius', 'ext']) else 1)
-        
-        if not attr_name.startswith('n_'):
-            if 'arc' in attr_name.lower() or 'angle' in attr_name.lower(): display_name += " (Deg)"
-            elif unit_factor == 1e3: display_name += " (mm)"
-        
-        # CHÈN CALLBACK VÀO ĐÂY: Mỗi khi nhập xong, on_input_changed sẽ chạy
+        if not is_node_count:
+            if 'arc' in attr_name.lower() or 'angle' in attr_name.lower(): display_name += " (°)"
+            elif unit_factor == 1000.0: display_name += " (mm)"
+
         input_widget = bind_input(
             motor=mesh_data, 
             attr_name=attr_name, 
             unit_factor=unit_factor, 
             callback=on_input_changed
         )
-        input_widget.setMinimumHeight(25)
 
         if isinstance(value, bool): 
             layouts["logic"].addRow(f"{display_name}:", input_widget)
@@ -144,13 +124,12 @@ def init_ui(mesh_tab=None):
             layouts["others"].addRow(f"{display_name}:", input_widget)
 
     for key in ["logic", "r_div", "t_div", "z_div", "others"]:
-        if layouts[key].rowCount() > 0: config_layout.addWidget(groups[key])
+        if layouts[key].rowCount() > 0: 
+            config_layout.addWidget(groups[key])
     
     config_layout.addStretch()
     scroll.setWidget(config_widget)
     left_layout.addWidget(scroll)
-
-    # LƯU Ý: Nút bấm và ProgressBar đã được loại bỏ theo yêu cầu
 
     # --- RIGHT PANEL: 3D MESH PLOTTER ---
     right_container = QFrame()
@@ -167,7 +146,6 @@ def init_ui(mesh_tab=None):
     splitter.setStretchFactor(1, 2)
     main_layout.addWidget(splitter)
     
-    # Refresh lần đầu khi mở tab
-    QTimer.singleShot(1000, on_refresh_clicked)
+    QTimer.singleShot(500, handle_refresh)
 
     return None

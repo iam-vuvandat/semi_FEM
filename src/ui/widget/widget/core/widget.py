@@ -12,24 +12,30 @@ class Widget(QTabWidget):
     def __init__(self, main_window):
         super().__init__(main_window)
         self.main_window = main_window
+
+        # --- BƯỚC QUAN TRỌNG: Khai báo sẵn các thuộc tính là None ---
         self.geometry_tab = None
-        self.geometry_tab = self.setup_geometry_widget()
-
         self.winding_tab = None
-        self.winding_tab = self.setup_winding_widget()
-
         self.input_data_tab = None
-        self.input_data_tab = self.setup_input_data_widget()
-
         self.mesh_tab = None
-        self.mesh_tab = self.setup_mesh_widget()
-
         self.calculation_tab = None
-        self.calculation_tab = self.setup_calculation_widget()
-
         self.maxwell_interface = None
-        self.setup_maxwell_interface_widget()
+
+        # --- Sau đó mới thực hiện setup (Thứ tự này giúp hàm utils không bị lỗi) ---
+        self.geometry_tab = self.setup_geometry_widget()
+        self.winding_tab = self.setup_winding_widget()
+        self.input_data_tab = self.setup_input_data_widget()
+        self.mesh_tab = self.setup_mesh_widget()
+        self.calculation_tab = self.setup_calculation_widget()
+        self.maxwell_interface = self.setup_maxwell_interface_widget()
         
+        # Kết nối chuyển tab (Smart Refresh)
+        self.currentChanged.connect(self.on_tab_changed)
+    
+    def on_tab_changed(self, index):
+        current_tab = self.widget(index)
+        if hasattr(current_tab, "refresh"):
+            current_tab.refresh()
     
     def setup_geometry_widget(self):
         return setup_geometry_widget(widget = self)   

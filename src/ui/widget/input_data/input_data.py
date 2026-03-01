@@ -25,11 +25,23 @@ class InputData(QWidget):
         """Xây dựng giao diện cho tab Input Data"""
         return init_ui(input_tab=self)
 
-    def refresh_tab(self):
+    def refresh(self):
         """
-        Làm mới bảng vật liệu khi Geometry thay đổi 
-        (ví dụ: khi thêm rãnh stator hoặc thay đổi số lượng nam châm).
+        Hàm refresh thông minh: 
+        Kiểm tra trạng thái lỗi thời của Material Database trước khi hiển thị.
         """
-        if hasattr(self, 'material_table') and self.material_table:
-            from src.ui.widget.input_data.init_ui import refresh_material_table
-            refresh_material_table(self, self.main_window.motor)
+        motor = self.main_window.motor
+        if motor:
+            # 1. Kiểm tra trạng thái: Nếu dữ liệu vật liệu đã bị đánh dấu 'thối' (False),
+            # require sẽ tự động chạy lại motor.create_material_database().
+            motor.require("material_database")
+            
+            # 2. Cập nhật nội dung hiển thị (Bảng vật liệu hoặc tóm tắt thông số)
+            # Ưu tiên gọi hàm refresh_content được gán trong init_ui
+            if hasattr(self, 'refresh_content'):
+                self.refresh_content()
+            
+            # Giữ lại logic cũ của bạn để đảm bảo tính tương thích
+            elif hasattr(self, 'material_table') and self.material_table:
+                from src.ui.widget.input_data.init_ui import refresh_material_table
+                refresh_material_table(self, motor)

@@ -16,24 +16,17 @@ def init_ui(geometry_tab=None):
     stator_params = motor.geometry_data.stator
     rotor_params  = motor.geometry_data.rotor
     
-    parent_widget = geometry_tab.parentWidget()
-    if not isinstance(parent_widget, QTabWidget):
-        parent_widget = main_win.findChild(QTabWidget)
-
     main_layout = QHBoxLayout(geometry_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
     
+    # 1. Khởi tạo Splitter
     splitter = QSplitter(Qt.Horizontal)
 
+    # --- PANEL PHẢI: HIỂN THỊ 3D ---
     geometry_tab.plotter = QtInteractor(geometry_tab)
     geometry_tab.plotter.set_background("white")
 
-    def global_update():
-        if motor is None: 
-            return
-        
-        motor.reload() 
-        
+    def refresh_plot():
         geometry_tab.plotter.clear()
         if motor.geometry is not None:
             motor.geometry.show(plotter=geometry_tab.plotter, show_axes=True)
@@ -41,101 +34,96 @@ def init_ui(geometry_tab=None):
             geometry_tab.plotter.reset_camera()
             geometry_tab.plotter.render()
 
-        if parent_widget and hasattr(parent_widget, 'setup_winding_widget'):
-            try:
-                if hasattr(parent_widget, 'winding_tab'):
-                    idx_w = parent_widget.indexOf(parent_widget.winding_tab)
-                    if idx_w != -1:
-                        title_w = parent_widget.tabText(idx_w)
-                        parent_widget.removeTab(idx_w)
-                        parent_widget.winding_tab.deleteLater()
-                        parent_widget.winding_tab = parent_widget.setup_winding_widget()
-                        parent_widget.insertTab(idx_w, parent_widget.winding_tab, title_w)
-
-                if hasattr(parent_widget, 'mesh_tab'):
-                    idx_m = parent_widget.indexOf(parent_widget.mesh_tab)
-                    if idx_m != -1:
-                        title_m = parent_widget.tabText(idx_m)
-                        parent_widget.removeTab(idx_m)
-                        parent_widget.mesh_tab.deleteLater()
-                        parent_widget.mesh_tab = parent_widget.setup_mesh_widget()
-                        parent_widget.insertTab(idx_m, parent_widget.mesh_tab, title_m)
-                
-                print("DEBUG: Tab regeneration successful.")
-            
-            except Exception as e:
-                print(f"Error regenerating tabs: {e}")
-
+    def handle_refresh():
+        if motor is None: return
+        if motor.ready_state.winding_data and motor.ready_state.geometry:
+            return 
+        motor.require("winding_data") 
+        motor.require("geometry")
+        refresh_plot()
         QApplication.processEvents()
 
+    def on_input_changed():
+        motor.just_changed("geometry")
+        handle_refresh()
+
+    geometry_tab.refresh = handle_refresh
+
+    # --- PANEL TRÁI: NHẬP LIỆU (2 CỘT) ---
     left_panel = QWidget()
     left_layout = QVBoxLayout(left_panel)
-    left_layout.setContentsMargins(0, 0, 10, 0)
+    left_layout.setContentsMargins(0, 0, 0, 0)
 
     scroll = QScrollArea()
     scroll.setWidgetResizable(True)
     scroll.setFrameShape(QFrame.NoFrame)
     
     content_widget = QWidget()
-    content_hbox = QHBoxLayout(content_widget)
+    content_layout = QHBoxLayout(content_widget)
+    content_layout.setSpacing(10)
+    content_layout.setAlignment(Qt.AlignTop)
 
     def create_dynamic_group(title, container):
         group = QGroupBox(title)
         group.setStyleSheet("""
             QGroupBox { 
-                font-weight: bold; 
-                border: 1px solid #dee2e6; 
-                border-radius: 4px;
-                margin-top: 15px; 
+                font-weight: bold; border: 1px solid #ccd1d1; 
+                border-radius: 6px; margin-top: 15px; background-color: #fcfcfc;
             }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px;
-            }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #333; }
         """)
         layout = QFormLayout(group)
-        layout.setVerticalSpacing(10)
+        layout.setVerticalSpacing(8)
         
         for key in vars(container):
-            if key.startswith('_'): 
-                continue
+            if key.startswith('_'): continue
             
             display_label = key.replace('_', ' ').title()
-            
             dim_keywords = ['dia', 'length', 'depth', 'width', 'opening', 'gap', 'radius', 'ext', 'embed']
             is_dimension = any(k in key.lower() for k in dim_keywords)
-            unit = 1e3 if is_dimension else 1
+            unit = 1000.0 if is_dimension else 1.0
             
             if 'arc' in key.lower() or 'angle' in key.lower():
-                display_label += " (Deg)"
+                display_label += " (°)"
             elif is_dimension:
                 display_label += " (mm)"
             
-            input_widget = bind_input(container, key, unit, global_update)
+            input_widget = bind_input(
+                motor = container, 
+                attr_name = key, 
+                unit_factor = unit, 
+                callback = on_input_changed
+            )
+            input_widget.setFixedWidth(70) 
             layout.addRow(f"{display_label}:", input_widget)
             
         return group
 
-    content_hbox.addWidget(create_dynamic_group("Stator Geometry", stator_params))
-    content_hbox.addWidget(create_dynamic_group("Rotor Geometry", rotor_params))
-    
+    # Thêm cột Stator và Rotor
+    content_layout.addWidget(create_dynamic_group("Stator Geometry", stator_params))
+    content_layout.addWidget(create_dynamic_group("Rotor Geometry", rotor_params))
+    content_layout.addStretch()
+
     scroll.setWidget(content_widget)
     left_layout.addWidget(scroll)
 
+    # Gộp vào Splitter
     right_panel = QFrame()
     right_layout = QVBoxLayout(right_panel)
     right_layout.setContentsMargins(0, 0, 0, 0)
-    
     right_layout.addWidget(geometry_tab.plotter)
 
     splitter.addWidget(left_panel)
     splitter.addWidget(right_panel)
+    
+    # --- CƯỠNG BỨC TỈ LỆ 50/50 ---
+    # setSizes nhận vào list các giá trị pixel, đặt 2 giá trị bằng nhau sẽ chia đôi
+    splitter.setSizes([500, 500])
     splitter.setStretchFactor(0, 1) 
     splitter.setStretchFactor(1, 1) 
     
     main_layout.addWidget(splitter)
     
-    QTimer.singleShot(500, global_update)
+    QTimer.singleShot(100, handle_refresh)
     
     return None
