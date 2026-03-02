@@ -1,6 +1,7 @@
 import math
 from src.core.motor_type.models.Container import Container
 from src.core.motor_type.models.MotorStateManager import MotorStateManager
+from src.core.motor_type.models.record import Record
 
 # Import các utility thực thi
 from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
@@ -128,7 +129,7 @@ class AxialFluxMotorType1:
         self.drive              = None
         self.mechanical         = None
         self.material_database  = None
-        self.record             = Container()
+        self.record             = Record(motor = self)
 
     # --- STATE MANAGEMENT BRIDGE ---
     @property

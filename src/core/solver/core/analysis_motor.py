@@ -68,9 +68,7 @@ def analysis_motor(motor, callback = None):
 
         if is_cogging_point or is_standard_point:
             motor.drive.apply_winding_excitation()
-            motor.reluctance_network.solve(method = "adaptive_broyden",
-                                            load_step = 1,
-                                            max_relative_residual = max_relative_residual,
+            motor.reluctance_network.solve(max_relative_residual = max_relative_residual,
                                             max_iteration = max_iteration,
                                             material_relax = material_relax, 
                                             damping_factor = 1.0,   
@@ -100,7 +98,8 @@ def analysis_motor(motor, callback = None):
         return None
 
     if callback: callback("Post-processing data...")
-    
+
+    motor.require("record")
     motor.record.flux_linkage = flux_linkage.copy()
     shaft_speed = motor.mechanical.shaft_speed * (pi/30)
     back_emf = periodic_derivative(data=flux_linkage, half_open_interval=True).derivative * shaft_speed 

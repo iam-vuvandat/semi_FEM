@@ -98,17 +98,13 @@ class ReluctanceNetwork:
                                                   debug = debug)
     
     def solve(self,
-              method = "adaptive_broyden",
-              load_step = 1,
-              max_relative_residual = 0.05,
               max_iteration=50,
-              material_relax=0.5, 
-              damping_factor = 1.0,   
-              debug = False):
+              max_relative_residual=0.05, 
+              material_relax=0.2, 
+              damping_factor=0.5,   
+              debug=True):
         
         solve(reluctance_network= self,
-              method= method,
-              load_step = load_step,
               max_relative_residual = max_relative_residual,
               max_iteration= max_iteration,
               material_relax= material_relax,
