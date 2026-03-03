@@ -17,11 +17,11 @@ def get_flux_linkage(reluctance_network):
     # 1. TRUY XUẤT DỮ LIỆU TỪ MESH CONTAINER
     # Truy cập trực tiếp vào adaptive_mesh_data của motor
     mesh_data = reluctance_network.mesh.adaptive_mesh_data
-    use_symmetry = mesh_data.use_symmetry_factor
+    #use_symmetry = mesh_data.use_symmetry_factor
     
     # 2. XÁC ĐỊNH HỆ SỐ MÁY ĐIỆN
     # Lấy symmetry_factor trực tiếp từ motor để đảm bảo tính đồng bộ
-    machine_factor = reluctance_network.symmetry_factor if use_symmetry else 1.0
+    #machine_factor = reluctance_network.symmetry_factor if use_symmetry else 1.0
 
     # 3. PHÂN TÍCH PHẦN TỬ ĐỂ XÁC ĐỊNH SỐ PHA
     elements = reluctance_network.elements.flatten()
@@ -55,7 +55,7 @@ def get_flux_linkage(reluctance_network):
     # 5. ĐỊNH DẠNG ĐẦU RA: [Phase_A, Phase_B, Phase_C, Rotor_Position]
     # Tạo vector cột để lưu kết quả và vị trí góc hiện tại của rotor
     flux_linkage_results = np.empty((phase_number + 1, 1))
-    flux_linkage_results[:-1, 0] = psi_total * machine_factor
+    #flux_linkage_results[:-1, 0] = psi_total * machine_factor
     flux_linkage_results[-1] = reluctance_network.mechanical.current_position
 
     return Output(flux_linkage=flux_linkage_results)

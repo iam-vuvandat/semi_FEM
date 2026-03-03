@@ -63,9 +63,9 @@ def maxwell_stress_tensor(motor):
 
     # 8. Xử lý symmetry factor
     # kiểm tra xem có dùng hệ số đối xứng không: 
-    use_symmetry_factor = adaptive_mesh_data.use_symmetry_factor
-    if use_symmetry_factor:
-        result = result * motor.mechanical.symmetry_factor
+    #use_symmetry_factor = adaptive_mesh_data.use_symmetry_factor
+    #if use_symmetry_factor:
+    #    result = result * motor.mechanical.symmetry_factor
 
     # 8. Gán vào mảng kết quả 
     mst_result[0] = result[0]

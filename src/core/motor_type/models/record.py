@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 class Record:
     def __init__(self, motor):
         self.mechanical = motor.mechanical
-        self.flux_linkage = None
-        self.back_emf = None
-        self.mst_data = None
+        self.flux_linkage = None        # numpy phase + 1 hàng
+        self.back_emf = None          # numpy phase + 1 hàng
+        self.mst_data = None        
+        self.cogging_torque  = None # numpy 2 hàng
+        self.torque  = None # numpy 2 hàng
 
     @property
     def phase_number(self):
@@ -98,6 +100,26 @@ class Record:
         if plot:
             plt.show()
             
+        return fig
+
+    def plot_cogging_torque(self, plot=False):
+        if self.cogging_torque is None:
+            return None
+        
+        fig, ax = plt.subplots()
+        # Hang 1 (index 1) la position
+        pos_deg = self.cogging_torque[1, :] * (180 / np.pi)
+        # Hang 0 (index 0) la gia tri torque
+        ax.plot(pos_deg, self.cogging_torque[0, :], color='k', linewidth=1.5)
+        
+        ax.set_title("Cogging Torque vs Position")
+        ax.set_xlabel("Position [deg]")
+        ax.set_ylabel("Torque [Nm]")
+        ax.grid(True)
+        
+        fig.tight_layout()
+        if plot:
+            plt.show()
         return fig
 
     def get_average_torque(self):

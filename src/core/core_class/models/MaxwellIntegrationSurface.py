@@ -32,6 +32,11 @@ class MaxwellIntegrationSurface:
         Tích phân Maxwell Stress Tensor (MST) - Hệ mét (SI Units).
         Trả về: np.array([Fr, Ft, Fz, Tz]) 
         (Đơn vị: Newton và Newton-meter)
+
+        [0] : Radial force
+        [1] : Tangential force
+        [2] : Axial force
+        [3] : Torque
         """
         if self.elements_list is None:
             return np.zeros(4)

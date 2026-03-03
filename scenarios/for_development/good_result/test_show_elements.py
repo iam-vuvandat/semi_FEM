@@ -44,4 +44,5 @@ aft.analysis_motor()
 aft.record.plot_flux_linkage(plot = True)
 aft.record.plot_back_emf(plot = True)
 aft.record.plot_maxwell_stress_tensor(plot = True)
+aft.record.plot_cogging_torque(plot = True)
 

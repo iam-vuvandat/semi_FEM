@@ -9,7 +9,6 @@ pi = math.pi
 
 def analysis_motor(motor, callback = None):
     
-    # Hàm bọc để bảo vệ callback, chỉ lấy tham số đầu tiên (chuỗi văn bản)
     def setup_callback(msg, *args):
         if callback:
             callback(msg)
@@ -48,6 +47,7 @@ def analysis_motor(motor, callback = None):
 
     phase_number = motor.winding_data.phase
     flux_linkage = np.zeros((phase_number + 1, n_point))
+    cogging = np.zeros((2,n_point))
     mst_data = np.zeros((5, n_point))
     
     n_step_cogging = 1 
@@ -55,6 +55,7 @@ def analysis_motor(motor, callback = None):
     cogging_shifted = 0
 
     loop_steps = 1 if solve_only_1_step else minimum_theta_cell
+
     for i in tqdm(range(loop_steps), disable=not debug):
         if callback:
             callback(f"Solving step {i+1}/{loop_steps}")
@@ -67,21 +68,31 @@ def analysis_motor(motor, callback = None):
         is_standard_point = (i % n_step_standard == 0)
 
         if is_cogging_point or is_standard_point:
-            motor.drive.apply_winding_excitation()
-            motor.reluctance_network.solve(max_relative_residual = max_relative_residual,
+            if is_cogging_point:
+                motor.drive.apply_winding_excitation(excitation = False)
+                motor.reluctance_network.solve(max_relative_residual = max_relative_residual,
                                             max_iteration = max_iteration,
                                             material_relax = material_relax, 
                                             damping_factor = 1.0,   
                                             debug = debug)
-            
-            if is_cogging_point:
-                mst_data[:, i] = motor.maxwell_stress_tensor().mst_result
+                
+                cogging[0:2, i] = motor.maxwell_stress_tensor().mst_result[3:5]
 
             if is_standard_point:
+                motor.drive.apply_winding_excitation(excitation = True)
+                motor.reluctance_network.solve(max_relative_residual = max_relative_residual,
+                                            max_iteration = max_iteration,
+                                            material_relax = material_relax, 
+                                            damping_factor = 1.0,   
+                                            debug = debug)
+                
                 motor.reluctance_network.add_elements_lite()
                 index_standard = i // n_step_standard
+
                 if index_standard < n_point:
                     flux_linkage[:, index_standard] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
+                    mst_data[:,index_standard]  = motor.maxwell_stress_tensor().mst_result
+
                 cogging_shifted = 0
 
         if is_cogging_point:
@@ -100,15 +111,21 @@ def analysis_motor(motor, callback = None):
     if callback: callback("Post-processing data...")
 
     motor.require("record")
-    motor.record.flux_linkage = flux_linkage.copy()
     shaft_speed = motor.mechanical.shaft_speed * (pi/30)
-    back_emf = periodic_derivative(data=flux_linkage, half_open_interval=True).derivative * shaft_speed 
+    
     if motor.mesh.adaptive_mesh_data.use_symmetry_factor:
-        back_emf = back_emf * motor.mechanical.symmetry_factor
+        flux_linkage = flux_linkage * motor.mechanical.symmetry_factor
+        mst_data = mst_data * motor.mechanical.symmetry_factor
+        cogging  *=  motor.mechanical.symmetry_factor
 
+    back_emf = periodic_derivative(data=flux_linkage, half_open_interval=True).derivative * shaft_speed
+    cogging = duplicate_data(data = cogging, half_open_interval=True).duplicated_data
+
+    motor.record.flux_linkage = flux_linkage.copy()
     motor.record.back_emf = back_emf.copy()
-    mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data
     motor.record.mst_data = mst_data.copy()
+    motor.record.cogging  = cogging.copy()
+     
 
     if callback: callback("Analysis Completed")
     return None

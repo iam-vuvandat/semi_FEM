@@ -79,8 +79,11 @@ class Drive:
             current_phases.append(i_k)
         return np.array(current_phases)
 
-    def apply_winding_excitation(self):
+    def apply_winding_excitation(self, excitation = True):
         currents = self.calculate_n_phase_currents()
+        if excitation is False:
+            currents *= 0.0
+
         self.reluctance_network.update_reluctance_network(
             winding_current = currents, 
             update_for_winding_current = True
