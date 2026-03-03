@@ -15,11 +15,12 @@ class Record:
         return 0
     
     def plot_maxwell_stress_tensor(self, plot=False):
-        if self.mst_data is None or self.position is None:
+        if self.mst_data is None:
             return None
         
         fig, axs = plt.subplots(2, 2, figsize=(12, 10))
-        pos_deg = self.position * (180 / np.pi)
+        # Hang cuoi cung (index 4) la position
+        pos_deg = self.mst_data[4, :] * (180 / np.pi)
         
         # Fx - Index 0
         axs[0, 0].plot(pos_deg, self.mst_data[0, :], color='b')
@@ -56,12 +57,13 @@ class Record:
         return fig
 
     def plot_back_emf(self, plot=False):
-        if self.back_emf is None or self.position is None:
+        if self.back_emf is None:
             return None
         
         fig, ax = plt.subplots()
         n_phase = self.phase_number
-        pos_deg = self.position * (180 / np.pi)
+        # Hang cuoi cung la position
+        pos_deg = self.back_emf[-1, :] * (180 / np.pi)
         for i in range(n_phase):
             ax.plot(pos_deg, self.back_emf[i, :], label=f"Phase {i+1}")
             
@@ -77,12 +79,13 @@ class Record:
         return fig
 
     def plot_flux_linkage(self, plot=False):
-        if self.flux_linkage is None or self.position is None:
+        if self.flux_linkage is None:
             return None
         
         fig, ax = plt.subplots()
         n_phase = self.phase_number
-        pos_deg = self.position * (180 / np.pi)
+        # Hang cuoi cung la position
+        pos_deg = self.flux_linkage[-1, :] * (180 / np.pi)
         for i in range(n_phase):
             ax.plot(pos_deg, self.flux_linkage[i, :], label=f"Phase {i+1}")
         

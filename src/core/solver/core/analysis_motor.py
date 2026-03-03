@@ -112,3 +112,6 @@ def analysis_motor(motor, callback = None):
 
     if callback: callback("Analysis Completed")
     return None
+
+
+    
