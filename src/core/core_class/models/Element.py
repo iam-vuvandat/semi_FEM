@@ -37,14 +37,14 @@ class Element:
                                     geometry=self.geometry,
                                     mesh=self.mesh)
         
-        self.material = info.material
+        self.material = info.material # vectorized
         self.dimension = info.dimension
         self.dimension_ratio = find_element_segment_dimension_ratio(element=self).dimension_ratio
         self.coordinate = info.coordinate
 
         self.segment_magnet_source = info.magnet_source
         self.magnetization_direction = info.magnetization_direction
-        self.magnet_source = find_magnet_source(element=self).magnet_source
+        self.magnet_source = find_magnet_source(element=self).magnet_source # vectorized
 
         self.segment_winding_vector = info.winding_vector
         self.winding_normal = info.winding_normal
@@ -52,7 +52,7 @@ class Element:
         self.volume_error = info.volume_error
 
         dimension_calculated = find_element_dimension(coordinate=self.coordinate)
-        self.length = dimension_calculated.length
+        self.length = dimension_calculated.length # vectorized 
         self.section_area = dimension_calculated.section_area
         self.length_ratio = dimension_calculated.length_ratio
 
