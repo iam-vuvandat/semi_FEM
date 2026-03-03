@@ -48,7 +48,7 @@ class Element:
 
         self.segment_winding_vector = info.winding_vector
         self.winding_normal = info.winding_normal
-        self.element_winding_vector = None
+        self.element_winding_vector = None   # vectorized
         self.volume_error = info.volume_error
 
         dimension_calculated = find_element_dimension(coordinate=self.coordinate)
@@ -57,16 +57,16 @@ class Element:
         self.length_ratio = dimension_calculated.length_ratio
 
         self.element_winding_vector = find_winding_source(element=self).element_winding_vector
-        self.winding_source = find_winding_source(element=self).winding_source
-        self.magnetic_source = find_branch_magnetic_source(element=self).branch_magnetic_source
+        self.winding_source = find_winding_source(element=self).winding_source   # vectorized 
+        self.magnetic_source = find_branch_magnetic_source(element=self).branch_magnetic_source  # vectorized
 
-        self.vacuum_reluctance = find_vacuum_reluctance(length=self.length,
+        self.vacuum_reluctance = find_vacuum_reluctance(length=self.length,      # vectorized
                                                         section_area=self.section_area).reluctance
         
-        self.minimum_reluctance = find_minimum_reluctance(element=self).reluctance
+        self.minimum_reluctance = find_minimum_reluctance(element=self).reluctance # vectorized
 
-        self.reluctance = self.minimum_reluctance.copy()
-        self.flux_direct = None
+        self.reluctance = self.minimum_reluctance.copy()   # vectorized
+        self.flux_direct = None 
         self.flux_density_direct = None
         self.flux_density_average = None
         self.relative_permeability = None

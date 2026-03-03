@@ -13,7 +13,7 @@ def solve(reluctance_network,
     G_c, Y_c, R_c, B_c, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[94m", "\033[0m"
 
     best_residual_history = []
-    reluctance_network.set_reluctance_at_zero()
+    #reluctance_network.set_reluctance_at_zero()
     mag_pot_shape = reluctance_network.magnetic_potential.data.shape
     
     x_k = reluctance_network.magnetic_potential.data.flatten(order='F')[:-1]
