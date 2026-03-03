@@ -15,6 +15,7 @@ from src.core.core_class.utils.for_reluctance_network.access_elements import acc
 from src.core.core_class.utils.for_reluctance_network.display_reluctance_network import display_reluctance_network
 from src.core.core_class.utils.for_reluctance_network.get_geometric_error import get_geometric_error
 from src.core.core_class.utils.for_reluctance_network.display_elements import display_elements
+from src.core.core_class.utils.for_reluctance_network.create_vectorized_elements import init_vectorized_elements
 
 # Solver Core
 from src.core.solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
@@ -27,7 +28,7 @@ class ReluctanceNetwork:
                  mesh = None,
                  magnetic_potential = None,
                  winding_current = None,
-                 vectorized_optimization = False,
+                 vectorized_optimization = True,
                  callback = None):
         
         self.mechanical = motor.mechanical
@@ -40,6 +41,7 @@ class ReluctanceNetwork:
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
         self.vectorized_optimization = vectorized_optimization
+        self.vectorized_elements = None
         find_geometry_dimension_in_mesh(geometry= geometry,
                                         mesh= mesh)
         
@@ -51,16 +53,14 @@ class ReluctanceNetwork:
         self.elements = None
         self.elements = self.create_elements(callback = callback)
 
-        self.vectorized_elements = None
+        self.vectorized_elements = init_vectorized_elements(reluctance_network= self)
+        
         
         self.list_elements_lite = None
 
     def create_elements(self,callback = None):
         return create_elements(reluctance_network= self, callback = callback)
     
-    def create_vectorized_element(self):
-        return None
-
     def add_elements_lite(self):
         add_elements_lite(reluctance_network = self)
     

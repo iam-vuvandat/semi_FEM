@@ -4,6 +4,7 @@ from src.core.core_class.utils.for_vectorized_elements.find_neighbor_indices imp
 def create_vectorized_elements(vectorized_elements):
     reluctance_network = vectorized_elements.reluctance_network
     elements = reluctance_network.elements
+    vectorized_elements.elements = elements
     total_elements = elements.size
     phase_number = elements[0,0,0].element_winding_vector.size
     
@@ -12,9 +13,6 @@ def create_vectorized_elements(vectorized_elements):
 
     # virtual shape
     vectorized_elements.virtual_shape = elements.shape
-
-    # neighbor index and valid mask
-    vectorized_elements.neighbor_indices , vectorized_elements.neighbor_valid = find_neighbor_indices(vectorized_elements= vectorized_elements)
 
     # material
     vectorized_elements.material = np.zeros(total_elements)
@@ -37,6 +35,10 @@ def create_vectorized_elements(vectorized_elements):
 
     # permeability
     vectorized_elements.relative_permeability = np.zeros((6,total_elements))
+
+    # neighbor index and valid mask
+    vectorized_elements.neighbor_indices , vectorized_elements.neighbor_valid = find_neighbor_indices(vectorized_elements= vectorized_elements)
+
 
     # flux
     vectorized_elements.flux_direct = np.zeros((6,total_elements))

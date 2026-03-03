@@ -1,8 +1,8 @@
-import numpy as np
+import numpy as np 
 
 def find_neighbor_indices(vectorized_elements):
     nr, nt, nz = vectorized_elements.virtual_shape
-    total_elements = vectorized_elements.material.size
+    total_elements = nr * nt * nz
     indices = np.arange(total_elements)
     
     r, t, z = np.unravel_index(indices, (nr, nt, nz), order='F')
@@ -14,8 +14,13 @@ def find_neighbor_indices(vectorized_elements):
         (-1, 0, 0), (0, -1, 0), (0, 0, -1), 
         (1, 0, 0), (0, 1, 0), (0, 0, 1)
     ]
+    
+    # SỬA TẠI ĐÂY: Đảm bảo periodic luôn có 3 phần tử [r, t, z]
     periodic = vectorized_elements.periodic_boundary 
-
+    if isinstance(periodic, (bool, np.bool_)):
+        # Nếu truyền vào True/False đơn lẻ, mặc định chỉ trục t (index 1) là chu kỳ
+        periodic = [False, periodic, False]
+    
     for row, (dr, dt, dz) in enumerate(offsets):
         nr_i, nt_i, nz_i = r + dr, t + dt, z + dz
         
@@ -25,7 +30,7 @@ def find_neighbor_indices(vectorized_elements):
         elif dt != 0:
             if periodic[1]: nt_i %= nt
             mask_valid = (nt_i >= 0) & (nt_i < nt)
-        else:
+        else: # dz != 0
             if periodic[2]: nz_i %= nz
             mask_valid = (nz_i >= 0) & (nz_i < nz)
             
@@ -36,7 +41,6 @@ def find_neighbor_indices(vectorized_elements):
                 order='F'
             )
             
-    # Tạo mặt nạ: 1 cho phần tử hợp lệ, 0 cho biên (-1)
     neighbor_mask = (neighbor_element != -1).astype(int)
             
     return neighbor_element, neighbor_mask

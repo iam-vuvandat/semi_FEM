@@ -6,6 +6,9 @@ from src.core.core_class.utils.for_vectorized_elements.update_vectorized_flux_di
 from src.core.core_class.utils.for_vectorized_elements.update_vectorized_flux_density_direct import update_vectorized_flux_density
 from src.core.core_class.utils.for_vectorized_elements.update_vectorized_flux_density_average import update_vectorized_flux_density_average
 from src.core.core_class.utils.for_vectorized_elements.update_winding_current import reload_winding_current
+from src.core.core_class.utils.for_vectorized_elements.update_vectorized_winding_source import update_vectorized_winding_source
+from src.core.core_class.utils.for_vectorized_elements.update_vectorized_magnetic_source import update_vectorized_magnetic_source
+from src.core.core_class.utils.for_vectorized_elements.update_vectorized_elements import update_for_vectorized_elements
 
 class VectorizedElements:
     def __init__(self, reluctance_network):
@@ -38,4 +41,24 @@ class VectorizedElements:
         reload_winding_current(vectorized_elements=self)
 
     def update_winding_source(self):
+        update_vectorized_winding_source(vectorized_elements= self)
+
+    def update_magnetic_source(self):
+        update_vectorized_magnetic_source(vectorized_elements= self)
+
+    def update_vectorized_elements(self,
+                                   magnetic_potential = None,
+                                   winding_current = None,
+                                   update_for_magnetic_potential = False,
+                                   update_for_winding_current =False,
+                                   material_relaxation_factor =1.0,
+                                   delta_mu_max = -1):
         
+        update_for_vectorized_elements(vectorized_elements= self,
+                                       magnetic_potential= magnetic_potential,
+                                       winding_current= winding_current,
+                                       update_for_magnetic_potential= update_for_magnetic_potential,
+                                       update_for_winding_current= update_for_winding_current,
+                                       material_relaxation_factor= material_relaxation_factor,
+                                       delta_mu_max= delta_mu_max
+                                       )

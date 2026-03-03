@@ -77,6 +77,13 @@ class Element:
         if self.flat_position is None:
             self.flat_position = self.update_flat_position()
 
+        self.update_element(magnetic_potential= self.magnetic_potential,
+                            winding_current= self.winding_current,
+                            update_for_magnetic_potential= True,
+                            update_for_winding_current= True,
+                            material_relaxation_factor= 1.0,
+                            delta_mu_max= -1)
+
     def update_flat_position(self):
         self.flat_position= find_flat_position(element=self).flat_position
         return self.flat_position
