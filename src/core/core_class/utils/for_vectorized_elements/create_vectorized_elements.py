@@ -44,7 +44,7 @@ def create_vectorized_elements(vectorized_elements):
     vectorized_elements.flux_density_average = np.zeros((4,total_elements))
 
     # magnetic_potential
-    vectorized_elements.magnetic_potential = reluctance_network.magnetic_potential.data
+    vectorized_elements.magnetic_potential = reluctance_network.magnetic_potential.data.ravel(order='F')
 
     for i, element in enumerate(elements.ravel(order = 'F')):
         # material
