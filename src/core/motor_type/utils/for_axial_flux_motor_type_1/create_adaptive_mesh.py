@@ -8,7 +8,7 @@ def create_adaptive_mesh(motor):
     stator = motor.geometry_data.stator
     rotor = motor.geometry_data.rotor
     md = motor.adaptive_mesh_data
-
+    
     def f_c(n):
         return max(1, int(n))
 

@@ -1,7 +1,9 @@
 import numpy as np 
+import time
 from src.core.core_class.utils.for_vectorized_elements.find_neighbor_indices import find_neighbor_indices
 
 def create_vectorized_elements(vectorized_elements):
+    start_time = time.perf_counter()
     reluctance_network = vectorized_elements.reluctance_network
     elements = reluctance_network.elements
     vectorized_elements.elements = elements
@@ -18,11 +20,13 @@ def create_vectorized_elements(vectorized_elements):
     vectorized_elements.material = np.zeros(total_elements)
 
     # dimension
+    vectorized_elements.coordinate = np.zeros((6,total_elements))
     vectorized_elements.length   = np.zeros((6,total_elements))
     vectorized_elements.section_area = np.zeros((6,total_elements))
 
     # magnetic source
     vectorized_elements.magnet_source = np.zeros((6,total_elements))
+    vectorized_elements.winding_normal = np.zeros((3,total_elements))
     vectorized_elements.element_winding_vector = np.zeros((phase_number,total_elements))
     vectorized_elements.winding_current = reluctance_network.winding_current
     vectorized_elements.winding_source = np.zeros((6,total_elements))
@@ -58,11 +62,13 @@ def create_vectorized_elements(vectorized_elements):
             vectorized_elements.material[i] = 0
 
         # dimension  
+        vectorized_elements.coordinate[:,i] = element.coordinate.ravel()
         vectorized_elements.length[:,i] = element.length.ravel()
         vectorized_elements.section_area[:,i] = element.section_area.ravel()
 
         # magnetic source 
         vectorized_elements.magnet_source[:,i] = element.magnet_source.ravel()
+        vectorized_elements.winding_normal[:,i] = element.winding_normal.ravel()
         vectorized_elements.element_winding_vector[:,i] = element.element_winding_vector.ravel()
         vectorized_elements.winding_source[:,i] = element.winding_source.ravel()
         vectorized_elements.magnetic_source[:,i] = element.magnetic_source.ravel()
@@ -79,3 +85,7 @@ def create_vectorized_elements(vectorized_elements):
         vectorized_elements.flux_direct[:,i] = element.flux_direct.ravel()
         vectorized_elements.flux_density_direct[:,i] = element.flux_density_direct.ravel()
         vectorized_elements.flux_density_average[:,i] = element.flux_density_average.ravel()
+    
+    end_time = time.perf_counter()
+    duration = end_time - start_time
+    print(f"Thời gian tạo vectorized element:{duration}")

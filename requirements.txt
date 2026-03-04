@@ -1,5 +1,6 @@
 numpy>=1.22,<1.25
 scipy==1.10.1
+pypardiso
 matplotlib>=3.6
 scikit-learn>=1.2
 pyamg>=5.0

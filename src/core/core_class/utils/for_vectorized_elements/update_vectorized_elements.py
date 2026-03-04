@@ -7,7 +7,7 @@ def update_for_vectorized_elements(vectorized_elements,
                                delta_mu_max = -1):
     
     if update_for_magnetic_potential:
-        vectorized_elements.magnetic_potential = magnetic_potential.ravel(order = 'F')
+        vectorized_elements.magnetic_potential = magnetic_potential.data.ravel(order = 'F')
         vectorized_elements.update_flux_direct()
         vectorized_elements.update_flux_density_direct()
         vectorized_elements.update_flux_density_average()

@@ -40,7 +40,6 @@ def create_magnetic_potential_equation(reluctance_network,
             j_val = 0.0
 
             for m in [0, 1]:
-                # m=0: r-in, t-left, z-bot | m=1: r-out, t-right, z-top
                 if m == 0:
                     nei_idx, my_face, nei_face, direction = 0, 0, 1, 1.0 
                 else:
@@ -76,44 +75,33 @@ def create_magnetic_potential_equation(reluctance_network,
     else:
         ve = reluctance_network.vectorized_elements
         
-        # 1. Quy ước hướng đối diện và hướng nguồn
-        # 0:r-in, 1:t-left, 2:z-bot | 3:r-out, 4:t-right, 5:z-top
         opp_face = np.array([3, 4, 5, 0, 1, 2])
         directions = np.array([1.0, 1.0, 1.0, -1.0, -1.0, -1.0])
         
-        # 2. Lấy dữ liệu từ láng giềng bằng Fancy Indexing
-        # r_neighbor[k, i] là reluctance tại mặt đối diện của láng giềng thứ k của phần tử i
         r_neighbor = ve.reluctance[opp_face[:, None], ve.neighbor_indices]
         f_neighbor = ve.magnetic_source[opp_face[:, None], ve.neighbor_indices]
         
-        # 3. Tính toán thông số nhánh đồng loạt
         r_total = ve.reluctance + r_neighbor
         f_total = (ve.magnetic_source + f_neighbor) * load_factor
         conductance = 1.0 / r_total
         
-        # 4. Xây dựng Vector nguồn J (loại bỏ nút gốc cuối cùng)
-        # J = sum( (F/R) * direction * mask )
         j_all = np.sum((f_total / r_total) * directions[:, None] * ve.neighbor_valid, axis=0)
         J_vec = j_all[:matrix_size]
         
-        # 5. Xây dựng Ma trận G (COO format)
-        # Tính đường chéo: Tổng conductance của các nhánh hợp lệ
         diag_values = np.sum(conductance * ve.neighbor_valid, axis=0)[:matrix_size]
         
         rows, cols, data = [], [], []
         
-        # Thêm đường chéo chính
         rows.append(np.arange(matrix_size))
         cols.append(np.arange(matrix_size))
         data.append(diag_values)
         
-        # Thêm các phần tử ngoài đường chéo cho 6 hướng láng giềng
         for k in range(6):
             i_idx = np.arange(matrix_size)
             j_idx = ve.neighbor_indices[k, :matrix_size]
             
-            # Điều kiện: Láng giềng tồn tại VÀ không phải là nút gốc (index < matrix_size)
-            mask = ve.neighbor_valid[k, :matrix_size] & (j_idx < matrix_size)
+            # Cap nhat mask: Loai bo chi so am (-1) tai bien
+            mask = (ve.neighbor_valid[k, :matrix_size] == 1) & (j_idx >= 0) & (j_idx < matrix_size)
             
             rows.append(i_idx[mask])
             cols.append(j_idx[mask])

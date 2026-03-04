@@ -9,6 +9,8 @@ from src.core.core_class.utils.for_vectorized_elements.update_winding_current im
 from src.core.core_class.utils.for_vectorized_elements.update_vectorized_winding_source import update_vectorized_winding_source
 from src.core.core_class.utils.for_vectorized_elements.update_vectorized_magnetic_source import update_vectorized_magnetic_source
 from src.core.core_class.utils.for_vectorized_elements.update_vectorized_elements import update_for_vectorized_elements
+from src.core.core_class.utils.for_vectorized_elements.rotate_for_vectorized_elements import rotate_for_vectorized_elements
+
 
 class VectorizedElements:
     def __init__(self, reluctance_network):
@@ -62,3 +64,12 @@ class VectorizedElements:
                                        material_relaxation_factor= material_relaxation_factor,
                                        delta_mu_max= delta_mu_max
                                        )
+        
+    def rotate_vectorized_elements(self,
+                                   z_indices = [0,1,2],
+                                   n_step = 1):
+        rotate_for_vectorized_elements(vectorized_elements=self,
+                                       z_indices= z_indices,
+                                       n_step= n_step)
+    
+    

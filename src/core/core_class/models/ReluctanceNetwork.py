@@ -16,6 +16,7 @@ from src.core.core_class.utils.for_reluctance_network.display_reluctance_network
 from src.core.core_class.utils.for_reluctance_network.get_geometric_error import get_geometric_error
 from src.core.core_class.utils.for_reluctance_network.display_elements import display_elements
 from src.core.core_class.utils.for_reluctance_network.create_vectorized_elements import init_vectorized_elements
+from src.core.core_class.utils.for_reluctance_network.update_elements_from_vectorized import update_elements_from_vectorized
 
 # Solver Core
 from src.core.solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
@@ -28,11 +29,12 @@ class ReluctanceNetwork:
                  mesh = None,
                  magnetic_potential = None,
                  winding_current = None,
-                 vectorized_optimization = True,
                  callback = None):
         
         self.mechanical = motor.mechanical
         self.symmetry_factor = motor.mechanical.symmetry_factor
+        self.calculation_data = motor.calculation_data
+        self.vectorized_optimization = self.calculation_data.vectorized_optimization
         self.material_database = motor.material_database
         self.geometry = geometry
         self.geometric_error = 0.0
@@ -40,7 +42,6 @@ class ReluctanceNetwork:
         self.system_variable = "magnetic_potential"
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
-        self.vectorized_optimization = vectorized_optimization
         self.vectorized_elements = None
         find_geometry_dimension_in_mesh(geometry= geometry,
                                         mesh= mesh)
@@ -99,9 +100,9 @@ class ReluctanceNetwork:
     
     def solve(self,
               max_iteration=50,
-              max_relative_residual=0.05, 
-              material_relax=0.2, 
-              damping_factor=0.5,   
+              max_relative_residual=0.005, 
+              material_relax=0.4, 
+              damping_factor=1.0,   
               debug=True):
         
         solve(reluctance_network= self,
@@ -132,4 +133,7 @@ class ReluctanceNetwork:
     
     def show_elements(self):
         return display_elements(reluctance_network=self)
+    
+    def refresh_elements(self):
+        update_elements_from_vectorized(reluctance_network= self)
     
