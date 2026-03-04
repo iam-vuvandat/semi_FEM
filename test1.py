@@ -21,7 +21,6 @@ aft.calculation_data.n_point = 31
 aft.calculation_data.solve_cogging = False
 aft.calculation_data.max_relative_residual = 0.005
 aft.calculation_data.solve_only_1_step = False
-aft.calculation_data.vectorized_optimization = True
 aft.just_changed("calculation_data")
 
 aft.adaptive_mesh_data.n_r_2 = 3
@@ -31,7 +30,7 @@ aft.adaptive_mesh_data.n_z_tooth_body = 3
 aft.adaptive_mesh_data.n_z_tooth_tip_2 = 3
 aft.just_changed("mesh")
 
-aft.drive_data.i_rms = 0    
+aft.drive_data.i_rms = 10    
 aft.just_changed("drive")
 
 #aft.require("reluctance_network")
@@ -40,7 +39,7 @@ aft.just_changed("drive")
 
 aft.analysis_motor()
 #aft.reluctance_network.show_elements()
-aft.display()
+#aft.display()
 
 aft.record.plot_flux_linkage(plot = True)
 aft.record.plot_back_emf(plot = True)
