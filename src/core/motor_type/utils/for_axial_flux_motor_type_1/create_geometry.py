@@ -17,7 +17,7 @@ def create_geometry(motor,
                     rotor_angle_offset = 0, # rad
                     stator_angle_offset = 0,
                     create_rotor_yoke = True,
-                    create_magnet = False,
+                    create_magnet = True,
                     create_tooth = True,
                     create_stator_yoke = True):
     
