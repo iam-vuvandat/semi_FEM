@@ -29,6 +29,7 @@ class AxialFluxMotorType1:
                  iron_material      = "steel_1008",
                  system_variable    = "magnetic_potential"):
         
+        self.shaft_speed = 3000.0
         self.motor_type = "axial_flux_motor_type_1"
         self.system_variable = system_variable
         self.mechanical = Mechanical()
