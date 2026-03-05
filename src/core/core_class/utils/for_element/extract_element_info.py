@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 import numpy as np
 import trimesh
-from collections import defaultdict
-from typing import Optional, List, Any
+from typing import Optional, Any
 
 @dataclass
 class ElementInfo:
@@ -11,12 +10,9 @@ class ElementInfo:
     magnetization_direction: np.ndarray = field(default_factory=lambda: np.array([0., 0., 1.]))
     winding_vector: np.ndarray = field(default_factory=lambda: np.array([0., 0., 0.]))
     winding_normal: np.ndarray = field(default_factory=lambda: np.array([0., 0., 1.]))
-    volume_error: float = 0.0 # Thêm thông số theo yêu cầu
+    volume_error: float = 0.0
     
-    # --- COORDINATE (2x3) ---
     coordinate: np.ndarray = field(default_factory=lambda: np.zeros((2, 3)))
-
-    # --- DIMENSION (2x3) ---
     dimension: np.ndarray = field(default_factory=lambda: np.zeros((2, 3)))
 
 def extract_element_info(position: tuple, 
@@ -33,7 +29,7 @@ def extract_element_info(position: tuple,
     if not (0 <= i_t < len(t_nodes) - 1): return None
     if not (0 <= i_z < len(z_nodes) - 1): return None
 
-    # --- 1. TÍNH TOÁN TỌA ĐỘ TÂM (CENTER POINT) ---
+    # --- 1. TINH TOAN TOA DO ---
     r_i, r_next = float(r_nodes[i_r]), float(r_nodes[i_r+1])
     t_j, t_next = float(t_nodes[i_t]), float(t_nodes[i_t+1])
     z_k, z_next = float(z_nodes[i_z]), float(z_nodes[i_z+1])
@@ -42,22 +38,20 @@ def extract_element_info(position: tuple,
     t_avg = (t_j + t_next) / 2.0
     z_avg = (z_k + z_next) / 2.0
 
-    # Chuyển đổi sang hệ Cartesian (x, y, z) để kiểm tra với Mesh CAD
     center_x = r_avg * np.cos(t_avg)
     center_y = r_avg * np.sin(t_avg)
     center_z = z_avg
     center_point = np.array([[center_x, center_y, center_z]])
 
-    # Tọa độ đỉnh (phục vụ lưu trữ)
     coord_array = np.array([[r_i, t_j, z_k], [r_next, t_next, z_next]])
 
-    # --- 2. KÍCH THƯỚC PHẦN TỬ ---
+    # --- 2. DIMENSION CUA ELEMENT (GIONG BAN CU) ---
     d_r = abs(r_next - r_i)
     d_t = abs(t_next - t_j) 
     d_z = abs(z_next - z_k)
-    row_element = [d_r, d_r * d_t, d_z] # d_t ở đây thường là grid_arc_len
+    row_element = [d_r, d_t, d_z] 
 
-    # --- 3. KIỂM TRA ĐIỂM NẰM TRONG MẢNH (POINT-IN-MESH) ---
+    # --- 3. KIEM TRA VA CHAM (POINT-IN-MESH) ---
     segments_list = geometry.geometry if hasattr(geometry, 'geometry') else geometry
     dominant_segment = None
 
@@ -65,17 +59,15 @@ def extract_element_info(position: tuple,
         if not hasattr(seg, 'mesh') or seg.mesh is None: 
             continue
         
-        # Kiểm tra nhanh bằng Bounding Box trước để tăng tốc
         seg_bounds = seg.mesh.bounds
         if not (np.all(center_point[0] > seg_bounds[0]) and np.all(center_point[0] < seg_bounds[1])):
             continue
 
-        # Kiểm tra điểm nằm trong khối (Sử dụng trimesh.contains)
         if seg.mesh.contains(center_point):
             dominant_segment = seg
-            break # Dừng ngay khi tìm thấy mảnh chứa tâm (O(1) logic)
+            break 
 
-    # --- 4. TRÍCH XUẤT THUỘC TÍNH ---
+    # --- 4. TRICH XUAT THUOC TINH ---
     def get_vec(obj, attr):
         val = getattr(obj, attr, None)
         return np.array(val, dtype=float) if val is not None else np.array([0., 0., 0.])
@@ -84,13 +76,12 @@ def extract_element_info(position: tuple,
         val = getattr(obj, attr, None)
         return float(val) if val is not None else default_val
 
-    # Xử lý ma trận Dimension 2x3
     if dominant_segment:
         if hasattr(dominant_segment, 'dimension') and dominant_segment.dimension is not None:
              row_segment = dominant_segment.dimension
         else:
              row_segment = [safe_float(dominant_segment, "r_length", d_r),
-                            safe_float(dominant_segment, "t_length", d_r * d_t), 
+                            safe_float(dominant_segment, "t_length", d_t), 
                             safe_float(dominant_segment, "z_length", d_z)]
     else:
         row_segment = row_element
@@ -101,7 +92,6 @@ def extract_element_info(position: tuple,
     if dominant_segment is None:
         return ElementInfo(
             material="air",
-            volume_error=0.0, # Không tính thể tích nên error mặc định là 0
             coordinate=coord_array,
             dimension=dims_array
         )
@@ -112,7 +102,6 @@ def extract_element_info(position: tuple,
         magnetization_direction=get_vec(dominant_segment, "magnetization_direction"),
         winding_vector=get_vec(dominant_segment, "winding_vector"),
         winding_normal=get_vec(dominant_segment, "winding_normal"),
-        volume_error=0.0,
         coordinate=coord_array,
         dimension=dims_array
     )

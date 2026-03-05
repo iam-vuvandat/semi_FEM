@@ -39,7 +39,7 @@ aft.just_changed("drive")
 #print(aft.reluctance_network.geometric_error)
 
 aft.analysis_motor()
-aft.reluctance_network.show_elements()
+#aft.reluctance_network.show_elements()
 aft.display()
 
 aft.record.plot_flux_linkage(plot = True)
