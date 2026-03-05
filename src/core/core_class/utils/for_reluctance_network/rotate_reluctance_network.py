@@ -27,4 +27,4 @@ def rotate_reluctance_network(reluctance_network, z_indices=(0, 1, 2), n_step=1)
         reluctance_network.vectorized_elements.rotate_vectorized_elements(z_indices = z_indices,
                                                                           n_step = n_step)
 
-        
+    
