@@ -20,3 +20,5 @@ def update_for_vectorized_elements(vectorized_elements,
         vectorized_elements.winding_current = winding_current
         vectorized_elements.update_winding_source()
         vectorized_elements.update_magnetic_source()
+
+    
