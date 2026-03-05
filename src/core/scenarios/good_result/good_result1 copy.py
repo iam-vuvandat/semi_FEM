@@ -8,9 +8,13 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 
 
 aft = AxialFluxMotorType1()
-aft.analysis_motor()
 
-   
+aft.geometry_data.rotor.airgap = 1 * 1e-4
+aft.geometry_data.rotor.magnet_length = 1 * 1e-3
+aft.drive_data.i_rms = 10.0
+aft.just_changed("geometry_data")
+
+aft.analysis_motor()
     
     
 flux = aft.record.flux_linkage

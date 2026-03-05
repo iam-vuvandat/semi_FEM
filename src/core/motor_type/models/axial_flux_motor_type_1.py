@@ -132,7 +132,7 @@ class AxialFluxMotorType1:
             i_rms = 0.0,
             phase_advanced = 0.0
         )
-
+            
     # Method
     def create_material_database(self): 
         self.material_database = MaterialDataBase(
