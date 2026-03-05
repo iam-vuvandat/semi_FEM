@@ -108,7 +108,7 @@ class AxialFluxMotorType1:
             solve_cogging          = False,
             get_geometric_error    = False,
             solve_only_1_step      = True,
-            vectorized_optimization = True,
+            vectorized_optimization = False,
             debug                  = True
         )
 

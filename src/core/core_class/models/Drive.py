@@ -87,3 +87,68 @@ class Drive:
             winding_current = currents, 
             update_for_winding_current = True
         )
+if __name__ == "__main__":
+    # --- 1. GIA LAP DOI TUONG MOTOR ---
+    class MockData: pass
+    
+    motor = MockData()
+    motor.mechanical = MockData()
+    motor.mechanical.current_position = 0.0 # Radian
+    motor.mechanical.speed_rpm = 3000
+    
+    motor.winding_data = MockData()
+    motor.winding_data.phase = 3
+    
+    motor.geometry_data = MockData()
+    motor.geometry_data.rotor = MockData()
+    motor.geometry_data.rotor.pole_number = 8 # 4 cap cuc
+    
+    motor.drive_data = MockData()
+    motor.drive_data.i_rms = 10.0 # 10A RMS
+    motor.drive_data.phase_advanced = 30.0 # 30 do (Electric Degree)
+    
+    motor.reluctance_network = MockData()
+    # Gia lap method de khong bi loi khi goi apply_winding_excitation
+    def mock_update(winding_current, update_for_winding_current):
+        pass
+    motor.reluctance_network.update_reluctance_network = mock_update
+
+    # --- 2. KHOI TAO DRIVE ---
+    drive = Drive(motor)
+    
+    # --- 3. MO PHONG QUATRINH QUAY (1 CHU KY DIEN) ---
+    steps = 100
+    # 1 chu ky dien = 2*pi / p (mechanical rad)
+    p = drive.pole_pairs
+    positions = np.linspace(0, (2 * pi) / p, steps)
+    
+    results = []
+    
+    print(f"[INFO] Testing Drive with {drive.phase_number} phases...")
+    print(f"[INFO] Current Functions: {drive.current_function}")
+
+    for pos in positions:
+        drive.mechanical.current_position = pos
+        currents = drive.calculate_n_phase_currents()
+        results.append(currents)
+    
+    results = np.array(results)
+
+    # --- 4. VE DO THI KIEM TRA ---
+    plt.figure(figsize=(10, 5))
+    for i in range(int(drive.phase_number)):
+        plt.plot(np.degrees(positions * p), results[:, i], label=f'Phase {i+1}')
+    
+    plt.title(f"Multi-phase Currents (i_rms={drive.i_rms}A, beta={drive.phase_advanced}deg)")
+    plt.xlabel("Electrical Angle (Degrees)")
+    plt.ylabel("Current (A)")
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
+    plt.show()
+
+    # --- 5. KIEM TRA TINH CAN BANG (Sum of currents = 0) ---
+    sum_currents = np.sum(results, axis=1)
+    if np.all(np.abs(sum_currents) < 1e-10):
+        print("\033[92m[PASS] He thong dong dien can bang (Tong = 0)\033[0m")
+    else:
+        print("\033[91m[FAIL] He thong khong can bang! Kiem tra lai phep bien doi Clarke.\033[0m")

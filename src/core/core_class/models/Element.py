@@ -56,7 +56,7 @@ class Element:
         self.section_area = dimension_calculated.section_area
         self.length_ratio = dimension_calculated.length_ratio
 
-        self.element_winding_vector = find_winding_source(element=self).element_winding_vector
+        self.element_winding_vector = find_winding_source(element=self).element_winding_vector # 
         self.winding_source = find_winding_source(element=self).winding_source   # vectorized 
         self.magnetic_source = find_branch_magnetic_source(element=self).branch_magnetic_source  # vectorized
 
