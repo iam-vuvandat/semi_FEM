@@ -12,6 +12,7 @@ from src.core.core_class.utils.for_reluctance_network.set_reluctance_at_zero imp
 from src.core.core_class.utils.for_reluctance_network.get_flux_linkage import get_flux_linkage
 from src.core.core_class.utils.for_reluctance_network.access_elements import access_elements
 from src.core.core_class.utils.for_reluctance_network.display_reluctance_network import display_reluctance_network
+from src.core.core_class.utils.for_reluctance_network.create_magnetic_potential import create_magnetic_potential
 
 # Solver Core
 from src.core.solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
@@ -23,7 +24,6 @@ class ReluctanceNetwork:
                  motor = None,
                  geometry = None,
                  mesh = None,
-                 loop_flux = None,
                  magnetic_potential = None,
                  winding_current = None,
                  callback = None):
@@ -33,18 +33,13 @@ class ReluctanceNetwork:
         self.material_database = motor.material_database
         self.geometry = geometry
         self.mesh = mesh
-        self.system_variable = motor.system_variable
-        self.loop_flux = loop_flux
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
         find_geometry_dimension_in_mesh(geometry= geometry,
                                         mesh= mesh)
         
         self.winding_current = create_winding_current(reluctance_network=self)
-
-        system_variable_data = create_system_variable(reluctance_network=self)
-        self.magnetic_potential = system_variable_data.magnetic_potential
-        self.loop_flux = system_variable_data.loop_flux
+        self.magnetic_potential = create_magnetic_potential(reluctance_network= self)
 
         self.elements = None
         self.elements = self.create_elements(callback = callback)
@@ -61,14 +56,12 @@ class ReluctanceNetwork:
                                position=position)
 
     def update_reluctance_network(self,
-                                  loop_flux = None,
                                   magnetic_potential = None,
                                   winding_current = None,
                                   material_relaxation_factor = 1.0,
                                   delta_mu_max=-1):
         
         update_reluctance_network(reluctance_network=self,
-                                  loop_flux = loop_flux,
                                   magnetic_potential = magnetic_potential,
                                   winding_current = winding_current,
                                   material_relaxation_factor = material_relaxation_factor,
@@ -87,14 +80,6 @@ class ReluctanceNetwork:
                                                   load_factor= load_factor,
                                                   debug = debug)
     
-    def create_loop_flux_equation(self,
-                                  load_factor = 1.0,
-                                  create_jacobian = False,
-                                  debug = True):
-        return create_loop_flux_equation(reluctance_network = self,
-                                         load_factor = load_factor,
-                                         create_jacobian = create_jacobian,
-                                         debug = debug)
     
     def solve(self,
               method = "adaptive_broyden",

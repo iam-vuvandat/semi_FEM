@@ -20,17 +20,17 @@ if RE_CREATE_MOTOR:
 
     aft.adaptive_mesh_data.n_r_in          = 1
     aft.adaptive_mesh_data.n_r_1           = 1
-    aft.adaptive_mesh_data.n_r_2           = 2
-    aft.adaptive_mesh_data.n_r_3           = 2
+    aft.adaptive_mesh_data.n_r_2           = 1
+    aft.adaptive_mesh_data.n_r_3           = 1
     aft.adaptive_mesh_data.n_r_out         = 1
-    aft.adaptive_mesh_data.n_theta         = 70
+    aft.adaptive_mesh_data.n_theta         = 50
     aft.adaptive_mesh_data.n_z_in_air      = 1
     aft.adaptive_mesh_data.n_z_rotor_yoke  = 1
     aft.adaptive_mesh_data.n_z_magnet      = 1
     aft.adaptive_mesh_data.n_z_airgap      = 1
     aft.adaptive_mesh_data.n_z_tooth_tip_1 = 1
-    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 2
-    aft.adaptive_mesh_data.n_z_tooth_body  = 3
+    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 1
+    aft.adaptive_mesh_data.n_z_tooth_body  = 1
     aft.adaptive_mesh_data.n_z_stator_yoke = 1
     aft.adaptive_mesh_data.n_z_out_air     = 1
 
@@ -53,11 +53,11 @@ if RE_CREATE_MOTOR or RE_SOLVE:
         aft.reluctance_network.list_elements_lite = None
     
     # Gọi hàm giải chính
-    aft.calculation_data.max_relative_residual = 0.05
+    aft.calculation_data.max_relative_residual = 0.08
     aft.calculation_data.max_iteration = 50
-    aft.calculation_data.material_relax = 0.35
+    aft.calculation_data.material_relax = 0.4
     aft.calculation_data.solve_cogging = True
-    aft.calculation_data.n_point = 18
+    aft.calculation_data.n_point = 10
     aft.calculation_data.debug = True
 
     aft.analysis_motor()
