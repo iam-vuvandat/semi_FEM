@@ -21,7 +21,7 @@ aft.calculation_data.n_point = 10
 aft.calculation_data.solve_cogging = False
 aft.calculation_data.max_relative_residual = 0.01
 aft.calculation_data.solve_only_1_step = False
-aft.calculation_data.vectorized_optimization = False
+aft.calculation_data.vectorized_optimization = True
 aft.just_changed("calculation_data")
 
 aft.adaptive_mesh_data.n_r_2 = 4
