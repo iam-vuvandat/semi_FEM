@@ -17,9 +17,9 @@ def analysis_motor(motor, callback = None):
     debug = calculation_data.debug
 
     epsilon = 1e-12
-    symmetry_factor = motor.symmetry_factor
+    symmetry_factor = motor.mechanical.symmetry_factor
     symmetry_angle = 2*pi / symmetry_factor
-    cogging_angle = motor.cogging_period_mech
+    cogging_angle = motor.mechanical.cogging_period_mech
     angle_factor = int(symmetry_angle // cogging_angle) 
     delta_theta  = cogging_angle / (n_point)
     minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))
@@ -29,11 +29,10 @@ def analysis_motor(motor, callback = None):
             total_progress = int(sub_progress * 0.15)
             callback(msg, total_progress)
 
-    if motor.mesh is None:
-        motor.reload()
+    
 
     motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
-    motor.reload()
+    motor.create_adaptive_mesh()
     motor.create_reluctance_network(callback = scaled_callback)
     
     phase_number = motor.winding_data.phase
@@ -91,7 +90,7 @@ def analysis_motor(motor, callback = None):
     shaft_speed = motor.mechanical.shaft_speed * (pi/30)
     back_emf = periodic_derivative(data=flux_linkage, half_open_interval=True).derivative * shaft_speed 
     if motor.mesh.adaptive_mesh_data.use_symmetry_factor:
-        back_emf = back_emf * motor.symmetry_factor
+        back_emf = back_emf * symmetry_factor
 
     motor.record.back_emf = back_emf.copy()
     mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data

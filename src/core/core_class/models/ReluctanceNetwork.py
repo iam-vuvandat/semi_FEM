@@ -29,7 +29,7 @@ class ReluctanceNetwork:
                  callback = None):
         
         self.mechanical = motor.mechanical
-        self.symmetry_factor = motor.symmetry_factor
+        self.symmetry_factor = self.mechanical.symmetry_factor
         self.material_database = motor.material_database
         self.geometry = geometry
         self.mesh = mesh
