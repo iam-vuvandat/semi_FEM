@@ -3,7 +3,9 @@ from src.core.core_class.utils.for_element.get_neighbor_elements_position import
 
 def rotate_reluctance_network(reluctance_network, z_indices=(0, 1, 2), n_step=1):
     delta_theta = reluctance_network.mesh.delta_theta
+    print(f"delta_theta :{delta_theta}")
     reluctance_network.mechanical.current_position += delta_theta * n_step
+    print(f"current_position: {reluctance_network.mechanical.current_position}")
     
     if reluctance_network.vectorized_optimization is False:
         z_idx_clean = np.atleast_1d(z_indices).astype(int)

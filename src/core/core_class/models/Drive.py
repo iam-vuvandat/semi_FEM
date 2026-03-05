@@ -12,37 +12,35 @@ class Drive:
         self.reluctance_network = motor.reluctance_network
         self.drive_data = motor.drive_data
         
-        # Nạp hằng số từ drive_data
         self.i_rms = self.drive_data.i_rms
         self.phase_advanced = self.drive_data.phase_advanced
         
-        # TỰ ĐỘNG tính toán id, iq ngay khi khởi tạo để tránh dòng điện = 0
         self._sync_dq_components()
 
     def _sync_dq_components(self):
         """Tính toán id, iq dựa trên i_rms và phase_advanced hiện tại."""
         i_peak = self.i_rms * math.sqrt(2)
         beta_rad = math.radians(self.phase_advanced)
+        # id am de tao tu truong nguoc chieu (flux weakening) neu beta > 0
         self.id = -i_peak * math.sin(beta_rad)
         self.iq = i_peak * math.cos(beta_rad)
 
     @property
     def pole_pairs(self):
-        """Số đôi cực từ (p)."""
         return int(self.geometry_data.rotor.pole_number // 2)
 
     @property
     def phase_number(self):
-        """Số pha của dây quấn."""
         return self.winding_data.phase
 
     @property
     def theta_e(self):
-        """Góc điện tức thời dựa trên vị trí cơ học."""
+        # Vi tri co hoc da la Radian (theo log), theta_e cung se la Radian
         return self.mechanical.current_position * self.pole_pairs
 
     @property
     def current_function(self):
+        """Hien thi ham dong dien phai khop voi calculate_n_phase_currents."""
         functions = []
         i_peak = self.i_rms * math.sqrt(2)
         speed_rpm = getattr(self.mechanical, 'speed_rpm', 3000)
@@ -51,30 +49,31 @@ class Drive:
         
         for k in range(int(self.phase_number)):
             angle_shift = (2 * pi * k) / self.phase_number
-            phi = beta_rad + angle_shift + (pi / 2)
-            func_str = f"{round(i_peak, 4)} * sin({round(omega_e, 4)} * Time + {round(phi, 4)})A"
+            # Su dung ham cos de phan anh dung phep bien doi Park nguoc
+            # Bo pi/2 de khong bi lech pha voi bo giai
+            phi = beta_rad + angle_shift 
+            func_str = f"{round(i_peak, 4)} * cos({round(omega_e, 4)} * Time + {round(phi, 4)})A"
             functions.append(func_str)
         return functions
 
     def set_control(self, i_rms, phase_advanced):
-        """Thiết lập thông số và đồng bộ hóa vào drive_data."""
         self.i_rms = i_rms
         self.phase_advanced = phase_advanced
-        
-        # Đồng bộ ngược lại drive_data để lưu trữ bền vững
         self.drive_data.i_rms = i_rms
         self.drive_data.phase_advanced = phase_advanced
-        
         self._sync_dq_components()
 
     def calculate_n_phase_currents(self):
+        """Phep bien doi Park nguoc chuan cho PMSM."""
         theta_e = self.theta_e
+        # Phep tinh Alpha-Beta tu DQ
         i_alpha = self.id * math.cos(theta_e) - self.iq * math.sin(theta_e)
         i_beta  = self.id * math.sin(theta_e) + self.iq * math.cos(theta_e)
         
         current_phases = []
         for k in range(int(self.phase_number)):
             angle_shift = (2 * pi * k) / self.phase_number
+            # Phep bien doi Clarke nguoc (Alpha-Beta -> ABC)
             i_k = i_alpha * math.cos(angle_shift) + i_beta * math.sin(angle_shift)
             current_phases.append(i_k)
         return np.array(current_phases)

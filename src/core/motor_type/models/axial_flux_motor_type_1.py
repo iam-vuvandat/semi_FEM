@@ -118,7 +118,7 @@ class AxialFluxMotorType1:
         )
 
         self.mechanical_data = Container(
-            shaft_speed = 3000.0
+            shaft_speed = 1000
         )
 
         self.maxwell_export_option = Container()      

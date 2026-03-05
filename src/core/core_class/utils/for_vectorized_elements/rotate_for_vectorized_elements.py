@@ -8,8 +8,7 @@ def rotate_for_vectorized_elements(vectorized_elements,
     z_idx_clean = np.atleast_1d(z_indices).astype(int)
 
     attributes_to_rotate = [
-        'material', 'magnet_source', 
-        'element_winding_vector', 'winding_source', 'magnetic_source','winding_normal',
+        'material', 'magnet_source','magnetic_source',
         'minimum_reluctance', 'reluctance',
         'relative_permeability', 'flux_direct', 'flux_density_direct', 
         'flux_density_average'
@@ -36,5 +35,4 @@ def rotate_for_vectorized_elements(vectorized_elements,
             # Ep tu 4D tro lai 2D (dim, total_elements)
             setattr(vectorized_elements, attr_name, reshaped.reshape((dim, -1), order='F'))
 
-    # Bat buoc phai cap nhat lai neighbor indices
-    vectorized_elements.neighbor_indices, vectorized_elements.neighbor_valid = find_neighbor_indices(vectorized_elements=vectorized_elements)
+    

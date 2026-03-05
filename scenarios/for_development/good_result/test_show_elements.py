@@ -13,14 +13,14 @@ aft = AxialFluxMotorType1()
 aft.winding_data.turns = 25
 aft.just_changed("winding_data")
 
-aft.geometry_data.rotor.airgap = 1 * 1e-3
-aft.geometry_data.rotor.magnet_length = 3 * 1e-3 
+aft.geometry_data.rotor.airgap = 1 * 1e-4
+aft.geometry_data.rotor.magnet_length = 1 * 1e-3 
 aft.just_changed("geometry")
 
-aft.calculation_data.n_point = 40
+aft.calculation_data.n_point = 25
 aft.calculation_data.solve_cogging = False
 aft.calculation_data.max_relative_residual = 0.005
-aft.calculation_data.solve_only_1_step = True
+aft.calculation_data.solve_only_1_step = False
 aft.calculation_data.vectorized_optimization = True
 aft.just_changed("calculation_data")
 
@@ -31,7 +31,7 @@ aft.adaptive_mesh_data.n_z_tooth_body = 6
 aft.adaptive_mesh_data.n_z_tooth_tip_2 = 4
 aft.just_changed("mesh")
 
-aft.drive_data.i_rms = 0    
+aft.drive_data.i_rms = 10
 aft.just_changed("drive")
 
 #aft.require("reluctance_network")

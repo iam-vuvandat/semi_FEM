@@ -13,7 +13,7 @@ class CylindricalMesh:
 
         self.r_nodes = np.array(r_nodes)
         self.theta_nodes = np.array(theta_nodes)
-        self.delta_theta = np.abs(self.theta_nodes[1] - self.theta_nodes[0])
+        self.delta_theta = np.abs(self.theta_nodes[5] - self.theta_nodes[4])
         self.z_nodes = np.array(z_nodes)
         self.periodic_boundary = periodic_boundary
 
