@@ -17,21 +17,21 @@ aft.geometry_data.rotor.airgap = 0.5 * 1e-3
 aft.geometry_data.rotor.magnet_length = 3 * 1e-3 
 aft.just_changed("geometry")
 
-aft.calculation_data.n_point = 31
-aft.calculation_data.solve_cogging = True
-aft.calculation_data.max_relative_residual = 0.01
+aft.calculation_data.n_point = 25
+aft.calculation_data.solve_cogging = False
+aft.calculation_data.max_relative_residual = 0.005
 aft.calculation_data.solve_only_1_step = False
 aft.calculation_data.vectorized_optimization = True
 aft.just_changed("calculation_data")
 
-aft.adaptive_mesh_data.n_r_2 = 4
-aft.adaptive_mesh_data.n_r_1 = 2
-aft.adaptive_mesh_data.n_r_3 = 2
-aft.adaptive_mesh_data.n_z_tooth_body = 4
-aft.adaptive_mesh_data.n_z_tooth_tip_2 = 3
+aft.adaptive_mesh_data.n_r_2 = 6
+aft.adaptive_mesh_data.n_r_1 = 3
+aft.adaptive_mesh_data.n_r_3 = 3
+aft.adaptive_mesh_data.n_z_tooth_body = 6
+aft.adaptive_mesh_data.n_z_tooth_tip_2 = 4
 aft.just_changed("mesh")
 
-aft.drive_data.i_rms = 10
+aft.drive_data.i_rms = 15
 aft.just_changed("drive")
 
 #aft.require("reluctance_network")
