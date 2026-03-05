@@ -12,6 +12,9 @@ from src.core.motor_type.utils.for_create_geometry.reload import reload
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell_copy import export_to_maxwell
+from src.core.core_class.models.Mechanical import Mechanical
+
+from types import SimpleNamespace
 import math
 pi = math.pi
 
@@ -26,8 +29,169 @@ class AxialFluxMotorType1:
                  shaft_speed        = 3000,
                  system_variable    = "magnetic_potential"):
         
-        # --- Basic Identification ---
-        self.motor_type = "axial_flux_motor_type_1"
+        # Property dependence: "material_database" , "winding_data", "geometry", "mechanical", "calculation_data", "mesh", "reluctance_network", "drive"
+        
+        # Empty property
+        self.material_database = None
+        self.winding_data = None
+        self.geometry = None
+        self.mechanical = None
+        self.calculation_data = None
+        self.mesh = None
+        self.reluctance_network = None
+        self.drive = None
+
+        # Material data
+        self.material_data = SimpleNamespace(
+            air         = "default",
+            magnet_type = "NdFe30",
+            iron_type   = "steel_1008"
+        )
+
+        # Winding data
+        self.winding_data = SimpleNamespace(
+            phase          = 3,
+            turns          = 15,
+            throw          = 1,
+            parallel_path  = 1,
+            winding_layer  = 2,
+            mmf_offset     = 0.0,
+            winding_matrix = None,
+            slot_winding   = None,
+            fig_layout     = None,
+            fig_polar      = None,
+            fig_star       = None,
+            fig_mmf        = None,
+            fig_wf         = None
+        ) 
+
+        # Geometry data
+        self.geometry_data = SimpleNamespace(
+            stator = SimpleNamespace(
+                slot_number          = 15,
+                stator_lam_dia       = 150 * 1e-3,
+                stator_bore_dia      = 50 * 1e-3,
+                slot_opening         = 5 * 1e-3,
+                wdg_extension_inner  = 0,
+                wdg_extension_outer  = 0,
+                slot_width           = 7 * 1e-3,
+                slot_depth           = 15 * 1e-3,
+                slot_corner_radius   = 0,
+                tooth_tip_depth      = 2 * 1e-3,
+                tooth_tip_angle      = 30,
+                stator_length        = 25 * 1e-3
+            ),
+            rotor = SimpleNamespace(
+                pole_number          = 10,
+                rotor_lam_dia        = 150 * 1e-3,
+                magnet_arc           = 140,
+                magnet_embed_depth   = 5 * 1e-3,
+                magnet_depth         = 40 * 1e-3,
+                magnet_segments      = 1,
+                banding_depth        = 0 * 1e-3,
+                shaft_dia            = 0 * 1e-3,
+                shaft_hole_diameter  = 50 * 1e-3,
+                airgap               = 2 * 1e-3,
+                magnet_length        = 4 * 1e-3,
+                rotor_length         = 6 * 1e-3
+            )
+        )
+
+        # Mechanical data
+        self.mechanical_data = SimpleNamespace(
+            shaft_speed = 1000 # rpm
+        )
+
+        # Calculation data 
+        self.calculation_data = SimpleNamespace(
+            max_iteration          = 50,
+            max_relative_residual  = 0.02,
+            material_relax         = 0.35,
+            n_point                = 31,
+            solve_cogging          = False,
+            get_geometric_error    = False,
+            solve_only_1_step      = True,
+            vectorized_optimization = True,
+            debug                  = True
+        )
+
+        # Mesh data
+        self.adaptive_mesh_data = SimpleNamespace(
+            n_r_in          = 1,
+            n_r_1           = 3,
+            n_r_2           = 6,
+            n_r_3           = 3,
+            n_r_out         = 1,
+            n_theta         = 150,
+            n_z_in_air      = 1,
+            n_z_rotor_yoke  = 4,
+            n_z_magnet      = 3,
+            n_z_airgap      = 3,
+            n_z_tooth_tip_1 = 1,
+            n_z_tooth_tip_2 = 4,
+            n_z_tooth_body  = 6,
+            n_z_stator_yoke = 4,
+            n_z_out_air     = 1,
+            use_symmetry_factor = True,
+            periodic_boundary   = True
+        )
+
+        # Reluctance Network data
+        self.reluctance_network_data = SimpleNamespace()
+
+        # Drive data 
+        self.drive_data = SimpleNamespace(
+            i_rms = 0.0,
+            phase_advanced = 0.0
+        )
+
+        # Record
+        self.record = SimpleNamespace()
+
+
+    # Create Material Database
+    def create_material_database(self): 
+        self.material_database = MaterialDataBase(
+            air         = self.material_data.air,
+            magnet_type = self.material_data.magnet_type,
+            iron_type   = self.material_data.iron_type
+        )
+
+    # Create Winding
+    def create_winding(self): 
+        result = generate_motor_winding_analysis(motor=self, debug=False)
+        self.winding_data.mmf_offset = 0.0
+        self.winding_data.winding_matrix = result.tooth_matrix
+        self.winding_data.slot_matrix = result.winding_matrix
+        self.winding_data.fig_layout = result.fig_layout
+        self.winding_data.fig_polar  = result.fig_polar
+        self.winding_data.fig_star   = result.fig_star
+        self.winding_data.fig_mmf    = result.fig_mmf
+        self.winding_data.fig_wf     = result.fig_wf
+
+    # Create Geometry
+    def create_geometry(self): 
+        self.geometry = create_geometry(motor=self)
+
+    # create mechanical
+    def create_mechanical(self): 
+        self.mechanical = Mechanical(motor=self)
+
+    
+    
+
+    
+    
+
+    
+
+
+
+
+
+
+
+
         self.shaft_speed = shaft_speed
         self.system_variable = system_variable
 

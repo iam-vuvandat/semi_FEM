@@ -128,7 +128,7 @@ if __name__ == "__main__":
     class MockMotor:
         def __init__(self):
             self.geometry_data = Container(stator=Container(slot_number=15), rotor=Container(pole_number=6))
-            self.winding_data = Container(throw=7, winding_layer=2, turns=15)
+            self.winding_data = Container(throw=1, winding_layer=2, turns=15)
 
     print("--- DANG CHAY TEST: DO THI SE HIEN RA VA LUU VAO DATA/FIGURE ---")
     result = generate_motor_winding_analysis(MockMotor(), debug=True)

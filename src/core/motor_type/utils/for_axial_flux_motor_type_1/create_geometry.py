@@ -13,13 +13,14 @@ from src.core.motor_type.utils.for_create_geometry.create_frustum_loft import cr
 from src.core.core_class.models.Segment import Segment
 from src.core.core_class.models.Geometry import Geometry
 
-def create_geometry(motor,
-                    rotor_angle_offset = 0, # rad
-                    stator_angle_offset = 0,
-                    create_rotor_yoke = True,
-                    create_magnet = True,
-                    create_tooth = True,
-                    create_stator_yoke = True):
+def create_geometry(motor):
+    
+    rotor_angle_offset = 0, # rad
+    stator_angle_offset = 0,
+    create_rotor_yoke = True,
+    create_magnet = True,
+    create_tooth = True,
+    create_stator_yoke = True
     
     geometry = []
     
