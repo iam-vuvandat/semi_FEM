@@ -8,6 +8,7 @@ from src.core.solver.utils.periodic_derivative import periodic_derivative
 from src.core.solver.utils.duplicate_data import duplicate_data
 
 def analysis_motor(motor, callback = None):
+    motor.require("calculation_data")
     calculation_data = motor.calculation_data
     max_relative_residual = calculation_data.max_relative_residual
     max_iteration = calculation_data.max_iteration
@@ -30,10 +31,15 @@ def analysis_motor(motor, callback = None):
             callback(msg, total_progress)
 
     
+    if motor.adaptive_mesh_data.n_theta ==  minimum_theta_cell:
+        pass
+    
+    else:
+        motor.adaptive_mesh_data.n_theta = minimum_theta_cell 
+        motor.just_changed("mesh")
 
-    motor.mesh.adaptive_mesh_data.n_theta = minimum_theta_cell 
-    motor.create_adaptive_mesh()
-    motor.create_reluctance_network(callback = scaled_callback)
+    motor.require("drive")
+
     
     phase_number = motor.winding_data.phase
     flux_linkage = np.zeros((phase_number + 1, n_point))

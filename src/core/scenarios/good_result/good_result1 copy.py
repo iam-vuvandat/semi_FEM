@@ -8,8 +8,6 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 
 
 aft = AxialFluxMotorType1()
-aft.require("drive")
-
 aft.analysis_motor()
 
    
