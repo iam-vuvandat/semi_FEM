@@ -88,9 +88,19 @@ class Drive:
             update_for_winding_current = True
         )
 
+    def apply_manual_winding_excitation(self, id, iq):
+        self.id = id
+        self.iq = iq
+        currents = self.calculate_n_phase_currents()
+        
+        self.reluctance_network.update_reluctance_network(
+            winding_current = currents, 
+            update_for_winding_current = True
+        )
 
     def debug_current(self):
         current_phases = self.calculate_n_phase_currents()
         # Cau truc mang: [id, iq, i1, i2, ..., iN, current_position]
         debug_array = np.concatenate(([self.id, self.iq], current_phases, [self.mechanical.current_position]))
         return debug_array
+    
