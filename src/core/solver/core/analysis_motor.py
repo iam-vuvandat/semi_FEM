@@ -16,6 +16,7 @@ def analysis_motor(motor, callback = None):
     solve_cogging = calculation_data.solve_cogging
     n_point = calculation_data.n_point
     debug = calculation_data.debug
+    phases = motor.winding_data.phase 
 
     epsilon = 1e-12
     symmetry_factor = motor.mechanical.symmetry_factor
@@ -45,6 +46,7 @@ def analysis_motor(motor, callback = None):
     flux_linkage = np.zeros((phase_number + 1, n_point))
     cogging = np.zeros((2, n_point))
     mst_data = np.zeros((5, n_point))
+    current = np.zeros((3 + phases, n_point))
     
     n_step_cogging = 1 
     n_step_standard = angle_factor
@@ -89,6 +91,8 @@ def analysis_motor(motor, callback = None):
                 if index_standard < n_point:
                     flux_linkage[:, index_standard] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
                     mst_data[:,index_standard] = motor.maxwell_stress_tensor().mst_result[:]
+                    current[:,index_standard] = motor.drive.debug_current()[:]
+
                 cogging_shifted = 0
 
         if is_cogging_point:
@@ -125,6 +129,7 @@ def analysis_motor(motor, callback = None):
     motor.record.back_emf = back_emf.copy()
     motor.record.mst_data = mst_data.copy()
     motor.record.cogging = cogging.copy()
+    motor.record.currents = current.copy()
 
     if callback: callback("Analysis Completed", 100)
     return None
