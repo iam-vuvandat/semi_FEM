@@ -18,7 +18,7 @@ def solve(reluctance_network,
     }
     t_start_total = time.perf_counter()
 
-    factor_1 = 0.7
+    factor_1 = 0.4
     G_c, Y_c, R_c, B_c, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[94m", "\033[0m"
     best_residual_history = []
     mag_pot_shape = reluctance_network.magnetic_potential.data.shape
