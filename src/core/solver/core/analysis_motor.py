@@ -43,7 +43,7 @@ def analysis_motor(motor, callback = None):
 
     
     phase_number = motor.winding_data.phase
-    flux_linkage = np.zeros((phase_number + 1, n_point))
+    flux_linkage = np.zeros((phase_number + 3, n_point))
     cogging = np.zeros((2, n_point))
     mst_data = np.zeros((5, n_point))
     current = np.zeros((3 + phases, n_point))
@@ -117,7 +117,7 @@ def analysis_motor(motor, callback = None):
 
     # handle data
     shaft_speed = motor.mechanical.shaft_speed * (pi/30)
-    back_emf = periodic_derivative(data=flux_linkage, half_open_interval=True).derivative * shaft_speed 
+    back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
     
     mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data
     cogging = duplicate_data(data=cogging, half_open_interval=True).duplicated_data

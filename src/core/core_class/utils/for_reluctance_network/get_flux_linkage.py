@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 import numpy as np
+from src.core.solver.utils.convert_to_dq import convert_to_dq
 
 @dataclass
 class Output:
@@ -14,21 +15,16 @@ def get_flux_linkage(reluctance_network):
     Calculates the total flux linkage for all phases based on the current magnetic state.
     Strictly follows the refactored original variable names.
     """
-    # 1. TRUY XUẤT DỮ LIỆU TỪ MESH CONTAINER
-    # Truy cập trực tiếp vào adaptive_mesh_data của motor
-    mesh_data = reluctance_network.mesh.adaptive_mesh_data
-    use_symmetry = mesh_data.use_symmetry_factor
-    
-    # 2. XÁC ĐỊNH HỆ SỐ MÁY ĐIỆN
-    # Lấy symmetry_factor trực tiếp từ motor để đảm bảo tính đồng bộ
-    machine_factor = reluctance_network.symmetry_factor if use_symmetry else 1.0
+    poles = reluctance_network.geometry_data.rotor.pole_number 
+    current_position = reluctance_network.mechanical.current_position
 
+    mesh_data = reluctance_network.mesh.adaptive_mesh_data
+    
     # 3. PHÂN TÍCH PHẦN TỬ ĐỂ XÁC ĐỊNH SỐ PHA
     elements = reluctance_network.elements.flatten()
-    # Lấy số lượng pha từ kích thước của winding vector trong phần tử
     phase_number = elements[0].element_winding_vector.size
     
-    # Khởi tạo tổng từ thông liên kết $\Psi$ cho từng pha
+    # Khởi tạo tổng từ thông liên kết Psi cho từng pha
     psi_total = np.zeros(phase_number)
     
     # 4. TÍCH PHÂN TỪ THÔNG TRÊN TOÀN BỘ PHẦN TỬ
@@ -46,16 +42,26 @@ def get_flux_linkage(reluctance_network):
         flux_density = element.flux_direct
         b_average = (flux_density[0] + flux_density[1]) * 0.5
         
-        # Tính toán đóng góp từ thông $\Phi$ của phần tử
+        # Tính toán đóng góp từ thông Phi của phần tử
         phi_element = b_average @ winding_impact
         
-        # Tích lũy vào tổng từ thông liên kết $\Psi_{total} = \sum (N \cdot \Phi)$
+        # Tích lũy vào tổng từ thông liên kết Psi_total = sum (N * Phi)
         psi_total += element.element_winding_vector * phi_element
 
-    # 5. ĐỊNH DẠNG ĐẦU RA: [Phase_A, Phase_B, Phase_C, Rotor_Position]
-    # Tạo vector cột để lưu kết quả và vị trí góc hiện tại của rotor
-    flux_linkage_results = np.empty((phase_number + 1, 1))
-    flux_linkage_results[:-1, 0] = psi_total * (machine_factor^0)
-    flux_linkage_results[-1] = reluctance_network.mechanical.current_position
+    # 5. BIẾN ĐỔI SANG HỆ DQ VÀ ĐỊNH DẠNG ĐẦU RA
+    # Tạo vector tạm thời để truyền vào hàm convert_to_dq
+    temp_val = np.empty((phase_number + 1, 1))
+    temp_val[:-1, 0] = psi_total
+    temp_val[-1, 0] = current_position
+
+    # Thực hiện biến đổi Park thuận
+    dq_data = convert_to_dq(temp_val, poles, current_position)
+
+    # Định dạng đầu ra: [d, q, Phase_A, ..., Phase_N, Rotor_Position]
+    flux_linkage_results = np.empty((phase_number + 3, 1))
+    flux_linkage_results[0, 0] = dq_data[0, 0]     # Trục d
+    flux_linkage_results[1, 0] = dq_data[1, 0]     # Trục q
+    flux_linkage_results[2:-1, 0] = psi_total      # Giá trị các pha
+    flux_linkage_results[-1, 0] = current_position # Vị trí cơ học
 
     return Output(flux_linkage=flux_linkage_results)
