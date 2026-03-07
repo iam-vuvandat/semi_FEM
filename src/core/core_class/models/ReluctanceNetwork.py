@@ -102,7 +102,7 @@ class ReluctanceNetwork:
     def solve(self,
               max_iteration=50,
               max_relative_residual=0.005, 
-              material_relax=0.4, 
+              material_relax=0.35, 
               damping_factor=1.0,   
               debug=True):
         

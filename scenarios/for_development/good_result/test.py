@@ -30,7 +30,7 @@ aft.adaptive_mesh_data.n_z_tooth_body = 6
 aft.adaptive_mesh_data.n_z_tooth_tip_2 = 4
 aft.just_changed("mesh")
 
-aft.drive_data.i_rms = 15
+aft.drive_data.i_rms = 0
 aft.just_changed("drive")
 
 aft.analysis_motor()
