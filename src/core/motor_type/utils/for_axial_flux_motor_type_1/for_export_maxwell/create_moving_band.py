@@ -5,7 +5,7 @@ def create_moving_band(motor, m3d):
     pole_number          = rotor.pole_number 
     rotor_lam_dia        = rotor.rotor_lam_dia  * 1e3 
     magnet_arc           = rotor.magnet_arc 
-    magnet_embed_depth   = rotor.magnet_embed_depth  
+    magnet_embed_depth   = rotor.magnet_embed_depth   * 1e3 
     magnet_depth         = rotor.magnet_depth * 1e3 
     magnet_segments      = rotor.magnet_segments
     banding_depth        = rotor.banding_depth

@@ -97,15 +97,25 @@ class AxialFluxMotorType1:
         )
 
         self.calculation_data = SimpleNamespace(
-            max_iteration          = 50,
-            max_relative_residual  = 0.02,
-            material_relax         = 0.35,
-            n_point                = 10,
-            solve_cogging          = True,
-            get_geometric_error    = False,
-            solve_only_1_step      = True,
-            vectorized_optimization = True,
-            debug                  = True
+            convergence_settings = SimpleNamespace(
+                max_iteration          = 50,
+                max_relative_residual  = 0.02,
+                material_relax         = 0.35
+            ),
+            general_options = SimpleNamespace(
+                n_point                = 10,
+                solve_cogging          = True,
+                solve_only_1_step      = True,
+                vectorized_optimization = True,
+                get_geometric_error    = False,
+                debug                  = True
+            ),  
+            export_inductance_options = SimpleNamespace(
+                export_inductance = False,
+                current_min           = 0.0,
+                current_max           = 20.0,
+                current_resolution    = 10
+            )  
         )
 
         self.adaptive_mesh_data = SimpleNamespace(

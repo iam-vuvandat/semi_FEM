@@ -35,7 +35,7 @@ class ReluctanceNetwork:
         self.mechanical = motor.mechanical
         self.symmetry_factor = motor.mechanical.symmetry_factor
         self.calculation_data = motor.calculation_data
-        self.vectorized_optimization = self.calculation_data.vectorized_optimization
+        self.vectorized_optimization = self.calculation_data.general_options.vectorized_optimization
         self.material_database = motor.material_database
         self.geometry = geometry
         self.geometric_error = 0.0
