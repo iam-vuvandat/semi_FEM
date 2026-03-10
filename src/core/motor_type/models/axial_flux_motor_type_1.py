@@ -15,6 +15,7 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
 from src.core.core_class.models.Drive import Drive
 from src.core.core_class.models.Mechanical import Mechanical
+from src.core.motor_type.utils.for_export_maxwell.update_maxwell_settings import update_maxwell_settings
 
 pi = math.pi
 
@@ -36,8 +37,7 @@ class AxialFluxMotorType1:
         self.reluctance_network = None
         self.drive = None
         self.record = SimpleNamespace()
-        self.maxwell_export_option = SimpleNamespace()
-
+    
         # data
         self.material_data = SimpleNamespace(
             air         = "default",
@@ -62,7 +62,7 @@ class AxialFluxMotorType1:
         )
 
         self.mechanical_data = SimpleNamespace(
-            shaft_speed = 1000
+            shaft_speed = 3000
         )
 
         self.geometry_data = SimpleNamespace(
@@ -99,11 +99,11 @@ class AxialFluxMotorType1:
         self.calculation_data = SimpleNamespace(
             convergence_settings = SimpleNamespace(
                 max_iteration          = 50,
-                max_relative_residual  = 0.02,
+                max_relative_residual  = 0.5 *1e-2,     # %
                 material_relax         = 0.35
             ),
             general_options = SimpleNamespace(
-                n_point                = 10,
+                n_point                = 21,
                 solve_cogging          = True,
                 solve_only_1_step      = True,
                 vectorized_optimization = True,
@@ -141,6 +141,20 @@ class AxialFluxMotorType1:
         self.drive_data = SimpleNamespace(
             i_rms = 0.0,
             phase_advanced = 0.0
+        )
+
+        self.maxwell_export_option = SimpleNamespace(
+            use_default_option = True,
+            custom_option = SimpleNamespace(
+                mesh_setting = SimpleNamespace(
+                    band_mapping_angle = pi / 180 # rad
+                ),
+                motion_setting = SimpleNamespace(
+                    shaft_speed = 3000 # rpm
+                )
+            ),
+            current_function = None,
+            solve_immediately = False
         )
             
     # Method
@@ -208,3 +222,6 @@ class AxialFluxMotorType1:
 
     def reload(self, callback=None, **kwargs):
         return self.motor_state_manager.reload(motor=self, callback=callback, **kwargs)
+    
+    def update_maxwell_setting(self):
+        update_maxwell_settings(motor=self)

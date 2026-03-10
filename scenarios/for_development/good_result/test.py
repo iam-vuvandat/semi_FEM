@@ -18,7 +18,7 @@ aft.just_changed("geometry")
 
 calc = aft.calculation_data
 calc.general_options.n_point = 25
-calc.general_options.solve_cogging = False
+calc.general_options.solve_cogging = True
 calc.general_options.solve_only_1_step = False
 calc.general_options.vectorized_optimization = True
 calc.general_options.debug = True

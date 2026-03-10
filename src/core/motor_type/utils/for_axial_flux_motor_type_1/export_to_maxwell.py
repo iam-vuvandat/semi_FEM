@@ -15,32 +15,27 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.cr
 from src.core.motor_type.utils.for_export_maxwell.init_solver import init_solver
 
 def export_to_maxwell(motor, callback=None):
-    if callback: callback("Initializing Maxwell window", 5)
-    init_window()
     
-    if callback: callback("Initializing project", 10)
+    init_window()
     m3d = init_project(project_name="AxialFluxMotor_pyaedt", solution_type="Transient")
-
     rotor = motor.geometry_data.rotor
     magnet_length = rotor.magnet_length * 1e3
     
+    # require
+    motor.require("mesh")
+
+    # create geometry
     segment_created = []
-    if callback: callback("Creating rotor yoke", 20)
     rotor_yoke = create_rotor_yoke(motor=motor, m3d=m3d)
-    print(segment_created)
     segment_created.append(rotor_yoke)
     
-    if callback: callback("Creating magnet", 30)
     magnet_segments =  create_magnet(motor=motor, m3d=m3d)
     segment_created += magnet_segments
     
-    if callback: callback("Creating moving band", 45)
     create_moving_band(motor=motor, m3d=m3d)
     
-    if callback: callback("Creating stator", 60)
     create_stator(motor=motor, m3d=m3d)
     
-    if callback: callback("Creating winding", 75)
     create_winding(motor=motor, m3d=m3d)
     
     create_balloon(pad_value=10, m3d=m3d)
@@ -62,18 +57,14 @@ def export_to_maxwell(motor, callback=None):
         name="Global_Core_Mesh"
     )
 
-    if callback: callback("Creating setup", 90)
     init_solver(m3d = m3d, motor = motor)
     m3d.save_project()
 
-    if callback: callback("Done", 100)
+
     return None
 
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
     motor = AxialFluxMotorType1()
-    motor.winding_data.throw = 1
-    motor.just_changed("winding_data")
-    motor.require("mesh")
-    motor.create_drive()
     export_to_maxwell(motor)
+    

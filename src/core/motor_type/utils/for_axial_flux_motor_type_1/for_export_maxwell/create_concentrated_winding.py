@@ -11,7 +11,8 @@ def create_concentrated_winding(m3d,motor):
     turns = winding_data.turns
 
     drive = motor.drive
-    current_function = drive.current_function
+    motor.update_maxwell_setting()
+    current_function = motor.maxwell_export_option.current_function
 
 
     geometry_data = motor.geometry_data 
