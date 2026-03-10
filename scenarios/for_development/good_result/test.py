@@ -23,14 +23,14 @@ calc.general_options.solve_only_1_step = False
 calc.general_options.vectorized_optimization = True
 calc.general_options.debug = True
 
-calc.convergence_settings.max_relative_residual = 0.5 * 1e-2 # %
+calc.convergence_settings.max_relative_residual = 0.1 * 1e-2 # %
 calc.convergence_settings.max_iteration = 50
-calc.convergence_settings.material_relax = 0.4
+calc.convergence_settings.material_relax = 0.35
 
-calc.export_inductance_options.export_inductance = False
-calc.export_inductance_options.current_min = 1.0
-calc.export_inductance_options.current_max = 30.0
-calc.export_inductance_options.current_resolution = 20
+calc.export_inductance_options.export_inductance = True
+calc.export_inductance_options.current_min = 1
+calc.export_inductance_options.current_max = 15
+calc.export_inductance_options.current_resolution = 10 
 
 aft.just_changed("calculation_data")
 
@@ -41,7 +41,7 @@ aft.adaptive_mesh_data.n_z_tooth_body = 3
 aft.adaptive_mesh_data.n_z_tooth_tip_2 = 3
 aft.just_changed("mesh")
 
-aft.drive_data.i_rms = 15.0
+aft.drive_data.i_rms = 10.0
 aft.just_changed("drive")
 
 aft.analysis_motor()

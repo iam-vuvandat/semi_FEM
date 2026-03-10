@@ -109,7 +109,7 @@ def create_adaptive_mesh(motor):
     axial_segments.append(z_sy[1:])
     z_curr = z_sy[-1]
 
-    z_oa = np.linspace(z_curr, z_curr + sy_h, nz_oa + 1)
+    z_oa = np.linspace(z_curr, z_curr + rotor.rotor_length, nz_oa + 1)
     axial_segments.append(z_oa[1:])
 
     axial_coordinates = np.concatenate(axial_segments)
