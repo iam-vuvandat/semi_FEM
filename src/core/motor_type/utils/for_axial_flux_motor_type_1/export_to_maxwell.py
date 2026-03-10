@@ -38,7 +38,7 @@ def export_to_maxwell(motor, callback=None):
     
     create_winding(motor=motor, m3d=m3d)
     
-    create_balloon(pad_value=10, m3d=m3d)
+    create_balloon(motor = motor, m3d=m3d)
 
     all_objects = m3d.modeler.object_names
     mesh_targets = [
@@ -66,5 +66,7 @@ def export_to_maxwell(motor, callback=None):
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
     motor = AxialFluxMotorType1()
+    motor.maxwell_export_option.solver_option.solve_immediately = True
+    motor.maxwell_export_option.solver_option.solve_only_1_step = True
     export_to_maxwell(motor)
     

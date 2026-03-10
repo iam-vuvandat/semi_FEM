@@ -24,6 +24,9 @@ def init_solver(m3d,motor):
     relative_residual = motor.calculation_data.convergence_settings.max_relative_residual
     relative_residual_str = f"{relative_residual}"
     
+    if motor.maxwell_export_option.solver_option.solve_only_1_step: 
+        time_step_str = stop_time_str
+
     setup = m3d.create_setup(name=setup_name, setup_type="Transient")
     setup.props["StopTime"] = stop_time_str
     setup.props["TimeStep"] = time_step_str
@@ -36,6 +39,6 @@ def init_solver(m3d,motor):
     setup.props["SmoothBHCurve"] = False
     setup.update()
 
-    if motor.maxwell_export_option.solve_immediately :
+    if motor.maxwell_export_option.solver_option.solve_immediately :
         for setup_name in m3d.setup_names:
             m3d.analyze_setup(setup_name)

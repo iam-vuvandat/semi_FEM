@@ -154,7 +154,11 @@ class AxialFluxMotorType1:
                 )
             ),
             current_function = None,
-            solve_immediately = False
+            solver_option = SimpleNamespace(
+                solve_immediately = False,
+                solve_only_1_step = False
+            )
+            
         )
             
     # Method
