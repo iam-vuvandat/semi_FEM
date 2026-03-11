@@ -67,6 +67,6 @@ if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
     motor = AxialFluxMotorType1()
     motor.maxwell_export_option.solver_option.solve_immediately = True
-    motor.maxwell_export_option.solver_option.solve_only_1_step = True
+    motor.maxwell_export_option.solver_option.solve_only_1_step = False
     export_to_maxwell(motor)
     
