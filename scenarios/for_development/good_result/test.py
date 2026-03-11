@@ -13,13 +13,13 @@ from src.core.storage.core import motor_io
 aft = AxialFluxMotorType1()
 aft.winding_data.turns = 30
 aft.just_changed("winding_data")
-
+                                                                            
 aft.geometry_data.rotor.airgap = 0.5 * 1e-3
 aft.geometry_data.rotor.magnet_length = 3 * 1e-3 
 aft.just_changed("geometry")
 
 calc = aft.calculation_data
-calc.general_options.n_point = 25
+calc.general_options.n_point = 15
 calc.general_options.solve_cogging = False
 calc.general_options.solve_only_1_step = False
 calc.general_options.vectorized_optimization = True
