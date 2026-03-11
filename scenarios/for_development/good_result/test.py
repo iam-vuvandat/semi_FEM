@@ -2,11 +2,13 @@ import paths
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import time
 from matplotlib.widgets import Slider
 from mpl_toolkits.mplot3d import Axes3D
 
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 from src.core.storage.core import motor_io
+
 
 aft = AxialFluxMotorType1()
 aft.winding_data.turns = 30
@@ -18,7 +20,7 @@ aft.just_changed("geometry")
 
 calc = aft.calculation_data
 calc.general_options.n_point = 25
-calc.general_options.solve_cogging = True
+calc.general_options.solve_cogging = False
 calc.general_options.solve_only_1_step = False
 calc.general_options.vectorized_optimization = True
 calc.general_options.debug = True
@@ -27,7 +29,7 @@ calc.convergence_settings.max_relative_residual = 0.1 * 1e-2 # %
 calc.convergence_settings.max_iteration = 50
 calc.convergence_settings.material_relax = 0.35
 
-calc.export_inductance_options.export_inductance = True
+calc.export_inductance_options.export_inductance = False
 calc.export_inductance_options.current_min = 1
 calc.export_inductance_options.current_max = 15
 calc.export_inductance_options.current_resolution = 10 
@@ -44,7 +46,12 @@ aft.just_changed("mesh")
 aft.drive_data.i_rms = 10.0
 aft.just_changed("drive")
 
+start_time_for_semiFEM = time.perf_counter()
 aft.analysis_motor()
+stop_time_for_semiFEM = time.perf_counter()
+total_time_for_semiFEM = stop_time_for_semiFEM - start_time_for_semiFEM
+
+print(total_time_for_semiFEM)
 
 flux = aft.record.flux_linkage
 emf  = aft.record.back_emf
@@ -160,3 +167,10 @@ if calc.export_inductance_options.export_inductance:
 
 plt.show()
 aft.display()
+
+time_start_FEM = time.perf_counter()
+aft.export_to_maxwell()
+time_stop_FEM = time.perf_counter()
+total_time_FEM = time_stop_FEM - time_start_FEM
+
+print(total_time_FEM)
