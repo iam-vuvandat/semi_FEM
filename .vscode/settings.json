@@ -12,5 +12,6 @@
     "editor.suggestOnTriggerCharacters":  true,
     "python.languageServer":  "Pylance",
     "python.analysis.autoImportCompletions":  true,
-    "explorer.compactFolders":  false
+    "explorer.compactFolders": false,
+    "python-envs.defaultEnvManager": "ms-python.python:venv"
 }

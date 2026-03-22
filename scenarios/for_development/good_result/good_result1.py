@@ -9,8 +9,8 @@ from src.core.storage.core import motor_io
 
 
 # Thiết lập các tham số điều khiển
-RE_CREATE_MOTOR = False  # True: Tạo mới động cơ | False: Nạp từ file
-RE_SOLVE        = False   # True: Chạy lại Solver | False: Chỉ vẽ dữ liệu cũ
+RE_CREATE_MOTOR = True  # True: Tạo mới động cơ | False: Nạp từ file
+RE_SOLVE        = True   # True: Chạy lại Solver | False: Chỉ vẽ dữ liệu cũ
 SHOW_RELUCTANCE = True  # Hiển thị cấu trúc mạng từ trở
 FILENAME        = "motor_ngon_1"
 

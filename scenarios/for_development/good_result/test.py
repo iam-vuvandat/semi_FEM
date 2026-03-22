@@ -9,7 +9,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 from src.core.storage.core import motor_io
 
-
 aft = AxialFluxMotorType1()
 aft.winding_data.turns = 30
 aft.just_changed("winding_data")

@@ -1,25 +1,25 @@
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg') 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # --- THAM SỐ ĐIỀU CHỈNH ---
 r_min, r_max = 70.0, 100.0      
-n_r = 6                      
+n_r = 6                       
 
-theta_start, theta_end = 0, 270 * np.pi / 180 
+theta_start, theta_end = 0, 320 * np.pi / 180 
 n_theta = 36      
 
 z_start, z_end = 0, 60         
 n_z = 5                        
 
 alpha_face = 0.85              
-edge_color = (0, 0, 0, 0.4)    # Giảm nhẹ độ đậm của viền để hài hòa với màu nhạt
+edge_color = (0, 0, 0, 0.4)    
 edge_width = 0.6
 
-# Điều chỉnh dải màu: Nhạt và thanh thoát hơn
-# start_color là vùng gần tâm (đậm nhất): Màu xanh cực nhẹ
+# Điều chỉnh dải màu
 start_color = np.array([0.75, 0.88, 1.0]) 
-# end_color là vùng xa tâm (nhạt nhất): Trắng tinh khôi
 end_color = np.array([1.0, 1.0, 1.0])   
 
 # --- KHỞI TẠO TỌA ĐỘ ---
@@ -39,12 +39,10 @@ def on_release(event):
     azim = ax.azim
     print(f"Góc nhìn hiện tại: ax.view_init(elev={elev:.2f}, azim={azim:.2f})")
 
-# Kết nối sự kiện thả chuột
 fig.canvas.mpl_connect('button_release_event', on_release)
 
 # --- XỬ LÝ HÌNH HỌC ---
 for i in range(len(R) - 1):
-    # Nội suy màu sắc từ xanh nhạt sang trắng theo lớp bán kính
     t = i / (len(R) - 2) if len(R) > 2 else 0
     current_color = start_color + (end_color - start_color) * t
     
@@ -74,12 +72,11 @@ for i in range(len(R) - 1):
             all_faces.extend(faces)
             face_colors.extend([current_color] * 6)
 
-# Vẽ tập trung để tối ưu hiệu năng
+# Vẽ tập trung
 poly3d = Poly3DCollection(all_faces, facecolors=face_colors, 
                           alpha=alpha_face, edgecolors=edge_color, linewidths=edge_width)
 ax.add_collection3d(poly3d)
 
-# Loại bỏ các trục tọa độ rác
 ax.set_axis_off() 
 
 limit = r_max
@@ -88,7 +85,6 @@ ax.set_ylim(-limit, limit)
 ax.set_zlim(z_start, z_end)
 ax.set_box_aspect((2*limit, 2*limit, z_end-z_start))
 
-# Góc nhìn bạn đã chọn
 ax.view_init(elev=31.14, azim=-138.03)
 
 plt.tight_layout()

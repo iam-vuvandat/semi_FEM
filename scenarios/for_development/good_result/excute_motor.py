@@ -6,8 +6,8 @@ import math
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 from src.core.storage.core import motor_io
 
-RE_CREATE_MOTOR = False
-RE_SOLVE        = False
+RE_CREATE_MOTOR = True
+RE_SOLVE        = True
 SHOW_RELUCTANCE = True
 FILENAME        = "AFT_Motor_Optimization"
 
