@@ -53,6 +53,8 @@ def analysis_motor(motor, callback = None):
     mst_data = np.zeros((5, n_point))
     current = np.zeros((3 + phases, n_point))
 
+    mechanical_power = np.zeros((2,n_point))
+
     if solve_cogging:
         motor.mechanical.reset_motor_position()
         for i in tqdm(range(n_point), desc="Solving Cogging", disable=not debug):
@@ -140,16 +142,15 @@ def analysis_motor(motor, callback = None):
         motor.record.lq_map = lq_map
 
 
+    shaft_speed = motor.mechanical.shaft_speed * (pi/30)
 
-
-
-    
-    
     flux_linkage[:-1] *= periodic_factor
     mst_data[:-1] *= periodic_factor
+    mechanical_power = mst_data[[3,-1],:]
+    mechanical_power[0,:] *= shaft_speed
     cogging[:-1] *= periodic_factor
 
-    shaft_speed = motor.mechanical.shaft_speed * (pi/30)
+    
     back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
     
     mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data
@@ -158,8 +159,10 @@ def analysis_motor(motor, callback = None):
     motor.record.flux_linkage = flux_linkage.copy()
     motor.record.back_emf = back_emf.copy()
     motor.record.mst_data = mst_data.copy()
+    motor.record.mechanical_power = mechanical_power.copy()
     motor.record.cogging = cogging.copy()
     motor.record.currents = current.copy()
+    motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
 
     
     return None

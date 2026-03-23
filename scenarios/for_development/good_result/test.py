@@ -10,15 +10,25 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 from src.core.storage.core import motor_io
 
 aft = AxialFluxMotorType1()
-aft.winding_data.turns = 30
+aft.winding_data.turns = 20
 aft.just_changed("winding_data")
-                                                                            
-aft.geometry_data.rotor.airgap = 0.5 * 1e-3
+
+
+aft.geometry_data.stator.slot_number = 30
+aft.geometry_data.stator.slot_opening = 2* 1e-3
+aft.geometry_data.stator.stator_bore_dia = 70 * 1e-3
+aft.geometry_data.stator.slot_width = 4 * 1e-3
+
+aft.geometry_data.rotor.pole_number = 20  
+aft.geometry_data.rotor.magnet_arc = 160                                                                      
+aft.geometry_data.rotor.airgap = 1.5 * 1e-3
 aft.geometry_data.rotor.magnet_length = 3 * 1e-3 
+aft.geometry_data.rotor.magnet_depth = 30 * 1e-3
+aft.geometry_data.rotor.shaft_hole_diameter = 70 * 1e-3
 aft.just_changed("geometry")
 
 calc = aft.calculation_data
-calc.general_options.n_point = 15
+calc.general_options.n_point = 21
 calc.general_options.solve_cogging = False
 calc.general_options.solve_only_1_step = False
 calc.general_options.vectorized_optimization = True
@@ -42,8 +52,12 @@ aft.adaptive_mesh_data.n_z_tooth_body = 3
 aft.adaptive_mesh_data.n_z_tooth_tip_2 = 3
 aft.just_changed("mesh")
 
-aft.drive_data.i_rms = 10.0
+aft.drive_data.i_rms = 20
 aft.just_changed("drive")
+
+
+aft.require("geometry")
+aft.geometry.show()
 
 start_time_for_semiFEM = time.perf_counter()
 aft.analysis_motor()
@@ -164,11 +178,38 @@ if calc.export_inductance_options.export_inductance:
     ax2.set_ylabel("$I_q$ (A)")
     fig3d.colorbar(surf2, ax=ax2, shrink=0.5, aspect=10)
 
+p_mech_values = aft.record.mechanical_power[0, :]
+theta_p_mech  = aft.record.mechanical_power[1, :]
+avg_p_mech    = aft.record.average_mechanical_power
+
+# 2. Khởi tạo đồ thị riêng
+plt.figure(figsize=(10, 5))
+
+# Vẽ công suất tức thời theo vị trí góc từ chính mảng đó
+plt.plot(theta_p_mech, p_mech_values, color='forestgreen', linewidth=2, label='Mechanical Power')
+
+# Vẽ đường công suất trung bình (nếu có dữ liệu)
+if avg_p_mech is not None:
+    plt.axhline(y=avg_p_mech, color='red', linestyle='--', linewidth=1.5, 
+                label=f'Average Power: {avg_p_mech:.2f} W')
+
+# 3. Định dạng và chú thích
+plt.title("Đặc tính Công suất Cơ học (Mechanical Power)", fontsize=13, fontweight='bold')
+plt.xlabel("Vị trí Rotor (rad)", fontsize=11)
+plt.ylabel("Công suất (W)", fontsize=11)
+plt.grid(True, which='both', linestyle=':', alpha=0.6)
+plt.legend(loc='upper right')
+
+# Hiển thị
+plt.tight_layout()
+plt.show()
+
+
 plt.show()
 aft.display()
 
 time_start_FEM = time.perf_counter()
-aft.export_to_maxwell()
+#aft.export_to_maxwell()
 time_stop_FEM = time.perf_counter()
 total_time_FEM = time_stop_FEM - time_start_FEM
 
