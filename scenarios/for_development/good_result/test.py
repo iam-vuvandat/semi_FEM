@@ -13,14 +13,13 @@ aft = AxialFluxMotorType1()
 aft.winding_data.turns = 20
 aft.just_changed("winding_data")
 
-
 aft.geometry_data.stator.slot_number = 30
 aft.geometry_data.stator.slot_opening = 2* 1e-3
 aft.geometry_data.stator.stator_bore_dia = 70 * 1e-3
 aft.geometry_data.stator.slot_width = 4 * 1e-3
 
 aft.geometry_data.rotor.pole_number = 20  
-aft.geometry_data.rotor.magnet_arc = 160                                                                      
+aft.geometry_data.rotor.magnet_arc = 160                                                                                                    
 aft.geometry_data.rotor.airgap = 1.5 * 1e-3
 aft.geometry_data.rotor.magnet_length = 3 * 1e-3 
 aft.geometry_data.rotor.magnet_depth = 30 * 1e-3
@@ -55,7 +54,6 @@ aft.just_changed("mesh")
 aft.drive_data.i_rms = 20
 aft.just_changed("drive")
 
-
 aft.require("geometry")
 aft.geometry.show()
 
@@ -64,20 +62,23 @@ aft.analysis_motor()
 stop_time_for_semiFEM = time.perf_counter()
 total_time_for_semiFEM = stop_time_for_semiFEM - start_time_for_semiFEM
 
-print(total_time_for_semiFEM)
+print(f"Total time for semiFEM: {total_time_for_semiFEM}")
 
 flux = aft.record.flux_linkage
 emf  = aft.record.back_emf
 mst  = aft.record.mst_data
 cogging = aft.record.cogging
 currents = aft.record.currents
+p_mech_values = aft.record.mechanical_power[0, :]
+theta_p_mech  = aft.record.mechanical_power[1, :]
+avg_p_mech    = aft.record.average_mechanical_power
 
 theta_flux = flux[-1, :]
 theta_mst  = mst[-1, :]
 theta_cogging = cogging[-1, :]
 theta_curr = currents[-1, :]
 
-num_plots = 6
+num_plots = 7
 fig = plt.figure(figsize=(12, 9))
 plt.subplots_adjust(left=0.1, right=0.85, top=0.95, bottom=0.05)
 
@@ -124,6 +125,7 @@ axs[2].plot(theta_mst, torque_z, color='purple')
 axs[2].axhline(y=avg_torque, color='black', linestyle='--', label=f'Avg: {avg_torque:.2f} Nm')
 axs[2].set_title("Mô-men điện từ (Maxwell Stress)", fontweight='bold')
 axs[2].set_ylabel("Torque (Nm)")
+axs[2].set_ylim(bottom=0)
 axs[2].legend(loc='upper right')
 axs[2].grid(True, alpha=0.3)
 
@@ -133,6 +135,7 @@ axs[3].plot(theta_mst, axial_force, color='darkcyan')
 axs[3].axhline(y=avg_axial, color='black', linestyle='--', label=f'Avg: {avg_axial:.2f} N')
 axs[3].set_title("Lực dọc trục (Axial Force)", fontweight='bold')
 axs[3].set_ylabel("Force (N)")
+axs[3].set_ylim(bottom=0)
 axs[3].legend(loc='upper right')
 axs[3].grid(True, alpha=0.3)
 
@@ -147,70 +150,34 @@ for j in range(aft.winding_data.phase):
     axs[5].plot(theta_curr, currents[2 + j, :], color=colors[j % 3], label=f'Phase {chr(65+j)}', alpha=0.7)
 axs[5].set_title("Dòng điện (Currents)", fontweight='bold')
 axs[5].set_ylabel("Current (A)")
-axs[5].set_xlabel("Vị trí Rotor (rad)")
 axs[5].legend(loc='upper right', fontsize='small', ncol=2)
 axs[5].grid(True, alpha=0.3)
+
+axs[6].plot(theta_p_mech, p_mech_values, color='forestgreen', linewidth=1.5, label='P_mech')
+if avg_p_mech is not None:
+    axs[6].axhline(y=avg_p_mech, color='red', linestyle='--', label=f'Avg: {avg_p_mech:.2f} W')
+axs[6].set_title("Công suất cơ học (Mechanical Power)", fontweight='bold')
+axs[6].set_ylabel("Power (W)")
+axs[6].set_xlabel("Vị trí Rotor (rad)")
+axs[6].set_ylim(bottom=0)
+axs[6].legend(loc='upper right')
+axs[6].grid(True, alpha=0.3)
 
 if calc.export_inductance_options.export_inductance:
     id_grid = aft.record.id_grid
     iq_grid = aft.record.iq_grid
     ld_map = aft.record.ld_map * 1000 
     lq_map = aft.record.lq_map * 1000 
-
     ld_map[ld_map == 0] = np.nan
     lq_map[lq_map == 0] = np.nan
-    
     ID, IQ = np.meshgrid(id_grid, iq_grid, indexing='ij')
-
     fig3d = plt.figure(figsize=(14, 6))
-    
     ax1 = fig3d.add_subplot(121, projection='3d')
     surf1 = ax1.plot_surface(ID, IQ, ld_map, cmap='viridis', edgecolor='none', alpha=0.9)
     ax1.set_title("Bản đồ điện cảm $L_d$ (mH)", fontweight='bold')
-    ax1.set_xlabel("$I_d$ (A)")
-    ax1.set_ylabel("$I_q$ (A)")
-    fig3d.colorbar(surf1, ax=ax1, shrink=0.5, aspect=10)
-
     ax2 = fig3d.add_subplot(122, projection='3d')
     surf2 = ax2.plot_surface(ID, IQ, lq_map, cmap='plasma', edgecolor='none', alpha=0.9)
     ax2.set_title("Bản đồ điện cảm $L_q$ (mH)", fontweight='bold')
-    ax2.set_xlabel("$I_d$ (A)")
-    ax2.set_ylabel("$I_q$ (A)")
-    fig3d.colorbar(surf2, ax=ax2, shrink=0.5, aspect=10)
-
-p_mech_values = aft.record.mechanical_power[0, :]
-theta_p_mech  = aft.record.mechanical_power[1, :]
-avg_p_mech    = aft.record.average_mechanical_power
-
-# 2. Khởi tạo đồ thị riêng
-plt.figure(figsize=(10, 5))
-
-# Vẽ công suất tức thời theo vị trí góc từ chính mảng đó
-plt.plot(theta_p_mech, p_mech_values, color='forestgreen', linewidth=2, label='Mechanical Power')
-
-# Vẽ đường công suất trung bình (nếu có dữ liệu)
-if avg_p_mech is not None:
-    plt.axhline(y=avg_p_mech, color='red', linestyle='--', linewidth=1.5, 
-                label=f'Average Power: {avg_p_mech:.2f} W')
-
-# 3. Định dạng và chú thích
-plt.title("Đặc tính Công suất Cơ học (Mechanical Power)", fontsize=13, fontweight='bold')
-plt.xlabel("Vị trí Rotor (rad)", fontsize=11)
-plt.ylabel("Công suất (W)", fontsize=11)
-plt.grid(True, which='both', linestyle=':', alpha=0.6)
-plt.legend(loc='upper right')
-
-# Hiển thị
-plt.tight_layout()
-plt.show()
-
 
 plt.show()
 aft.display()
-
-time_start_FEM = time.perf_counter()
-#aft.export_to_maxwell()
-time_stop_FEM = time.perf_counter()
-total_time_FEM = time_stop_FEM - time_start_FEM
-
-print(total_time_FEM)
