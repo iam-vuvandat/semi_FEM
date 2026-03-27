@@ -1,7 +1,7 @@
 from typing import Any
 import os
 import paths
-from pyaedt import Maxwell3d
+from ansys.aedt.core import Maxwell3d
 from dataclasses import dataclass
 import time
 

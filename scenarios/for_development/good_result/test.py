@@ -59,7 +59,7 @@ aft.geometry.show()
 
 
 
-aft.export_to_maxwell()
+#aft.export_to_maxwell()
 
 start_time_for_semiFEM = time.perf_counter()
 aft.analysis_motor()
