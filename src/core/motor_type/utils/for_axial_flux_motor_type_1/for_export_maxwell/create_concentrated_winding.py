@@ -145,6 +145,6 @@ def create_concentrated_winding(m3d,motor):
                 else:
                     direction = 'Negative'
                 
-                new_coil = m3d.assign_coil(all_winding_cross_section[i], conductors_number= turns * np.abs(tooth_matrix[i,j]), polarity=direction)
+                new_coil = m3d.assign_coil(all_winding_cross_section[i], conductors_number= turns * np.sign(tooth_matrix[i,j]), polarity=direction)
                 all_winding_terminal.append(new_coil)
                 m3d.add_winding_coils(assignment = current[j].name, coils = new_coil.name)
