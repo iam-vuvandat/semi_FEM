@@ -17,7 +17,7 @@ from src.core.motor_type.utils.for_export_maxwell.init_solver import init_solver
 def export_to_maxwell(motor, callback=None):
     
     init_window()
-    m3d = init_project(project_name="AxialFluxMotor_pyaedt", solution_type="Transient")
+    m3d = init_project(project_name="AxialFluxMotor_pyaedt", solution_type="Transient", motor = motor)
     rotor = motor.geometry_data.rotor
     magnet_length = rotor.magnet_length * 1e3
     

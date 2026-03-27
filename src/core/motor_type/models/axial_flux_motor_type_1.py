@@ -144,6 +144,7 @@ class AxialFluxMotorType1:
         )
 
         self.maxwell_export_option = SimpleNamespace(
+            ansys_electronic_version = "2025R2",
             use_default_option = True,
             custom_option = SimpleNamespace(
                 mesh_setting = SimpleNamespace(

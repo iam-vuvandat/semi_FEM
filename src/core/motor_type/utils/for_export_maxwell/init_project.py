@@ -5,8 +5,11 @@ from pyaedt import Maxwell3d
 from dataclasses import dataclass
 import time
 
-def init_project(project_name = "pyaedt_test", solution_type = "Transient"):
-    m3d = Maxwell3d(version="2023.1", new_desktop=True, non_graphical=False)
+def init_project(project_name = "pyaedt_test", solution_type = "Transient", motor= None) :
+
+    version = motor.maxwell_export_option.ansys_electronic_version
+
+    m3d = Maxwell3d(version= version, new_desktop=True, non_graphical=False)
     project_root = paths.configure_path()
     save_path = os.path.join(project_root, "Ansys_Projects")
     if not os.path.exists(save_path):
