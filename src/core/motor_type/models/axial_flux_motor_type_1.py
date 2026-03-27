@@ -2,7 +2,6 @@ import math
 from types import SimpleNamespace
 from src.core.motor_type.models.MotorStateManager import MotorStateManager
 
-# Import các utility thực thi
 from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
 from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
@@ -21,13 +20,8 @@ pi = math.pi
 
 class AxialFluxMotorType1:
     def __init__(self):
-        # property dependence: 
-        # "material_database", "winding_data", "mechanical", "geometry", "calculation_data", "mesh", "reluctance_network", "drive"
-        
-        # State Manager
         self.motor_state_manager = MotorStateManager()
 
-        # empty property
         self.material_database = None
         self.winding_data = None
         self.mechanical = None
@@ -38,7 +32,6 @@ class AxialFluxMotorType1:
         self.drive = None
         self.record = SimpleNamespace()
     
-        # data
         self.material_data = SimpleNamespace(
             air         = "default",
             magnet_type = "NdFe30",
@@ -47,7 +40,7 @@ class AxialFluxMotorType1:
 
         self.winding_data = SimpleNamespace(
             phase          = 3,
-            turns          = 15,
+            turns          = 20,
             throw          = 1,
             parallel_path  = 1,
             winding_layer  = 2,
@@ -67,13 +60,13 @@ class AxialFluxMotorType1:
 
         self.geometry_data = SimpleNamespace(
             stator = SimpleNamespace(
-                slot_number          = 15,
+                slot_number          = 30,
                 stator_lam_dia       = 150 * 1e-3,
-                stator_bore_dia      = 50 * 1e-3,
-                slot_opening         = 5 * 1e-3,
+                stator_bore_dia      = 70 * 1e-3,
+                slot_opening         = 2 * 1e-3,
                 wdg_extension_inner  = 0,
                 wdg_extension_outer  = 0,
-                slot_width           = 7 * 1e-3,
+                slot_width           = 4 * 1e-3,
                 slot_depth           = 15 * 1e-3,
                 slot_corner_radius   = 0,
                 tooth_tip_depth      = 2 * 1e-3,
@@ -81,17 +74,17 @@ class AxialFluxMotorType1:
                 stator_length        = 25 * 1e-3
             ),
             rotor = SimpleNamespace(
-                pole_number          = 10,
+                pole_number          = 20,
                 rotor_lam_dia        = 150 * 1e-3,
-                magnet_arc           = 140,
+                magnet_arc           = 160,
                 magnet_embed_depth   = 5 * 1e-3,
-                magnet_depth         = 40 * 1e-3,
+                magnet_depth         = 30 * 1e-3,
                 magnet_segments      = 1,
                 banding_depth        = 0 * 1e-3,
                 shaft_dia            = 0 * 1e-3,
-                shaft_hole_diameter  = 50 * 1e-3,
-                airgap               = 2 * 1e-3,
-                magnet_length        = 4 * 1e-3,
+                shaft_hole_diameter  = 70 * 1e-3,
+                airgap               = 1.5 * 1e-3,
+                magnet_length        = 3 * 1e-3,
                 rotor_length         = 6 * 1e-3
             )
         )
@@ -99,22 +92,22 @@ class AxialFluxMotorType1:
         self.calculation_data = SimpleNamespace(
             convergence_settings = SimpleNamespace(
                 max_iteration          = 50,
-                max_relative_residual  = 0.5 *1e-2,     # %
+                max_relative_residual  = 0.1 * 1e-2,
                 material_relax         = 0.35
             ),
             general_options = SimpleNamespace(
                 n_point                = 21,
-                solve_cogging          = True,
-                solve_only_1_step      = True,
+                solve_cogging          = False,
+                solve_only_1_step      = False,
                 vectorized_optimization = True,
                 get_geometric_error    = False,
                 debug                  = True
             ),  
             export_inductance_options = SimpleNamespace(
                 export_inductance = False,
-                current_min           = 0.0,
-                current_max           = 20.0,
-                current_resolution    = 10
+                current_min       = 1.0,
+                current_max       = 15.0,
+                current_resolution = 10
             )  
         )
 
@@ -126,20 +119,20 @@ class AxialFluxMotorType1:
             n_r_out         = 1,
             n_theta         = 150,
             n_z_in_air      = 1,
-            n_z_rotor_yoke  = 4,
-            n_z_magnet      = 3,
-            n_z_airgap      = 4,
-            n_z_tooth_tip_1 = 3,
-            n_z_tooth_tip_2 = 5,
-            n_z_tooth_body  = 6,
-            n_z_stator_yoke = 4,
+            n_z_rotor_yoke  = 6,
+            n_z_magnet      = 5,
+            n_z_airgap      = 6,
+            n_z_tooth_tip_1 = 5,
+            n_z_tooth_tip_2 = 6,
+            n_z_tooth_body  = 8,
+            n_z_stator_yoke = 6,
             n_z_out_air     = 1,
             use_symmetry_factor = True,
             periodic_boundary   = True
         )
 
         self.drive_data = SimpleNamespace(
-            i_rms = 0.0,
+            i_rms = 20.0,
             phase_advanced = 0.0
         )
 
@@ -148,10 +141,10 @@ class AxialFluxMotorType1:
             use_default_option = True,
             custom_option = SimpleNamespace(
                 mesh_setting = SimpleNamespace(
-                    band_mapping_angle = pi / 180 # rad
+                    band_mapping_angle = pi / 180
                 ),
                 motion_setting = SimpleNamespace(
-                    shaft_speed = 3000 # rpm
+                    shaft_speed = 3000
                 )
             ),
             current_function = None,
@@ -159,10 +152,8 @@ class AxialFluxMotorType1:
                 solve_immediately = False,
                 solve_only_1_step = False
             )
-            
         )
-            
-    # Method
+
     def create_material_database(self): 
         self.material_database = MaterialDataBase(
             air         = self.material_data.air,
