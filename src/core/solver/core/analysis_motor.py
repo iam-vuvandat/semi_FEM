@@ -6,6 +6,7 @@ from tqdm import tqdm
 pi = math.pi
 from src.core.solver.utils.periodic_derivative import periodic_derivative
 from src.core.solver.utils.duplicate_data import duplicate_data
+from src.core.solver.utils.calculate_line_to_line_back_emf import calculate_line_to_line_back_emf
 
 
 def analysis_motor(motor, callback = None):
@@ -152,12 +153,14 @@ def analysis_motor(motor, callback = None):
 
     
     back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
-    
+    back_emf_line = calculate_line_to_line_back_emf(data_numpy=back_emf)
+
     mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data
     cogging = duplicate_data(data=cogging, half_open_interval=True).duplicated_data
 
     motor.record.flux_linkage = flux_linkage.copy()
     motor.record.back_emf = back_emf.copy()
+    motor.record.back_emf_line = back_emf_line.copy()
     motor.record.mst_data = mst_data.copy()
     motor.record.mechanical_power = mechanical_power.copy()
     motor.record.cogging = cogging.copy()

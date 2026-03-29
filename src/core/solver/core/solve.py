@@ -93,6 +93,10 @@ def solve(reluctance_network,
     t_end_total = time.perf_counter()
     total_time = t_end_total - t_start_total
     
+
+
+
+    # -- Debug -- 
     print("\n" + "="*50)
     print(f"{B_c}PERFORMANCE SUMMARY (PYPARDISO SOLVER){RESET}")
     print("-"*50)

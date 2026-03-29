@@ -1,19 +1,20 @@
 import math
 from types import SimpleNamespace
 from src.core.motor_type.models.MotorStateManager import MotorStateManager
+from src.core.core_class.models.Drive import Drive
+from src.core.core_class.models.Mechanical import Mechanical
+from src.core.material.models.MaterialDataBase import MaterialDataBase
+from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
+from src.core.core_class.models.ResultPlotter import ResultPlotter
 
 from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
-from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
-from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.rotate_rotor import rotate_rotor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh import create_adaptive_mesh
 from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
-from src.core.core_class.models.Drive import Drive
-from src.core.core_class.models.Mechanical import Mechanical
 from src.core.motor_type.utils.for_export_maxwell.update_maxwell_settings import update_maxwell_settings
 
 pi = math.pi
@@ -21,6 +22,7 @@ pi = math.pi
 class AxialFluxMotorType1:
     def __init__(self):
         self.motor_state_manager = MotorStateManager()
+        self.result_plotter = ResultPlotter(motor=self)
 
         self.material_database = None
         self.winding_data = None
