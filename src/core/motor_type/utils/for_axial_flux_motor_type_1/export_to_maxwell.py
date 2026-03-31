@@ -3,7 +3,6 @@ import numpy as np
 import math 
 pi = math.pi
 
-from src.core.motor_type.utils.for_create_geometry.rotate_point_z import rotate_point_z
 from src.core.motor_type.utils.for_export_maxwell.init_window import init_window
 from src.core.motor_type.utils.for_export_maxwell.init_project import init_project
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_rotor_yoke import create_rotor_yoke
@@ -13,6 +12,7 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.cr
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_winding import create_winding
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.create_balloon import create_balloon
 from src.core.motor_type.utils.for_export_maxwell.init_solver import init_solver
+from src.core.motor_type.utils.for_export_maxwell.flux_linkage_export import flux_linkage_export
 
 def export_to_maxwell(motor, callback=None):
     
@@ -48,8 +48,8 @@ def export_to_maxwell(motor, callback=None):
         and "Sheet" not in obj      
     ]
 
-    if callback: callback("Assigning mesh", 85)
-    maximum_element_length = magnet_length * 2 
+    
+    maximum_element_length = magnet_length * 6
     m3d.mesh.assign_length_mesh(
         assignment=mesh_targets,
         maximum_length=f"{maximum_element_length}mm",
@@ -58,6 +58,10 @@ def export_to_maxwell(motor, callback=None):
     )
 
     init_solver(m3d = m3d, motor = motor)
+    flux_linkage_export(motor = motor, m3d = m3d)
+    
+
+
     m3d.save_project()
 
 

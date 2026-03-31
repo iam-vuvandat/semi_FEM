@@ -2,7 +2,7 @@ import os
 import glob
 import time
 import inspect
-from pyaedt import Maxwell3d
+from ansys.aedt.core import Maxwell3d
 
 os.system("taskkill /F /IM ansysedt.exe /T")
 os.system("taskkill /F /IM AnsysGRPC.exe /T")

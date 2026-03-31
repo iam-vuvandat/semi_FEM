@@ -28,23 +28,43 @@ def _resolve_full_path(filename: str, filepath: str = None) -> Path:
 
 def save_motor(motor_obj, filename: str, filepath: str = None, callback=None):
     """
-    Lưu motor an toàn với callback thông báo trạng thái.
-    Chiến thuật: Ghi vào file .tmp trước, sau đó mới đổi tên thành .mbgrn chính thức.
+    Lưu motor an toàn. Chỉ lưu các thuộc tính trong danh sách attributes_to_save.
     """
-    sys.setrecursionlimit(100000) # Tăng giới hạn đệ quy cho các mesh phức tạp
+    sys.setrecursionlimit(100000) 
     full_path = _resolve_full_path(filename, filepath)
     temp_path = full_path.with_suffix('.tmp')
+
+    # Quy tắc: Chỉ save những thứ này để tránh file quá nặng
+    attributes_to_save = [
+        'geometry_data', 
+        'winding_data', 
+        'material_data', 
+        'mechanical', 
+        'record'
+    ]
 
     if callback: callback(f"Preparing to save: {full_path.name}...")
 
     try:
+        # Tạo một dictionary chứa trạng thái được lọc
+        state_to_save = {}
+        for attr in attributes_to_save:
+            if hasattr(motor_obj, attr):
+                state_to_save[attr] = getattr(motor_obj, attr)
+            else:
+                logger.warning(f"Attribute '{attr}' not found, skipping.")
+
         # 1. Ghi vào file tạm (.tmp)
+        # Luu mot dictionary chua 'type' (ten class) va 'state' (du lieu)
         with open(temp_path, "wb") as f:
-            pickle.dump({"motor": motor_obj}, f, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump({
+                "class_name": motor_obj.__class__.__name__,
+                "state": state_to_save
+            }, f, protocol=pickle.HIGHEST_PROTOCOL)
         
         if callback: callback("Finalizing file structure...")
 
-        # 2. Ghi đè file chính thức (Atomic operation)
+        # 2. Ghi đè file chính thức
         if temp_path.exists():
             shutil.move(str(temp_path), str(full_path))
         
@@ -56,11 +76,13 @@ def save_motor(motor_obj, filename: str, filepath: str = None, callback=None):
         logger.error(f"Save error: {e}")
         if callback: callback(f"Error while saving: {str(e)}")
         if temp_path.exists():
-            temp_path.unlink() # Xóa file tạm bị hỏng
+            temp_path.unlink() 
         return False
 
 def load_motor(filename: str, filepath: str = None, callback=None):
-    """Nạp motor và thông báo trạng thái qua callback."""
+    """
+    Nạp motor và tái cấu trúc lại đối tượng từ state đã lưu.
+    """
     sys.setrecursionlimit(1000000000)
     full_path = _resolve_full_path(filename, filepath)
     
@@ -76,8 +98,14 @@ def load_motor(filename: str, filepath: str = None, callback=None):
         with open(full_path, "rb") as f:
             data = pickle.load(f)
         
-        motor = data.get("motor")
-        if motor:
+        state = data.get("state")
+        if state:
+            # Tao mot doi tuong rỗng hoặc Dictionary giả lập Object
+            # Cách an toàn nhất để tránh lỗi Circular Import là trả về một SimpleNamespace
+            # Hoặc đơn giản là một object chứa các thuộc tính đã lưu
+            from types import SimpleNamespace
+            motor = SimpleNamespace(**state)
+            
             if callback: callback(f"Load completed: {full_path.name}")
             return motor
         else:

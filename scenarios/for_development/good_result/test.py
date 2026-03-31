@@ -3,21 +3,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import time
-from matplotlib.widgets import Slider
-from mpl_toolkits.mplot3d import Axes3D
 
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
-from src.core.storage.core import motor_io
 
-# 1. Khởi tạo đối tượng
+# Option
+export_maxwell = True
+show_geometry = False
+solve_semiFEM = True
+
+# 1. Init Object
 aft = AxialFluxMotorType1()
 
-# 2. Khai báo Material Data
+# 2. Material Data
 aft.material_data.air = "default"
 aft.material_data.magnet_type = "NdFe30"
 aft.material_data.iron_type = "steel_1008"
 
-# 3. Khai báo Winding Data
+# 3. Winding Data
 aft.winding_data.phase = 3
 aft.winding_data.turns = 20
 aft.winding_data.throw = 1
@@ -66,7 +68,7 @@ calc.convergence_settings.max_iteration = 50
 calc.convergence_settings.max_relative_residual = 0.1 * 1e-2 # %
 calc.convergence_settings.material_relax = 0.35
 
-calc.general_options.n_point = 21
+calc.general_options.n_point = 20
 calc.general_options.solve_cogging = True
 calc.general_options.solve_only_1_step = False
 calc.general_options.vectorized_optimization = True
@@ -95,13 +97,13 @@ mesh.n_z_tooth_tip_1 = 3
 mesh.n_z_tooth_tip_2 = 3
 mesh.n_z_tooth_body = 3
 mesh.n_z_stator_yoke = 3
-mesh.n_z_out_air = 1
+mesh.n_z_out_air = 1 
 mesh.use_symmetry_factor = True
 mesh.periodic_boundary = True
 aft.just_changed("mesh")
 
 # 9. Khai báo Drive Data
-aft.drive_data.i_rms = 10
+aft.drive_data.i_rms = 10.0
 aft.drive_data.phase_advanced = 0.0
 aft.just_changed("drive")
 
@@ -114,16 +116,22 @@ export.custom_option.motion_setting.shaft_speed = 3000
 export.solver_option.solve_immediately = True
 export.solver_option.solve_only_1_step = False
 
-# --- Thực thi mô phỏng ---
-aft.require("geometry")
-#aft.geometry.show()
+if export_maxwell:
+    aft.export_to_maxwell()
+
+if show_geometry:
+    aft.require("geometry")
+    aft.geometry.show()
+
+if solve_semiFEM:
+    aft.analysis_motor()
+    aft.data_processor.plot(horizontal_axis = "time", plot_all = True)
+    aft.data_processor.compare_flux_linkage(horizontal_axis= "time")
+    aft.data_processor.compare_back_emf(horizontal_axis= "time")
+    aft.data_processor.compare_back_emf_line(horizontal_axis= "time")
+    aft.display()
 
 
-aft.analysis_motor()
 
-aft.result_plotter.plot(plot_all = True)
 
-aft.display()
 
-# Export to maxwell 
-#aft.export_to_maxwell()

@@ -25,19 +25,20 @@ def update_maxwell_settings(motor):
     omega_e = (speed_rpm * 2 * pi / 60) * pole_pairs
     beta_rad = math.radians(phase_advanced)
     
-    # Tao chuoi phuong trinh cho tung pha
+    # Tao chuoi phuong trinh cho tung pha khop voi logic Drive
     for k in range(int(phase_number)):
         angle_shift = (2 * pi * k) / phase_number
-        # Phi phan anh dung phep bien doi Park nguoc trong Drive
-        phi = beta_rad + angle_shift 
-        func_str = f"{round(i_peak, 4)} * cos({round(omega_e, 4)} * Time + {round(phi, 4)})A"
+        # Phi phan anh dung phep bien doi Park/Clarke nguoc dung ham sin
+        phi = -angle_shift + beta_rad
+        
+        # Format chuoi khop 100% voi thuc te tinh toan so
+        func_str = f"-{round(i_peak, 4)} * sin({round(omega_e, 4)} * Time + ({round(phi, 4)}))"
         functions.append(func_str)
         
     motor.maxwell_export_option.current_function = functions
 
 # --- Script Test ---
 if __name__ == "__main__":
-    # Tao cau truc lop gia lap (Mock) de khop voi yeu cau cua ham
     class MockObject:
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
@@ -45,7 +46,6 @@ if __name__ == "__main__":
             if not hasattr(self, name):
                 raise AttributeError(f"Missing required attribute: {name}")
 
-    # Khoi tao cac thanh phan con
     mock_winding = MockObject(phase=3)
     mock_rotor = MockObject(pole_number=8)
     mock_geometry = MockObject(rotor=mock_rotor)
@@ -53,7 +53,6 @@ if __name__ == "__main__":
     mock_drive = MockObject(i_rms=10.0, phase_advanced=30.0)
     mock_export = MockObject(current_function=[])
 
-    # Khoi tao doi tuong motor tong the
     motor_test = MockObject(
         winding_data=mock_winding,
         geometry_data=mock_geometry,
@@ -62,10 +61,8 @@ if __name__ == "__main__":
         maxwell_export_option=mock_export
     )
 
-    # Thuc thi ham
     update_maxwell_settings(motor_test)
 
-    # In ket qua kiem tra
-    print("--- Maxwell Current Functions Export ---")
+    print("--- Maxwell Current Functions Export (Synced with Drive) ---")
     for i, func in enumerate(motor_test.maxwell_export_option.current_function):
         print(f"Phase {i}: {func}")

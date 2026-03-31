@@ -40,7 +40,6 @@ class Drive:
 
     @property
     def current_function(self):
-        """Hien thi ham dong dien phai khop voi calculate_n_phase_currents."""
         functions = []
         i_peak = self.i_rms * math.sqrt(2)
         speed_rpm = getattr(self.mechanical, 'speed_rpm', 3000)
@@ -49,10 +48,11 @@ class Drive:
         
         for k in range(int(self.phase_number)):
             angle_shift = (2 * pi * k) / self.phase_number
-            # Su dung ham cos de phan anh dung phep bien doi Park nguoc
-            # Bo pi/2 de khong bi lech pha voi bo giai
-            phi = beta_rad + angle_shift 
-            func_str = f"{round(i_peak, 4)} * cos({round(omega_e, 4)} * Time + {round(phi, 4)})A"
+            # Phi duoc tinh toan de khop 100% voi phep bien doi Park/Clarke nguoc
+            # Cong thuc: i_k = -i_peak * sin(omega_e*t - angle_shift + beta)
+            phi = -angle_shift + beta_rad
+            
+            func_str = f"-{round(i_peak, 4)} * sin({round(omega_e, 4)} * Time + ({round(phi, 4)}))A"
             functions.append(func_str)
         return functions
 

@@ -5,7 +5,7 @@ from src.core.core_class.models.Drive import Drive
 from src.core.core_class.models.Mechanical import Mechanical
 from src.core.material.models.MaterialDataBase import MaterialDataBase
 from src.core.core_class.models.ReluctanceNetwork import ReluctanceNetwork
-from src.core.core_class.models.ResultPlotter import ResultPlotter
+from src.core.core_class.models.DataProcessor import DataProcessor
 
 from src.core.motor_type.utils.for_winding.generate_motor_winding_analysis import generate_motor_winding_analysis
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_geometry import create_geometry
@@ -22,7 +22,7 @@ pi = math.pi
 class AxialFluxMotorType1:
     def __init__(self):
         self.motor_state_manager = MotorStateManager()
-        self.result_plotter = ResultPlotter(motor=self)
+        self.data_processor = DataProcessor(motor=self)
 
         self.material_database = None
         self.winding_data = None
