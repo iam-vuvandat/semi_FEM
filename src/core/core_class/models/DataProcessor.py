@@ -1,5 +1,7 @@
+import paths
 import numpy as np
 import matplotlib.pyplot as plt
+from src.core.solver.utils.synchronize_signals import synchronize_signals
 from mpl_toolkits.mplot3d import Axes3D
 
 class DataProcessor:
@@ -11,7 +13,7 @@ class DataProcessor:
         record = self.motor.record
         n_phase = self.motor.winding_data.phase
        
-        shaft_speed = (self.motor.mechanical.shaft_speed * np.pi * 2) / 60 # rad/s
+        shaft_speed = (self.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 # rad/s
 
         def get_x_axis(theta_data):
             if horizontal_axis == "time":
@@ -182,9 +184,10 @@ class DataProcessor:
         plt.show()
     
     def compare_flux_linkage(self, horizontal_axis = "mechanical_position"):
+        self.synchronize_signal(data_true = self.motor.record.flux_linkage, data_pred = self.motor.record.flux_linkage_fem)
         record = self.motor.record
         n_phase = self.motor.winding_data.phase
-        shaft_speed = (self.motor.mechanical.shaft_speed * np.pi * 2) / 60 
+        shaft_speed = (self.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
 
         def get_x_axis(theta_data):
             if horizontal_axis == "time":
@@ -214,9 +217,11 @@ class DataProcessor:
             plt.show()
 
     def compare_back_emf(self, horizontal_axis = "mechanical_position"):
+        self.synchronize_signal(data_true = self.motor.record.back_emf, data_pred = self.motor.record.back_emf_fem)
+
         record = self.motor.record
         n_phase = self.motor.winding_data.phase
-        shaft_speed = (self.motor.mechanical.shaft_speed * np.pi * 2) / 60 # rad/s
+        shaft_speed = (self.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 # rad/s
 
         def get_x_axis(theta_data):
             if horizontal_axis == "time":
@@ -251,9 +256,11 @@ class DataProcessor:
             plt.show()
 
     def compare_back_emf_line(self, horizontal_axis = "mechanical_position"):
+        self.synchronize_signal(data_true = self.motor.record.back_emf_line, data_pred = self.motor.record.back_emf_line_fem)
+
         record = self.motor.record
         n_phase = self.motor.winding_data.phase
-        shaft_speed = (self.motor.mechanical.shaft_speed * np.pi * 2) / 60 
+        shaft_speed = (self.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
 
         def get_x_axis(theta_data):
             if horizontal_axis == "time":
@@ -291,5 +298,7 @@ class DataProcessor:
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             plt.show()
+    
+    def synchronize_signal(self,data_true, data_pred, is_periodic=True, half_open_interval=True):
+        synchronize_signals(data_true = data_true, data_pred = data_pred, is_periodic= is_periodic, half_open_interval= half_open_interval)
 
-            

@@ -4,6 +4,7 @@ import os
 from src.core.solver.utils.convert_to_dq import convert_to_dq
 from src.core.solver.utils.periodic_derivative import periodic_derivative
 from src.core.solver.utils.calculate_line_to_line_back_emf import calculate_line_to_line_back_emf
+from src.core.solver.utils.synchronize_signals import synchronize_signals
 
 def flux_linkage_export(motor, m3d):
     project_root = paths.configure_path()
@@ -102,11 +103,13 @@ def flux_linkage_export(motor, m3d):
         flux_phases,        
         current_positions   
     ))
+    combined_data = combined_data[:,:-1]
 
+    
 
     # back emf 
     back_emf = periodic_derivative(data=combined_data[2:], half_open_interval=True).derivative * omega_m
-    
+
     back_emf_line = calculate_line_to_line_back_emf(data_numpy=back_emf)
 
     # Save to record

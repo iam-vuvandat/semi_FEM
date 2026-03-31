@@ -1,66 +1,53 @@
-import paths
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.optimize import minimize_scalar
+from scipy.interpolate import interp1d
 from src.core.solver.utils.get_waveform_nrmse import get_waveform_nrmse
 
-def synchronize_signals(data_true, data_pred):
-    # Kiem tra va loai bo diem cuoi neu trung voi diem dau (tinh tuan hoan)
-    if np.allclose(data_pred[:, 0], data_pred[:, -1]):
-        data_pred = data_pred[:, :-1]
-        
+def synchronize_signals(data_true, data_pred, is_periodic=True, half_open_interval=True):
+    # Sao chep truc toa do de lam tham chieu co dinh
+    x_fixed = data_pred[-1].copy()
+    n_rows, n_points = data_pred.shape
+    x_min, x_max = np.min(x_fixed), np.max(x_fixed)
+    
+    if half_open_interval and n_points > 1:
+        dx = (x_max - x_min) / (n_points - 1)
+        period = (x_max - x_min) + dx
+    else:
+        period = x_max - x_min
+
     def objective(shift):
         temp_pred = data_pred.copy()
-        temp_pred[-1] = data_pred[-1] + shift
+        if is_periodic and period > 0:
+            new_x = (x_fixed + shift - x_min) % period + x_min
+            sort_idx = np.argsort(new_x)
+            temp_pred = temp_pred[:, sort_idx]
+            temp_pred[-1] = new_x[sort_idx]
+            _, unique_indices = np.unique(temp_pred[-1], return_index=True)
+            temp_pred = temp_pred[:, unique_indices]
+        else:
+            temp_pred[-1] = x_fixed + shift
+            
         return get_waveform_nrmse(data_true, temp_pred, num_points=100, row_index=2)
 
-    res = minimize_scalar(objective, bounds=(-np.pi, np.pi), method='bounded')
+    search_bound = period / 2 if is_periodic else np.pi
+    res = minimize_scalar(objective, bounds=(-search_bound, search_bound), method='bounded')
     optimal_shift = res.x
 
-    data_synchronized = data_pred.copy()
-    data_synchronized[-1] = data_pred[-1] + optimal_shift
+    # Sua truc tiep tren data_pred
+    for i in range(n_rows - 1):
+        y_orig = data_pred[i].copy() 
+        
+        if is_periodic and period > 0:
+            x_ext = np.concatenate([x_fixed - period, x_fixed, x_fixed + period])
+            y_ext = np.concatenate([y_orig, y_orig, y_orig])
+            idx_ext = np.argsort(x_ext)
+            f_interp = interp1d(x_ext[idx_ext], y_ext[idx_ext], kind='quadratic', fill_value="extrapolate")
+            
+            # Ghi de truc tiep vao hang i cua mảng gốc
+            data_pred[i, :] = f_interp(x_fixed - optimal_shift)
+        else:
+            f_interp = interp1d(x_fixed, y_orig, kind='quadratic', fill_value="extrapolate", bounds_error=False)
+            data_pred[i, :] = f_interp(x_fixed - optimal_shift)
 
-    return optimal_shift, data_synchronized
-
-if __name__ == "__main__":
-    # 1. Gia lap du lieu co diem cuoi trung diem dau (0 den 2*pi inclusive)
-    theta = np.linspace(0, 2 * np.pi, 101) # 101 diem de diem cuoi la 2*pi
-    
-    psi_true = 0.05 * np.sin(theta)
-    # Tin hieu du doan bi lech pha va co diem cuoi trung diem dau
-    psi_pred = 0.048 * np.sin(theta - 0.5)
-
-    d_true = np.zeros((4, 101))
-    d_true[2] = psi_true
-    d_true[-1] = theta
-
-    d_pred = np.zeros((4, 101))
-    d_pred[2] = psi_pred
-    d_pred[-1] = theta
-
-    # 2. Thuc hien dong bo hoa (Ham se tu loai bo diem thu 101 cua d_pred)
-    shift_val, d_sync = synchronize_signals(d_true, d_pred)
-
-    # 3. Tinh toan sai so
-    nrmse_before = get_waveform_nrmse(d_true, d_pred, row_index=2)
-    nrmse_after = get_waveform_nrmse(d_true, d_sync, row_index=2)
-
-    print(f"Ket qua dieu chinh lech pha:")
-    print(f"- So luong diem ban dau: {d_pred.shape[1]}")
-    print(f"- So luong diem sau khi loc: {d_sync.shape[1]}")
-    print(f"- Goc lech tim duoc: {shift_val:.6f} rad")
-    print(f"- NRMSE sau khi dong bo: {nrmse_after:.4f} %")
-
-    # 4. Ve do thi
-    plt.figure(figsize=(10, 6))
-    plt.plot(d_true[-1], d_true[2], 'k-', label='True Signal (FEM)', linewidth=2)
-    plt.plot(d_pred[-1], d_pred[2], 'r--', label='Original Pred (Redundant)', alpha=0.5)
-    plt.plot(d_sync[-1], d_sync[2], 'g:', label='Synchronized & Cleaned', linewidth=2.5)
-    
-    plt.title("Synchronize Signals with Redundant Point Removal", fontweight='bold')
-    plt.xlabel("Theta (rad)")
-    plt.ylabel("Flux (Wb)")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
+    # Hang cuoi data_pred[-1] khong thay doi do da co dinh tu dau
+    return optimal_shift
