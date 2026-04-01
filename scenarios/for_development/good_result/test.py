@@ -1,20 +1,18 @@
 import paths
-import numpy as np
-import matplotlib.pyplot as plt
 import math
-import time
+pi = math.pi
+from types import SimpleNamespace
 
 from src.core.storage.core import motor_io 
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 
-
 # Option
-reload_motor = True
+reload_motor = False
 file_name = "motor_test"
 
-export_maxwell = False
+export_maxwell = True
 show_geometry = False
-solve_semiFEM = False
+solve_semiFEM = True
 
 if reload_motor:
     aft = motor_io.load_motor(filename = file_name)
@@ -117,13 +115,24 @@ else:
     aft.just_changed("drive")
 
     # 10. Khai báo Maxwell Export Option
-    export = aft.maxwell_export_option
-    export.ansys_electronic_version = "2025.2"
-    export.use_default_option = True
-    export.custom_option.mesh_setting.band_mapping_angle = math.pi / 180
-    export.custom_option.motion_setting.shaft_speed = 3000
-    export.solver_option.solve_immediately = True
-    export.solver_option.solve_only_1_step = False
+    aft.maxwell_export_option = SimpleNamespace(
+            ansys_electronic_version = "2025.2",
+            use_default_option = True,
+            custom_option = SimpleNamespace(
+                mesh_setting = SimpleNamespace(
+                    band_mapping_angle = pi / 180,
+                    maximum_element_length = 20 * 1e-3 # unit: m
+                ),
+                motion_setting = SimpleNamespace(
+                    shaft_speed = 3000
+                )
+            ),
+            current_function = None,
+            solver_option = SimpleNamespace(
+                solve_immediately = False,
+                solve_only_1_step = False
+            )
+        )
 
 if export_maxwell:
     aft.export_to_maxwell()
@@ -138,12 +147,28 @@ if solve_semiFEM:
     if reload_motor is False:
         motor_io.save_motor(motor_obj=aft,filename= file_name)
 
-#aft.data_processor.plot(horizontal_axis = "time", plot_all = True)
-aft.data_processor.compare_flux_linkage(horizontal_axis= "time")
-aft.data_processor.compare_back_emf(horizontal_axis= "time")
-aft.data_processor.compare_back_emf_line(horizontal_axis= "time")
+# Visualization
+data_processor = aft.data_processor
 
-aft.display()
+data_processor.plot_flux_linkage(horizontal_axis="time")
+data_processor.plot_back_emf(horizontal_axis="time")
+data_processor.plot_back_emf_line(horizontal_axis="time")
+data_processor.plot_current(horizontal_axis="time")
+data_processor.plot_torque(horizontal_axis="time")
+data_processor.plot_axial_force(horizontal_axis="time")
+data_processor.plot_cogging_torque(horizontal_axis="time")
+data_processor.plot_mechanical_power(horizontal_axis="time")
+data_processor.plot_inductance_map()
+
+data_processor.compare_flux_linkage(horizontal_axis="time")
+data_processor.compare_back_emf(horizontal_axis="time")
+data_processor.compare_back_emf_line(horizontal_axis="time")
+data_processor.compare_torque(horizontal_axis="time")
+data_processor.compare_mechanical_power(horizontal_axis="time")
+
+
+
+#aft.display()
 
 
 

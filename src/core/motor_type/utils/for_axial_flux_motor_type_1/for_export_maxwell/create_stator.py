@@ -1,3 +1,4 @@
+from networkx import single_target_shortest_path
 import numpy as np
 
 def create_stator(motor,m3d):
@@ -166,3 +167,5 @@ def create_stator(motor,m3d):
     stator_parts = ["tooth_tip_1", "tooth_tip_2", "tooth_body", "stator_yoke"] + new_teeth
     m3d.modeler.unite(assignment=stator_parts)
     m3d.modeler[stator_parts[0]].name = "stator"
+
+    return stator_parts

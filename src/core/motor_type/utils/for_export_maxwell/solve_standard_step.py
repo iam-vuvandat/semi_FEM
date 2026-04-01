@@ -1,6 +1,10 @@
+import paths
 import math
 
-def init_solver(m3d,motor):
+from src.core.motor_type.utils.for_export_maxwell.flux_linkage_export import flux_linkage_export
+from src.core.motor_type.utils.for_export_maxwell.torque_export import torque_export
+
+def solver_standard_step(m3d,motor):
 
     setup_name = "Setup1"
     if setup_name in m3d.setup_names:
@@ -42,3 +46,10 @@ def init_solver(m3d,motor):
     if motor.maxwell_export_option.solver_option.solve_immediately :
         for setup_name in m3d.setup_names:
             m3d.analyze_setup(setup_name)
+
+            flux_linkage_export(motor = motor, m3d = m3d)
+            torque_export(motor = motor, m3d = m3d)
+
+
+
+    

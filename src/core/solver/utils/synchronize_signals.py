@@ -1,3 +1,4 @@
+import paths
 import numpy as np
 from scipy.optimize import minimize_scalar
 from scipy.interpolate import interp1d

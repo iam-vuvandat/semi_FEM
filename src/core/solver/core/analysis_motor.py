@@ -155,7 +155,6 @@ def analysis_motor(motor, callback = None):
     back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
     back_emf_line = calculate_line_to_line_back_emf(data_numpy=back_emf)
 
-    mst_data = duplicate_data(data=mst_data, half_open_interval=True).duplicated_data
     cogging = duplicate_data(data=cogging, half_open_interval=True).duplicated_data
 
     motor.record.flux_linkage = flux_linkage.copy()

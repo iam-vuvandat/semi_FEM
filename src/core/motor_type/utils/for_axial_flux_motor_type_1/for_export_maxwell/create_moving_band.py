@@ -57,4 +57,6 @@ def create_moving_band(motor, m3d):
     rotating_parts = m3d.modeler.object_names[:]
     m3d.eddy_effects_on(rotating_parts, enable_eddy_effects=False)
 
+    return moving_band
+
 
