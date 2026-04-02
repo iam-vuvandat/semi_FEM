@@ -7,7 +7,7 @@ from src.core.storage.core import motor_io
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 
 # Option
-reload_motor = False
+reload_motor = True
 file_name = "motor_test"
 
 export_maxwell = True
@@ -127,7 +127,7 @@ else:
                 mesh_setting = SimpleNamespace(
                     band_mapping_angle = pi / 180,
                     maximum_element_length = 20 * 1e-3, # unit: m
-                    airgap_element_layer = 6
+                    airgap_element_layer = 2
                 ),
                 motion_setting = SimpleNamespace(
                     shaft_speed = 3000
