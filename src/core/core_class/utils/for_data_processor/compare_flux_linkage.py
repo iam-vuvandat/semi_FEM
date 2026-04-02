@@ -20,12 +20,17 @@ def compare_flux_linkage(data_processor, horizontal_axis = "mechanical_position"
     if hasattr(record, "flux_linkage") and hasattr(record, "flux_linkage_fem"):
         # 1. Lấy dữ liệu thô
         data_sf = record.flux_linkage
-        data_fem_raw = record.flux_linkage_fem
         
-        # 2. Đồng bộ hóa dữ liệu
-        data_fem = data_processor.synchronize_signal(data_true = data_sf, 
-                                                     data_pred = data_fem_raw)
+        # TẠO BẢN SAO để synchronize_signal chỉnh sửa trực tiếp trên bản sao này
+        # Điều này giúp bảo vệ dữ liệu gốc trong record.flux_linkage_fem
+        data_fem = record.flux_linkage_fem.copy()
         
+        # 2. Đồng bộ hóa dữ liệu (In-place modification)
+        # Không gán biến (data_fem = ...) vì hàm trả về None
+        data_processor.synchronize_signal(data_true = data_sf, 
+                                          data_pred = data_fem)
+        
+        # Sau khi gọi hàm trên, data_fem đã được cập nhật dữ liệu mới
         x_sf, x_label = get_x_axis(data_sf[-1, :])
         x_fem, _ = get_x_axis(data_fem[-1, :])
 

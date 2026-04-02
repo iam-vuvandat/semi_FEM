@@ -11,7 +11,6 @@ def compare_back_emf_line(data_processor, horizontal_axis = "mechanical_position
     Thực hiện đồng bộ hóa tín hiệu và tính toán sai số NRMSE, Peak, RMS.
     """
     record = data_processor.motor.record
-    # Số lượng dây (thường là 3 cho hệ 3 pha: AB, BC, CA)
     s = data_processor.plot_style
     shaft_speed = (data_processor.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
 
@@ -21,21 +20,25 @@ def compare_back_emf_line(data_processor, horizontal_axis = "mechanical_position
         else:
             return theta_data, r'Rotor Position ($rad$)'
 
-    # Kiểm tra sự tồn tại của dữ liệu Back-EMF Line
     if hasattr(record, "back_emf_line") and hasattr(record, "back_emf_line_fem"):
         
-        # 1. Chuẩn bị dữ liệu để đồng bộ hóa (Đính kèm trục theta từ flux_linkage)
+        # 1. Chuẩn bị dữ liệu thô
         theta_sf = record.flux_linkage[-1, :]
         theta_fem = record.flux_linkage_fem[-1, :]
         
-        data_sf_raw = np.vstack((record.back_emf_line, theta_sf))
-        data_fem_raw = np.vstack((record.back_emf_line_fem, theta_fem))
+        # Dữ liệu MRN làm chuẩn (True)
+        data_sf = np.vstack((record.back_emf_line, theta_sf))
         
-        # 2. Đồng bộ hóa dữ liệu (Căn chỉnh Maxwell theo semi-FEM)
-        data_fem = data_processor.synchronize_signal(data_true = data_sf_raw, 
-                                                     data_pred = data_fem_raw)
-        data_sf = data_sf_raw
+        # Khởi tạo data_fem như một bản sao/mảng mới để được modify in-place
+        # Việc tạo bản sao giúp tránh làm hỏng dữ liệu gốc trong record
+        data_fem = np.vstack((record.back_emf_line_fem, theta_fem))
         
+        # 2. Đồng bộ hóa dữ liệu (In-place modification)
+        # KHÔNG gán biến ở đây vì method synchronize_signal trả về None
+        data_processor.synchronize_signal(data_true = data_sf, 
+                                          data_pred = data_fem)
+        
+        # Sau khi gọi, data_fem đã được cập nhật dữ liệu mới từ hàm synchronize_signals
         x_sf, x_label = get_x_axis(data_sf[-1, :])
         x_fem, _ = get_x_axis(data_fem[-1, :])
 
@@ -49,7 +52,6 @@ def compare_back_emf_line(data_processor, horizontal_axis = "mechanical_position
         peak_fem = np.max(np.abs(wave_fem))
         error_peak = np.abs(peak_mrn - peak_fem) / peak_fem * 100
 
-        # Mean Absolute Error để đánh giá trị trung bình độ lớn
         average_mrn = np.mean(np.abs(wave_mrn))
         average_fem = np.mean(np.abs(wave_fem))
         error_average = np.abs(average_mrn - average_fem) / average_fem * 100
@@ -61,7 +63,6 @@ def compare_back_emf_line(data_processor, horizontal_axis = "mechanical_position
         # 4. Vẽ đồ thị
         fig, ax = plt.subplots(figsize=(16, 10))
         
-        # Xác định số lượng cặp dây (ví dụ 3 pha có 3 dây AB, BC, CA)
         n_lines = data_sf.shape[0] - 1 
 
         if show_all_phases:

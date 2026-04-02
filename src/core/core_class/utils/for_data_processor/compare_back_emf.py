@@ -21,19 +21,20 @@ def compare_back_emf(data_processor, horizontal_axis = "mechanical_position",
     if hasattr(record, "back_emf") and hasattr(record, "back_emf_fem"):
         
         # 1. Chuẩn bị dữ liệu để đồng bộ hóa
-        # Vì back_emf thường chỉ gồm các hàng pha, ta cần đính kèm trục theta 
-        # (lấy từ hàng cuối của flux_linkage tương ứng) để hàm synchronize_signal hoạt động
+        # Lấy trục theta từ flux_linkage (SF và FEM)
         theta_sf = record.flux_linkage[-1, :]
         theta_fem = record.flux_linkage_fem[-1, :]
         
-        data_sf_raw = np.vstack((record.back_emf, theta_sf))
-        data_fem_raw = np.vstack((record.back_emf_fem, theta_fem))
+        # Khởi tạo mảng dữ liệu (np.vstack tạo ra mảng mới, an toàn để modify)
+        data_sf = np.vstack((record.back_emf, theta_sf))
+        data_fem = np.vstack((record.back_emf_fem, theta_fem))
         
-        # 2. Đồng bộ hóa dữ liệu
-        data_fem = data_processor.synchronize_signal(data_true = data_sf_raw, 
-                                                     data_pred = data_fem_raw)
-        data_sf = data_sf_raw # Sử dụng luôn bản đã có theta ở cuối
+        # 2. Đồng bộ hóa dữ liệu (In-place modification)
+        # Không gán biến vì method synchronize_signal trả về None
+        data_processor.synchronize_signal(data_true = data_sf, 
+                                          data_pred = data_fem)
         
+        # Sau khi gọi, data_fem đã được cập nhật dữ liệu mới từ hàm synchronize_signals
         x_sf, x_label = get_x_axis(data_sf[-1, :])
         x_fem, _ = get_x_axis(data_fem[-1, :])
 
@@ -47,8 +48,6 @@ def compare_back_emf(data_processor, horizontal_axis = "mechanical_position",
         peak_fem = np.max(np.abs(wave_fem))
         error_peak = np.abs(peak_mrn - peak_fem) / peak_fem * 100
 
-        # Đối với Back-EMF, giá trị trung bình đại số thường xấp xỉ 0, 
-        # nên ta tính trung bình trị tuyệt đối (Mean Absolute)
         average_mrn = np.mean(np.abs(wave_mrn))
         average_fem = np.mean(np.abs(wave_fem))
         error_average = np.abs(average_mrn - average_fem) / average_fem * 100
@@ -82,7 +81,7 @@ def compare_back_emf(data_processor, horizontal_axis = "mechanical_position",
         plt.tight_layout()
         plt.show()
 
-        # 5. Đóng gói kết quả vào record
+        # 5. Đóng gói kết quả
         result = SimpleNamespace(
             nrmse = nrmse_val, 
             peak_mrn = peak_mrn, 

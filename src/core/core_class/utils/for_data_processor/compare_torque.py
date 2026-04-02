@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from src.core.solver.utils.get_waveform_nrmse import get_waveform_nrmse
 from types import SimpleNamespace
 
-def compare_torque(data_processor, horizontal_axis = "mechanical_position"):
+def compare_torque(data_processor, horizontal_axis = "mechanical_position", synchronize_signal = False):
     """
     So sánh Mô-men điện từ (Electromagnetic Torque) giữa semi-FEM và Maxwell FEM.
     Đồng bộ hóa tín hiệu và tính toán sai số NRMSE, Peak, Average, RMS.
@@ -24,16 +24,17 @@ def compare_torque(data_processor, horizontal_axis = "mechanical_position"):
         
         # 1. Chuẩn bị dữ liệu để đồng bộ hóa
         # semi-FEM: hàng 3 là Torque, hàng cuối là Theta
-        data_sf_raw = np.vstack((record.mst_data[3, :], record.mst_data[-1, :]))
+        data_sf = np.vstack((record.mst_data[3, :], record.mst_data[-1, :]))
         
         # Maxwell FEM: hàng 0 là Torque, hàng 1 là Theta
-        data_fem_raw = record.torque_fem
+        # Sử dụng .copy() để bảo vệ dữ liệu gốc trong record
+        data_fem = record.torque_fem.copy()
         
-        # 2. Đồng bộ hóa dữ liệu (Căn chỉnh Maxwell theo semi-FEM)
-        data_fem = data_processor.synchronize_signal(data_true = data_sf_raw, 
-                                                     data_pred = data_fem_raw)
-        data_sf = data_sf_raw
+        if synchronize_signal:
+            data_processor.synchronize_signal(data_true = data_sf, 
+                                            data_pred = data_fem)
         
+        # Sau khi đồng bộ, lấy trục X để vẽ
         x_sf, x_label = get_x_axis(data_sf[-1, :])
         x_fem, _ = get_x_axis(data_fem[-1, :])
 
@@ -77,7 +78,6 @@ def compare_torque(data_processor, horizontal_axis = "mechanical_position"):
         ax.set_ylabel(r'Torque ($N.m$)', fontsize=s.label_size, family=s.font_family)
         ax.tick_params(axis='both', which='major', labelsize=s.tick_size)
         
-        # Đặt legend ở ngoài hoặc vị trí không che khuất đồ thị
         ax.legend(frameon=True, loc='best', ncol=2, fontsize=s.legend_size)
         ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
         

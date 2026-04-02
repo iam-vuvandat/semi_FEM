@@ -144,7 +144,8 @@ class AxialFluxMotorType1:
             custom_option = SimpleNamespace(
                 mesh_setting = SimpleNamespace(
                     band_mapping_angle = pi / 180,
-                    maximum_element_length = 20 * 1e-3 # unit: m
+                    maximum_element_length = 20 * 1e-3, # unit: m
+                    airgap_element_layer = 6
                 ),
                 motion_setting = SimpleNamespace(
                     shaft_speed = 3000

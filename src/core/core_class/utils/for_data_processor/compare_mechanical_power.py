@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from src.core.solver.utils.get_waveform_nrmse import get_waveform_nrmse
 from types import SimpleNamespace
 
-def compare_mechanical_power(data_processor, horizontal_axis = "mechanical_position"):
+def compare_mechanical_power(data_processor, horizontal_axis = "mechanical_position",synchronize_signal = False):
     """
     So sánh Công suất cơ học (Mechanical Power) giữa semi-FEM và Maxwell FEM.
     Đồng bộ hóa tín hiệu và tính toán các chỉ số sai số NRMSE, Average, Peak.
@@ -23,18 +23,18 @@ def compare_mechanical_power(data_processor, horizontal_axis = "mechanical_posit
     # Kiểm tra sự tồn tại của dữ liệu công suất cơ học
     if hasattr(record, "mechanical_power") and hasattr(record, "mechanical_power_fem"):
         
-        # 1. Lấy dữ liệu thô
-        # Dữ liệu MRN (semi-FEM): record.mechanical_power (hàng 0: Power, hàng 1: Theta)
-        data_sf_raw = record.mechanical_power
+        # 1. Lấy dữ liệu
+        data_sf = record.mechanical_power
         
-        # Dữ liệu Maxwell FEM: record.mechanical_power_fem (hàng 0: Power, hàng 1: Theta)
-        data_fem_raw = record.mechanical_power_fem
+        # Khởi tạo data_fem bằng cách copy để synchronize_signal chỉnh sửa trực tiếp (in-place)
+        # Việc copy giúp bảo vệ dữ liệu gốc trong record.mechanical_power_fem
+        data_fem = record.mechanical_power_fem.copy()
         
-        # 2. Đồng bộ hóa tín hiệu
-        data_fem = data_processor.synchronize_signal(data_true = data_sf_raw, 
-                                                     data_pred = data_fem_raw)
-        data_sf = data_sf_raw
+        if synchronize_signal:
+            data_processor.synchronize_signal(data_true = data_sf, 
+                                            data_pred = data_fem)
         
+        # Sau khi đồng bộ, trục X của hai bên đã khớp nhau
         x_sf, x_label = get_x_axis(data_sf[-1, :])
         x_fem, _ = get_x_axis(data_fem[-1, :])
 

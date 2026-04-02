@@ -15,6 +15,11 @@ show_geometry = False
 solve_semiFEM = True
 
 if reload_motor:
+    export_maxwell = False
+    solve_semiFEM = False
+
+
+if reload_motor:
     aft = motor_io.load_motor(filename = file_name)
 
 else:
@@ -73,7 +78,7 @@ else:
     calc = aft.calculation_data
     calc.convergence_settings.max_iteration = 50
     calc.convergence_settings.max_relative_residual = 0.1 * 1e-2 # %
-    calc.convergence_settings.material_relax = 0.35
+    calc.convergence_settings.material_relax = 0.5
 
     calc.general_options.n_point = 20
     calc.general_options.solve_cogging = True
@@ -121,7 +126,8 @@ else:
             custom_option = SimpleNamespace(
                 mesh_setting = SimpleNamespace(
                     band_mapping_angle = pi / 180,
-                    maximum_element_length = 20 * 1e-3 # unit: m
+                    maximum_element_length = 20 * 1e-3, # unit: m
+                    airgap_element_layer = 6
                 ),
                 motion_setting = SimpleNamespace(
                     shaft_speed = 3000
@@ -129,13 +135,15 @@ else:
             ),
             current_function = None,
             solver_option = SimpleNamespace(
-                solve_immediately = False,
+                solve_immediately = True,
                 solve_only_1_step = False
             )
         )
 
+
 if export_maxwell:
     aft.export_to_maxwell()
+
 
 if show_geometry:
     aft.require("geometry")
@@ -143,6 +151,8 @@ if show_geometry:
 
 if solve_semiFEM:
     aft.analysis_motor()
+
+
 
     if reload_motor is False:
         motor_io.save_motor(motor_obj=aft,filename= file_name)
