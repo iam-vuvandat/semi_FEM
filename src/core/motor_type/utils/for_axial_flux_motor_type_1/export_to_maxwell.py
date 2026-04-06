@@ -30,9 +30,8 @@ def export_to_maxwell(motor, callback=None):
     region = create_balloon(motor = motor, m3d=m3d)
     create_custom_mesh(m3d = m3d, motor = motor, region = region )
 
+    
     solve_standard_step(m3d = m3d, motor = motor)
-
-
     m3d.save_project()
 
     return None

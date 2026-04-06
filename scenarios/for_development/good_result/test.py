@@ -7,12 +7,12 @@ from src.core.storage.core import motor_io
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 
 # Option
-reload_motor = True
+reload_motor = False
 file_name = "motor_test"
 
 export_maxwell = True
 show_geometry = False
-solve_semiFEM = True
+solve_semiFEM = False
 
 if reload_motor:
     export_maxwell = False
