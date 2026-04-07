@@ -135,7 +135,7 @@ else:
             ),
             current_function = None,
             solver_option = SimpleNamespace(
-                solve_immediately = True,
+                solve_immediately = False,
                 solve_only_1_step = False
             )
         )
