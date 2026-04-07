@@ -114,6 +114,8 @@ else:
     mesh.periodic_boundary = True
     aft.just_changed("mesh")
 
+
+
     # 9. Khai báo Drive Data
     aft.drive_data.i_rms = 10.0
     aft.drive_data.phase_advanced = 0.0
@@ -140,7 +142,6 @@ else:
             )
         )
 
-
 if export_maxwell:
     aft.export_to_maxwell()
 
@@ -151,8 +152,6 @@ if show_geometry:
 
 if solve_semiFEM:
     aft.analysis_motor()
-
-
 
     if reload_motor is False:
         motor_io.save_motor(motor_obj=aft,filename= file_name)

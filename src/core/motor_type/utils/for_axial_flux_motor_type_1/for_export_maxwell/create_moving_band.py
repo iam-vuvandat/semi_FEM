@@ -1,4 +1,5 @@
 import math
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.apply_symmetry import apply_symmetry
 
 def create_moving_band(motor, m3d):
 
@@ -23,7 +24,6 @@ def create_moving_band(motor, m3d):
     maxwell_export_option = motor.maxwell_export_option
     use_default_option = maxwell_export_option.use_default_option
 
-    
     if not use_default_option:
         custom_option = maxwell_export_option.custom_option
 
@@ -50,13 +50,16 @@ def create_moving_band(motor, m3d):
     print(f"shaft_speed: {shaft_speed}")
 
     m3d.modeler[moving_band].name = "moving_band"
+    moving_band = "moving_band"
     m3d.modeler[moving_band].material_name = "vacuum"
-    motion_setup = m3d.assign_rotate_motion(assignment="moving_band", angular_velocity= shaft_speed)
+
+    # Áp dụng symmetry để gọt Moving Band theo sector
+    apply_symmetry(assignment=moving_band, m3d=m3d, motor=motor)
+
+    motion_setup = m3d.assign_rotate_motion(assignment=moving_band, angular_velocity= shaft_speed)
     motion_setup.props["BandMappingAngle"] = band_mapping_angle
 
     rotating_parts = m3d.modeler.object_names[:]
     m3d.eddy_effects_on(rotating_parts, enable_eddy_effects=False)
 
     return moving_band
-
-

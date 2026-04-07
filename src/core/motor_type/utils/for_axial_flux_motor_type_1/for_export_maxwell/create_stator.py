@@ -1,7 +1,7 @@
-from networkx import single_target_shortest_path
 import numpy as np
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.apply_symmetry import apply_symmetry
 
-def create_stator(motor,m3d):
+def create_stator(motor, m3d):
     # extract geometry
     rotor = motor.geometry_data.rotor
     pole_number          = rotor.pole_number 
@@ -60,13 +60,14 @@ def create_stator(motor,m3d):
     m3d.modeler.subtract(blank_list=[tooth_tip_1_base], tool_list=[knife_1, knife_2], keep_originals=False)
     tooth_tip_segments = m3d.modeler.separate_bodies(tooth_tip_1_base)
 
-    if tooth_tip_segments[0].volume <= tooth_tip_segments[1].volume:
+    if m3d.modeler[tooth_tip_segments[0]].volume <= m3d.modeler[tooth_tip_segments[1]].volume:
         m3d.modeler.delete(tooth_tip_segments[1])
         tooth_tip_1 = tooth_tip_segments[0]
     else:
         m3d.modeler.delete(tooth_tip_segments[0])
         tooth_tip_1 = tooth_tip_segments[1]
     m3d.modeler[tooth_tip_1].name = "tooth_tip_1"
+    tooth_tip_1 = "tooth_tip_1"
 
     ### tooth_tip_2 
     z_bottom_surface = offset_z0 + tooth_tip_depth
@@ -111,10 +112,11 @@ def create_stator(motor,m3d):
     tooth_tip_2 = res_tip2[0] if isinstance(res_tip2, list) else res_tip2
     m3d.modeler[tooth_tip_2].name = "tooth_tip_2"
     m3d.modeler[tooth_tip_2].material_name = material_name
+    tooth_tip_2 = "tooth_tip_2"
 
     ### tooth_body
     tooth_body_length = slot_depth - h1
-    all_faces_tip2 = m3d.modeler.get_object_faces("tooth_tip_2")
+    all_faces_tip2 = m3d.modeler.get_object_faces(tooth_tip_2)
     top_face_id = None
     z_max_tip2 = -1e9
     for f_id in all_faces_tip2:
@@ -132,10 +134,11 @@ def create_stator(motor,m3d):
     tooth_body = sweep_body[0] if isinstance(sweep_body, list) else sweep_body
     m3d.modeler[tooth_body].name = "tooth_body"
     m3d.modeler[tooth_body].material_name = material_name
+    tooth_body = "tooth_body"
 
     # --- Nhân bản cụm răng ---
     _, new_teeth = m3d.modeler.duplicate_around_axis(
-        assignment=["tooth_tip_1", "tooth_tip_2", "tooth_body"],
+        assignment=[tooth_tip_1, tooth_tip_2, tooth_body],
         axis="Z",
         angle=slot_arc,
         clones=slot_number
@@ -164,8 +167,12 @@ def create_stator(motor,m3d):
     m3d.modeler[stator_yoke].material_name = material_name
 
     # Unite all stator components
-    stator_parts = ["tooth_tip_1", "tooth_tip_2", "tooth_body", "stator_yoke"] + new_teeth
+    stator_parts = [tooth_tip_1, tooth_tip_2, tooth_body, stator_yoke] + list(new_teeth)
     m3d.modeler.unite(assignment=stator_parts)
-    m3d.modeler[stator_parts[0]].name = "stator"
+    stator = stator_parts[0]
+    m3d.modeler[stator].name = "stator"
 
-    return stator_parts
+    # Áp dụng symmetry lên toàn bộ khối stator sau khi đã unite
+    apply_symmetry(assignment="stator", m3d=m3d, motor=motor)
+
+    return "stator"

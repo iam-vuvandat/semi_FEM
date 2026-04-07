@@ -1,3 +1,5 @@
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.apply_symmetry import apply_symmetry
+
 
 def create_custom_mesh(m3d, motor, region):
     mesh_setting = motor.maxwell_export_option.custom_option.mesh_setting
@@ -33,6 +35,8 @@ def create_custom_mesh(m3d, motor, region):
         origin=[0, 0, rotor_length + magnet_length], 
         radius= rotor_outer_radius * 1.1, 
         height= airgap)
+
+        apply_symmetry(assignment=airgap_obj,m3d = m3d, motor= motor)
 
         m3d.mesh.assign_length_mesh(
             assignment=airgap_obj,

@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.for_export_maxwell.apply_symmetry import apply_symmetry
 
 def create_magnet(motor, m3d):
 
@@ -21,13 +22,12 @@ def create_magnet(motor, m3d):
     rotor_outer_radius = rotor_lam_dia / 2 
     rotor_inner_radius = shaft_hole_diameter / 2
     magnet_radius = rotor_outer_radius - magnet_embed_depth
-    magnet_hole   = magnet_radius - magnet_depth
+    magnet_hole_radius = magnet_radius - magnet_depth
 
     magnet_base = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, rotor_length], radius=magnet_radius, height=magnet_length)
-    magnet_hole = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, rotor_length], radius=magnet_hole, height=magnet_length)
+    magnet_hole = m3d.modeler.create_cylinder(orientation="Z", origin=[0, 0, rotor_length], radius=magnet_hole_radius, height=magnet_length)
     m3d.modeler.subtract(blank_list=[magnet_base], tool_list=[magnet_hole], keep_originals=False)
 
-    ## Knife for split magnet
     pole_arc = 360 / pole_number
     magnet_arc_mechanical = pole_arc * (magnet_arc/180)
     half_magnet_arc_mechanical = magnet_arc_mechanical / 2 
@@ -37,26 +37,26 @@ def create_magnet(motor, m3d):
     knife_2 = m3d.modeler.create_box(origin=[0, 0, rotor_length], sizes=[magnet_radius, 0.0001, magnet_length])
     m3d.modeler.rotate(knife_2, axis="Z", angle=-half_magnet_arc_mechanical)
     m3d.modeler.subtract(blank_list=[magnet_base], tool_list=[knife_1, knife_2], keep_originals=False)
-    magnet_segments = m3d.modeler.separate_bodies(magnet_base)
+    
+    magnet_segments_list = m3d.modeler.separate_bodies(magnet_base)
 
-    if magnet_segments[0].volume >= magnet_segments[1].volume:
-        m3d.modeler.delete(magnet_segments[0])
-        magnet_pole = magnet_segments[1]
+    if m3d.modeler[magnet_segments_list[0]].volume >= m3d.modeler[magnet_segments_list[1]].volume:
+        m3d.modeler.delete(magnet_segments_list[0])
+        magnet_pole = magnet_segments_list[1]
     else:
-        m3d.modeler.delete(magnet_segments[1])
-        magnet_pole = magnet_segments[0]
+        m3d.modeler.delete(magnet_segments_list[1])
+        magnet_pole = magnet_segments_list[0]
 
     magnet_material_type = motor.material_database.magnet
     material_name = magnet_material_type.name
     coercivity = magnet_material_type.coercivity
     
     m3d.modeler[magnet_pole].name = "magnet_pole"
+    magnet_pole = "magnet_pole"
 
-    # Define names
     name_n = f"{material_name}N"
     name_s = f"{material_name}S"
 
-    # FIX: Use 'material_keys' or direct membership check
     if name_n not in m3d.materials.material_keys:
         mat_n = m3d.materials.add_material(name_n)
         mat_n.set_magnetic_coercivity(-coercivity, 0, 0, 1)
@@ -68,9 +68,17 @@ def create_magnet(motor, m3d):
     m3d.modeler[magnet_pole].material_name = name_n
 
     arc_pole = 360 / pole_number
-    _, new_pole = m3d.modeler.duplicate_around_axis(assignment=magnet_pole, axis="Z", angle = arc_pole, clones=pole_number)
-    for i in range(len(new_pole)):
-        m3d.modeler[new_pole[i]].material_name = name_s if i % 2 == 0 else name_n
+    _, new_poles = m3d.modeler.duplicate_around_axis(assignment=magnet_pole, axis="Z", angle=arc_pole, clones=pole_number)
+    
+    for i in range(len(new_poles)):
+        m3d.modeler[new_poles[i]].material_name = name_s if i % 2 == 0 else name_n
 
-    all_magnets = [magnet_pole] + list(new_pole)
-    return all_magnets
+    all_magnets_raw = [magnet_pole] + list(new_poles)
+    magnets_in_sector = []
+
+    for mag in all_magnets_raw:
+        res = apply_symmetry(assignment=mag, m3d=m3d, motor=motor)
+        if res:
+            magnets_in_sector.append(res)
+
+    return magnets_in_sector
