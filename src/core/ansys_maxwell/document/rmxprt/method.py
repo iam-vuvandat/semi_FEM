@@ -2,7 +2,7 @@ import os
 import glob
 import time
 import inspect
-from pyaedt import Rmxprt
+from ansys.aedt.core import Rmxprt
 
 os.system("taskkill /F /IM ansysedt.exe /T")
 os.system("taskkill /F /IM AnsysGRPC.exe /T")
@@ -12,7 +12,7 @@ for f in glob.glob(os.path.join(ansoft_dir, "*.aedt.auto")):
     except: pass
 time.sleep(2)
 
-rmxprt = Rmxprt(version="2023.1", new_desktop=True, non_graphical=False)
+rmxprt = Rmxprt(version="2025.2", new_desktop=True, non_graphical=False)
 
 def list_all_members(obj, obj_name, file_handle, limit_depth=9999):
     file_handle.write(f"\n{'='*20} METHODS OF {obj_name} {'='*20}\n")

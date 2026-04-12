@@ -1,5 +1,6 @@
 import numpy as np 
 import math
+from types import SimpleNamespace
 
 pi = math.pi
 
@@ -65,7 +66,7 @@ def create_concentrated_winding(m3d,motor):
     ## subtract base to hole
     m3d.modeler.subtract(blank_list=[base], tool_list=[hole], keep_originals=False)
 
-    ## create knife 
+     ## create knife 
     knife_1 = m3d.modeler.create_box(origin=[0, 0, z_winding_bottom], sizes=[stator_outer_radius * 1.06, 0.0001, winding_heigh])
     m3d.modeler.rotate(knife_1, axis="Z", angle= half_open_arc_slot * 0.95)
 
@@ -148,3 +149,6 @@ def create_concentrated_winding(m3d,motor):
                 new_coil = m3d.assign_coil(all_winding_cross_section[i], conductors_number= turns * np.sign(tooth_matrix[i,j]), polarity=direction)
                 all_winding_terminal.append(new_coil)
                 m3d.add_winding_coils(assignment = current[j].name, coils = new_coil.name)
+
+    print("List of winding: ",current)
+    return SimpleNamespace(winding = current)

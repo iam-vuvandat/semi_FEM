@@ -2,7 +2,9 @@ import paths
 import numpy as np
 import os
 
-def torque_export(motor, m3d):
+from src.core.solver.utils.duplicate_data import duplicate_data
+
+def cogging_torque_export(motor, m3d):
     project_root = paths.configure_path()
     
     speed_rpm = getattr(motor.mechanical, 'shaft_speed', 3000)
@@ -13,7 +15,7 @@ def torque_export(motor, m3d):
         os.makedirs(temp_dir)
 
     expressions = ["Moving1.Torque"]
-    report_name = "Torque_Report_FEM"
+    report_name = "Cogging_Torque_Report_FEM"
     csv_path = os.path.join(temp_dir, f"{report_name}.csv")
 
     m3d.post.create_report(
@@ -61,11 +63,10 @@ def torque_export(motor, m3d):
 
     combined_torque = np.vstack((torque_data, current_positions))
     combined_torque = combined_torque[:,:-1]
-    combined_power = np.vstack((mechanical_power_data, current_positions))
-    combined_power = combined_power[:,:-1]
+    
+    combined_torque = duplicate_data(data = combined_torque, half_open_interval= True).duplicated_data
+    
 
-    motor.record.torque_fem = combined_torque.copy()
-    motor.record.mechanical_power_fem = combined_power.copy()
-    motor.record.average_mechanical_power_fem = np.mean(mechanical_power_data)
+    motor.record.cogging_fem = combined_torque.copy()
 
     return None

@@ -1,4 +1,5 @@
 import numpy as np 
+
 from src.core.motor_type.utils.for_create_geometry.find_symmetry_factor import find_symmetry_factor
 from src.core.motor_type.utils.for_create_geometry.find_cogging_period import find_cogging_period
 
@@ -12,6 +13,8 @@ class Mechanical:
         self.step_rotated = 0
         self.cogging_period_mech = find_cogging_period(geometry_data = self.geometry_data).period_mech
         self.symmetry_factor = find_symmetry_factor(geometry_data= self.geometry_data).symmetry_factor
+        self.slot_arc = (2*np.pi) / self.geometry_data.stator.slot_number
+        self.pole_arc = (2*np.pi) / self.geometry_data.rotor.pole_number
 
     def reset_motor_position(self):
         motor = self.motor

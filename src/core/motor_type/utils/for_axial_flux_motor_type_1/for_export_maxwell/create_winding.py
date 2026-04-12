@@ -11,6 +11,6 @@ def create_winding(m3d,motor):
     throw = motor.winding_data.throw
 
     if throw == 1: # concentrated winding
-        create_concentrated_winding(m3d = m3d, motor= motor)
+        return create_concentrated_winding(m3d = m3d, motor= motor)
     else: # distributed winding
-        create_distributed_winding(m3d = m3d, motor = motor)
+        return create_distributed_winding(m3d = m3d, motor = motor)

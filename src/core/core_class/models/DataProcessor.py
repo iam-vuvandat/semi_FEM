@@ -21,6 +21,7 @@ from src.core.core_class.utils.for_data_processor.compare_back_emf import compar
 from src.core.core_class.utils.for_data_processor.compare_back_emf_line import compare_back_emf_line
 from src.core.core_class.utils.for_data_processor.compare_torque import compare_torque
 from src.core.core_class.utils.for_data_processor.compare_mechanical_power import compare_mechanical_power
+from src.core.core_class.utils.for_data_processor.compare_cogging_torque import compare_cogging_torque
 
 from src.core.solver.utils.synchronize_signals import synchronize_signals
 from mpl_toolkits.mplot3d import Axes3D
@@ -77,6 +78,9 @@ class DataProcessor:
 
     def compare_mechanical_power(self,horizontal_axis = "mechanical_position"):
         compare_mechanical_power(data_processor= self, horizontal_axis= horizontal_axis)
+    
+    def compare_cogging_torque(self,horizontal_axis = "mechanical_position"):
+        compare_cogging_torque(data_processor= self, horizontal_axis= horizontal_axis)
 
 
     def synchronize_signal(self, data_true, data_pred, is_periodic=True, half_open_interval=True):

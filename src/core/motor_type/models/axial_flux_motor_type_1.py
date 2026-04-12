@@ -17,6 +17,8 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
 from src.core.motor_type.utils.for_export_maxwell.update_maxwell_settings import update_maxwell_settings
 
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.export_to_rmxprt import export_to_rmxprt
+
 pi = math.pi
 
 class AxialFluxMotorType1:
@@ -62,13 +64,13 @@ class AxialFluxMotorType1:
 
         self.geometry_data = SimpleNamespace(
             stator = SimpleNamespace(
-                slot_number          = 30,
+                slot_number          = 15,
                 stator_lam_dia       = 150 * 1e-3,
                 stator_bore_dia      = 70 * 1e-3,
                 slot_opening         = 2 * 1e-3,
                 wdg_extension_inner  = 0,
                 wdg_extension_outer  = 0,
-                slot_width           = 4 * 1e-3,
+                slot_width           = 7 * 1e-3,
                 slot_depth           = 15 * 1e-3,
                 slot_corner_radius   = 0,
                 tooth_tip_depth      = 2 * 1e-3,
@@ -76,7 +78,7 @@ class AxialFluxMotorType1:
                 stator_length        = 25 * 1e-3
             ),
             rotor = SimpleNamespace(
-                pole_number          = 20,
+                pole_number          = 10,
                 rotor_lam_dia        = 150 * 1e-3,
                 magnet_arc           = 160,
                 magnet_embed_depth   = 5 * 1e-3,
@@ -85,7 +87,7 @@ class AxialFluxMotorType1:
                 banding_depth        = 0 * 1e-3,
                 shaft_dia            = 0 * 1e-3,
                 shaft_hole_diameter  = 70 * 1e-3,
-                airgap               = 1.5 * 1e-3,
+                airgap               = 1 * 1e-3,
                 magnet_length        = 3 * 1e-3,
                 rotor_length         = 6 * 1e-3
             )
@@ -98,8 +100,9 @@ class AxialFluxMotorType1:
                 material_relax         = 0.35
             ),
             general_options = SimpleNamespace(
-                n_point                = 21,
-                solve_cogging          = False,
+                n_point                = 15,
+                solve_cogging          = True,
+                solve_smooth_torque    = False,
                 solve_only_1_step      = False,
                 vectorized_optimization = True,
                 get_geometric_error    = False,
@@ -114,27 +117,27 @@ class AxialFluxMotorType1:
         )
 
         self.adaptive_mesh_data = SimpleNamespace(
-            n_r_in          = 1,
-            n_r_1           = 3,
-            n_r_2           = 6,
-            n_r_3           = 3,
-            n_r_out         = 1,
+            n_r_in          = 2,
+            n_r_1           = 4,
+            n_r_2           = 7,
+            n_r_3           = 4,
+            n_r_out         = 2,
             n_theta         = 150,
-            n_z_in_air      = 1,
+            n_z_in_air      = 2,
             n_z_rotor_yoke  = 6,
-            n_z_magnet      = 5,
-            n_z_airgap      = 6,
-            n_z_tooth_tip_1 = 5,
+            n_z_magnet      = 4,
+            n_z_airgap      = 5,
+            n_z_tooth_tip_1 = 3,
             n_z_tooth_tip_2 = 6,
             n_z_tooth_body  = 8,
             n_z_stator_yoke = 6,
-            n_z_out_air     = 1,
+            n_z_out_air     = 2,
             use_symmetry_factor = True,
             periodic_boundary   = True
         )
 
         self.drive_data = SimpleNamespace(
-            i_rms = 20.0,
+            i_rms = 10.0,
             phase_advanced = 0.0
         )
 
@@ -143,17 +146,32 @@ class AxialFluxMotorType1:
             use_default_option = True,
             custom_option = SimpleNamespace(
                 mesh_setting = SimpleNamespace(
+                    cylindrical_gap_1= SimpleNamespace(
+                        clone_mesh = False,
+                        mapping_angle = -1,
+                        moving_side = 1,
+                        static_side = 1
+                    ),
+
                     band_mapping_angle = pi / 180,
                     maximum_element_length = 20 * 1e-3, # unit: m
-                    airgap_element_layer = 6
+                    airgap_element_layer = 6,
+                    moving_side_layers = 1,
+                    static_side_layers = 1,
+                    length_band_element_length = -1,
+                    length_coil_element_length = -1,
+                    length_mag_element_length = -1,
+                    length_main_element_length = -1,
+                    length_region_element_length = -1
                 ),
                 motion_setting = SimpleNamespace(
                     shaft_speed = 3000
                 )
             ),
             current_function = None,
+            current_function_for_rmxprt_export = None,
             solver_option = SimpleNamespace(
-                solve_immediately = False,
+                solve_immediately = True,
                 solve_only_1_step = False
             )
         )
@@ -213,6 +231,9 @@ class AxialFluxMotorType1:
 
     def export_to_maxwell(self, callback = None):
         return export_to_maxwell(motor = self, callback = callback)
+    
+    def export_to_rmxprt(self):
+        return export_to_rmxprt(motor = self )
 
     def just_changed(self, component_name):
         return self.motor_state_manager.just_changed(component_name)
@@ -225,3 +246,5 @@ class AxialFluxMotorType1:
     
     def update_maxwell_setting(self):
         update_maxwell_settings(motor=self)
+
+        
