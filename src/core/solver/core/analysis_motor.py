@@ -62,13 +62,7 @@ def analysis_motor(motor, callback = None):
            
             
             motor.drive.apply_winding_excitation(excitation = False)
-            motor.reluctance_network.solve(
-                max_relative_residual = max_relative_residual,
-                max_iteration = max_iteration,
-                material_relax = material_relax, 
-                damping_factor = 1.0,   
-                debug = debug
-            )
+            motor.reluctance_network.solver.solve()
             cogging[:, i] = motor.maxwell_stress_tensor().mst_result[3:5]
             motor.rotate_rotor(n_step = 1)
         
@@ -78,13 +72,8 @@ def analysis_motor(motor, callback = None):
         
         
         motor.drive.apply_winding_excitation(excitation = True)
-        motor.reluctance_network.solve(
-            max_relative_residual = max_relative_residual,
-            max_iteration = max_iteration,
-            material_relax = material_relax, 
-            damping_factor = 1.0,   
-            debug = debug
-        )
+        motor.reluctance_network.solver.solve()
+        
         
         motor.reluctance_network.add_elements_lite()
         flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
@@ -112,12 +101,8 @@ def analysis_motor(motor, callback = None):
 
         # 1. Giai diem khong tai (id=0, iq=0) de lay Psi_pm
         motor.drive.apply_manual_winding_excitation(id=0.0, iq=0.0) # Su dung method moi
-        motor.reluctance_network.solve(
-            max_relative_residual = conv.max_relative_residual,
-            max_iteration = conv.max_iteration,
-            material_relax = conv.material_relax,
-            debug = False
-        )
+        motor.reluctance_network.solver.solve()
+            
         psi_pm = motor.reluctance_network.get_flux_linkage().flux_linkage[0, 0] * periodic_factor
         
         for i, id_val in enumerate(tqdm(id_vector, desc="Exporting Ld Map", disable=not debug)):
@@ -125,12 +110,8 @@ def analysis_motor(motor, callback = None):
                 # Su dung dung method: apply_manual_winding_excitation
                 motor.drive.apply_manual_winding_excitation(id=id_val, iq=iq_val)
                 
-                motor.reluctance_network.solve(
-                    max_relative_residual = conv.max_relative_residual,
-                    max_iteration = conv.max_iteration,
-                    material_relax = conv.material_relax,
-                    debug = False
-                )
+                motor.reluctance_network.solver.solve()
+                   
                 
                 flux_dq = motor.reluctance_network.get_flux_linkage().flux_linkage[:2, 0] * periodic_factor
                 

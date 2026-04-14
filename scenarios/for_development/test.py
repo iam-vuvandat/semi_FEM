@@ -20,38 +20,38 @@ if reload_motor:
 else:
     aft = AxialFluxMotorType1()
 
+
 if export_maxwell:
     aft.export_to_rmxprt()
-
+    
 if solve_semiFEM:
     aft.analysis_motor()
-
     if reload_motor is False:
-        motor_io.save_motor(motor_obj=aft,filename= file_name)
+        aft.data_processor.plot_flux_linkage(horizontal_axis="time")
+        aft.data_processor.plot_back_emf(horizontal_axis="time")
+        aft.data_processor.plot_back_emf_line(horizontal_axis="time")
+        aft.data_processor.plot_current(horizontal_axis="time")
+        aft.data_processor.plot_torque(horizontal_axis="time")
+        aft.data_processor.plot_axial_force(horizontal_axis="time")
+        aft.data_processor.plot_cogging_torque(horizontal_axis="time")
+        aft.data_processor.plot_mechanical_power(horizontal_axis="time")
+        aft.data_processor.plot_inductance_map()
+    aft.display()
+
+
 
 # Visualization
-data_processor = aft.data_processor
-"""
-data_processor.plot_flux_linkage(horizontal_axis="time")
-data_processor.plot_back_emf(horizontal_axis="time")
-data_processor.plot_back_emf_line(horizontal_axis="time")
-data_processor.plot_current(horizontal_axis="time")
-data_processor.plot_torque(horizontal_axis="time")
-data_processor.plot_axial_force(horizontal_axis="time")
-data_processor.plot_cogging_torque(horizontal_axis="time")
-data_processor.plot_mechanical_power(horizontal_axis="time")
-data_processor.plot_inductance_map()
-
-"""
-data_processor.compare_flux_linkage(horizontal_axis="time")
-data_processor.compare_back_emf(horizontal_axis="time")
-data_processor.compare_back_emf_line(horizontal_axis="time")
-data_processor.compare_torque(horizontal_axis="time")
-data_processor.compare_mechanical_power(horizontal_axis="time")
-data_processor.compare_cogging_torque(horizontal_axis="time")
 
 
-#aft.display()
+aft.data_processor.compare_flux_linkage(horizontal_axis="time")
+aft.data_processor.compare_back_emf(horizontal_axis="time")
+aft.data_processor.compare_back_emf_line(horizontal_axis="time")
+aft.data_processor.compare_torque(horizontal_axis="time")
+aft.data_processor.compare_mechanical_power(horizontal_axis="time")
+aft.data_processor.compare_cogging_torque(horizontal_axis="time")
+
+motor_io.save_motor(motor_obj=aft,filename= file_name)
+
 
 
 

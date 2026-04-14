@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from types import SimpleNamespace
 from src.core.motor_type.models.MotorStateManager import MotorStateManager
 from src.core.core_class.models.Drive import Drive
@@ -87,7 +88,7 @@ class AxialFluxMotorType1:
                 banding_depth        = 0 * 1e-3,
                 shaft_dia            = 0 * 1e-3,
                 shaft_hole_diameter  = 70 * 1e-3,
-                airgap               = 1 * 1e-3,
+                airgap               = 1.5 * 1e-3,
                 magnet_length        = 3 * 1e-3,
                 rotor_length         = 6 * 1e-3
             )
@@ -96,11 +97,14 @@ class AxialFluxMotorType1:
         self.calculation_data = SimpleNamespace(
             convergence_settings = SimpleNamespace(
                 max_iteration          = 50,
-                max_relative_residual  = 0.1 * 1e-2,
-                material_relax         = 0.35
+                max_relative_residual  = 1 * 1e-2,
+                material_relax         = 0.35,
+                damping_factor         = 1.0,
+                relaxation_history     = None,
+                relaxation_decay = 0.5
             ),
             general_options = SimpleNamespace(
-                n_point                = 15,
+                n_point                = 20,
                 solve_cogging          = True,
                 solve_smooth_torque    = False,
                 solve_only_1_step      = False,
@@ -171,6 +175,7 @@ class AxialFluxMotorType1:
             current_function = None,
             current_function_for_rmxprt_export = None,
             solver_option = SimpleNamespace(
+                half_open_interval = True,
                 solve_immediately = True,
                 solve_only_1_step = False
             )

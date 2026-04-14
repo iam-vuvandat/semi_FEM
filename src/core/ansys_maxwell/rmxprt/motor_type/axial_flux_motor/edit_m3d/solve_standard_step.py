@@ -10,6 +10,9 @@ def solve_standard_step(m3d, motor):
         m3d.delete_setup(setup_name)
 
     motor.require("mechanical")
+
+    
+
     oModule = m3d.odesign.GetModule("AnalysisSetup")
 
     # 2. Trich xuat va tinh toan cac thong so thoi gian
@@ -27,6 +30,11 @@ def solve_standard_step(m3d, motor):
     
     # Mac dinh time_step
     time_step_ms = stop_time_ms / n_point 
+
+    half_open_interval = motor.maxwell_export_option.solver_option.half_open_interval
+    if half_open_interval:
+        stop_time_ms -= time_step_ms
+
 
     # Truong hop dac biet: chi giai 1 buoc
     if motor.maxwell_export_option.solver_option.solve_only_1_step: 

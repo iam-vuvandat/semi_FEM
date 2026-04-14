@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from src.core.solver.utils.get_waveform_nrmse import get_waveform_nrmse
 from types import SimpleNamespace
 
-def compare_cogging_torque(data_processor, horizontal_axis = "mechanical_position", synchronize_signal = True):
+def compare_cogging_torque(data_processor, horizontal_axis = "mechanical_position", synchronize_signal = False):
     """
     So sánh Mô-men răng khía (Cogging Torque) giữa semi-FEM và Maxwell FEM.
     """

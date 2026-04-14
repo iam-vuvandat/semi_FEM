@@ -49,7 +49,7 @@ def export_to_rmxprt(motor = None):
 
     # solve
     solve_standard_step(m3d= m3d, motor= motor)
-    #solve_cogging_torque(m3d= m3d, motor= motor)
+    solve_cogging_torque(m3d= m3d, motor= motor)
 
 
 if __name__ == "__main__":

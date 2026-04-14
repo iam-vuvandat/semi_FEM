@@ -19,6 +19,7 @@ from src.core.core_class.utils.for_reluctance_network.create_vectorized_elements
 from src.core.core_class.utils.for_reluctance_network.update_elements_from_vectorized import update_elements_from_vectorized
 
 # Solver Core
+from src.core.solver.model.Solver import Solver
 from src.core.solver.core.create_magnetic_potential_equation import create_magnetic_potential_equation
 from src.core.solver.core.solve import solve
 
@@ -59,6 +60,8 @@ class ReluctanceNetwork:
         
         
         self.list_elements_lite = None
+
+        self.solver = Solver(reluctance_network= self)
 
     def create_elements(self,callback = None):
         return create_elements(reluctance_network= self, callback = callback)

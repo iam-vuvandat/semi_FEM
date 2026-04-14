@@ -3,12 +3,17 @@ import time
 from pypardiso import spsolve as pardiso_solve
 from scipy.sparse.linalg import norm
 
-def solve(reluctance_network, 
-          max_iteration=50,
-          max_relative_residual=0.05, 
-          material_relax=0.2, 
-          damping_factor=0.5,   
-          debug=True):
+def solve(solver):
+    reluctance_network = solver.reluctance_network
+    convergence_settings = solver.convergence_settings
+    # Lay debug tu general_options
+    debug = reluctance_network.calculation_data.general_options.debug
+
+    material_relax = convergence_settings.material_relax
+    max_iteration = convergence_settings.max_iteration
+    max_relative_residual = convergence_settings.max_relative_residual
+    damping_factor = convergence_settings.damping_factor
+    relaxation_history = convergence_settings.relaxation_history
     
     stats = {
         "update_network": 0.0,
@@ -18,7 +23,8 @@ def solve(reluctance_network,
     }
     t_start_total = time.perf_counter()
 
-    factor_1 = 0.5
+    # Doc gia tri relaxation_decay dang dung
+    factor_1 = convergence_settings.relaxation_decay
     G_c, Y_c, R_c, B_c, RESET = "\033[92m", "\033[93m", "\033[91m", "\033[94m", "\033[0m"
     best_residual_history = []
     mag_pot_shape = reluctance_network.magnetic_potential.data.shape
@@ -27,6 +33,7 @@ def solve(reluctance_network,
     best_pot_data = reluctance_network.magnetic_potential.data.copy()
     best_phi = float('inf') 
     current_relax = material_relax
+    total_iteration = 0
 
     def compute_system(x_vec, relax):
         t0 = time.perf_counter()
@@ -50,8 +57,8 @@ def solve(reluctance_network,
     F_k, G_k, J_k = compute_system(x_k, current_relax)
     
     for j in range(1, max_iteration + 1):
+        total_iteration = j
         try:
-            # Giai truc tiep bang PyPardiso (Intel MKL Pardiso)
             t_s0 = time.perf_counter()
             delta_x = pardiso_solve(G_k, -F_k)
             stats["direct_solve"] += (time.perf_counter() - t_s0)
@@ -65,6 +72,7 @@ def solve(reluctance_network,
         
         t_o0 = time.perf_counter()
         phi_true = np.linalg.norm(F_next) / (np.linalg.norm(J_next) + 1e-12)
+        best_residual_history.append(phi_true)
 
         if debug:
             color = G_c if phi_true <= max_relative_residual else (R_c if phi_true >= best_phi else RESET)
@@ -87,26 +95,34 @@ def solve(reluctance_network,
         F_next, G_next, J_next = compute_system(x_next, current_relax)
 
         G_k, x_k, F_k = G_next, x_next, F_next
-        best_residual_history.append(phi_true)
         stats["other"] += (time.perf_counter() - t_o0)
+
+    # Cap nhat so buoc lap vao hang 2 cua relaxation_history
+    decay_values = relaxation_history[0, :]
+    idx = np.argmin(np.abs(decay_values - factor_1))
+    relaxation_history[1, idx] = total_iteration
+
+    # Luu lich su sai so vao setting de find_relaxation_decay co the su dung neu can
+    convergence_settings.relaxation_history_current = best_residual_history
 
     t_end_total = time.perf_counter()
     total_time = t_end_total - t_start_total
-    
 
-
-
-    # -- Debug -- 
-    print("\n" + "="*50)
-    print(f"{B_c}PERFORMANCE SUMMARY (PYPARDISO SOLVER){RESET}")
-    print("-"*50)
-    for task, duration in stats.items():
-        percentage = (duration / total_time) * 100
-        print(f"{task.replace('_', ' ').title():<20}: {duration:>8.4f} s ({percentage:>6.2f}%)")
-    print("-"*50)
-    print(f"{'Total Solve Time':<20}: {total_time:>8.4f} s (100.00%)")
-    print("="*50 + "\n")
+    if debug:
+        print("\n" + "="*50)
+        print(f"{B_c}PERFORMANCE SUMMARY (PYPARDISO SOLVER){RESET}")
+        print("-"*50)
+        for task, duration in stats.items():
+            percentage = (duration / total_time) * 100
+            print(f"{task.replace('_', ' ').title():<20}: {duration:>8.4f} s ({percentage:>6.2f}%)")
+        print("-"*50)
+        print(f"{'Total Solve Time':<20}: {total_time:>8.4f} s (100.00%)")
+        print("="*50 + "\n")
 
     reluctance_network.magnetic_potential.data = best_pot_data
     reluctance_network.refresh_elements()
+
+    solver.find_relaxation_decay()
     return best_phi, best_residual_history
+
+
