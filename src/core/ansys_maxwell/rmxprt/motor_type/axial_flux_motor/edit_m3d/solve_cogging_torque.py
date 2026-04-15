@@ -1,7 +1,6 @@
 import math
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.edit_excitation import edit_excitation
-from src.core.motor_type.utils.for_export_maxwell.cogging_torque_export import cogging_torque_export
-
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.cogging_torque_export import cogging_torque_export
 def solve_cogging_torque(m3d=None, motor=None):
     if motor.calculation_data.general_options.solve_cogging:
         setup_name = "Setup1"
@@ -23,7 +22,7 @@ def solve_cogging_torque(m3d=None, motor=None):
 
         half_open_interval = motor.maxwell_export_option.solver_option.half_open_interval
         if half_open_interval:
-            stop_time_ms -= time_step
+            stop_time -= time_step
 
         stop_time_str = f"{stop_time}ms"
 
@@ -55,3 +54,5 @@ def solve_cogging_torque(m3d=None, motor=None):
         return True
     else:
         return False
+    
+

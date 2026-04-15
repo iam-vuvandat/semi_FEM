@@ -26,6 +26,7 @@ if export_maxwell:
     
 if solve_semiFEM:
     aft.analysis_motor()
+    """
     if reload_motor is False:
         aft.data_processor.plot_flux_linkage(horizontal_axis="time")
         aft.data_processor.plot_back_emf(horizontal_axis="time")
@@ -37,6 +38,7 @@ if solve_semiFEM:
         aft.data_processor.plot_mechanical_power(horizontal_axis="time")
         aft.data_processor.plot_inductance_map()
     aft.display()
+    """
 
 
 

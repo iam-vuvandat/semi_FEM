@@ -1,6 +1,7 @@
 import math
-from src.core.motor_type.utils.for_export_maxwell.flux_linkage_export import flux_linkage_export
-from src.core.motor_type.utils.for_export_maxwell.torque_export import torque_export
+
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.flux_linkage_export import flux_linkage_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.torque_export import torque_export
 
 def solve_standard_step(m3d, motor):
     setup_name = "Setup1"
