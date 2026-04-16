@@ -1,14 +1,12 @@
 import paths
 import math
 pi = math.pi
-from types import SimpleNamespace
 
 from src.core.storage.core import motor_io 
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 
 # Option
-reload_motor = False
-
+reload_motor = True
 file_name = "motor_test"
 export_maxwell = True
 solve_semiFEM = True
@@ -19,7 +17,6 @@ if reload_motor:
     aft = motor_io.load_motor(filename = file_name)
 else:
     aft = AxialFluxMotorType1()
-
 
 if export_maxwell:
     aft.export_to_rmxprt()
@@ -40,18 +37,13 @@ if solve_semiFEM:
     aft.display()
     """
 
-
-
-# Visualization
-
-
+# Visualizatn
 aft.data_processor.compare_flux_linkage(horizontal_axis="time")
 aft.data_processor.compare_back_emf(horizontal_axis="time")
 aft.data_processor.compare_back_emf_line(horizontal_axis="time")
 aft.data_processor.compare_torque(horizontal_axis="time")
 aft.data_processor.compare_mechanical_power(horizontal_axis="time")
 aft.data_processor.compare_cogging_torque(horizontal_axis="time")
-
 motor_io.save_motor(motor_obj=aft,filename= file_name)
 
 
