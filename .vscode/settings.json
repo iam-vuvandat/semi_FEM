@@ -4,7 +4,12 @@
                           "**/*.pyc":  true,
                           "**/*.pyo":  true,
                           "**/*.pyd":  true,
-                          "**/*.ini":  true
+                          "**/*.ini":  true,
+                          "**/*.gitignore":  true,
+                          "**/*.project_root":  true,
+                          "**/*.log":  true,
+                          "**/*.spec":  true,
+                          "**/paths.py": true,
                       },
     "files.autoSave":  "afterDelay",
     "files.autoSaveDelay":  1000,
