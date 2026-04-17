@@ -29,9 +29,20 @@ def create_geometry(motor,
     mmf_offset = motor.winding_data.mmf_offset
 
     rotor_angle_offset+= mmf_offset
+
+
+    geometry_option = motor.geometry_data.geometry_option
     
-    # --- Thành phần 1: Rotor Yoke ---
-    # Sử dụng tên gốc: rotor_length thay cho rotor_yoke_axial_length
+    synchronize_with_rmxprt = geometry_option.synchronize_with_rmxprt
+    if synchronize_with_rmxprt:
+        offset_rotor_for_rmxprt = (2* pi / (rotor.pole_number)) / 2
+        offset_stator_for_rmxprt = (2 * pi) / (stator.slot_number)
+        stator_angle_offset += offset_stator_for_rmxprt
+        rotor_angle_offset += offset_rotor_for_rmxprt
+        motor.geometry_option.rotor_mechanical_synchronized.rotor_mechanical_synchronized = offset_rotor_for_rmxprt - offset_stator_for_rmxprt
+        print(f"\033[92m[DEBUG] RMxprt Synchronization: rotor_mechanical_synchronized = {geometry_option.rotor_mechanical_synchronized:.6f} rad\033[0m")
+    
+ 
     rotor_yoke_mesh = create_tube(inner_radius=rotor.shaft_hole_diameter/2,
                                   outer_radius=rotor.rotor_lam_dia/2,
                                   height = rotor.rotor_length)

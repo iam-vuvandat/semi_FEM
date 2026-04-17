@@ -4,8 +4,12 @@ import os
 from src.core.solver.utils.convert_to_dq import convert_to_dq
 from src.core.solver.utils.periodic_derivative import periodic_derivative
 from src.core.solver.utils.calculate_line_to_line_back_emf import calculate_line_to_line_back_emf
+from src.core.solver.utils.alternetive_first_point import alternetive_first_point
 
 def flux_linkage_export(motor, m3d):
+
+    alternetive_first_point_data = motor.maxwell_export_option.solver_option.alternetive_first_point
+    
     # 1. Khởi tạo đường dẫn và thông số
     project_root = paths.configure_path()
     n_phase = motor.winding_data.phase
@@ -105,11 +109,10 @@ def flux_linkage_export(motor, m3d):
 
     # 6. Đóng gói và lưu Record
     combined_data = np.vstack((d_axis_flux, q_axis_flux, flux_phases, current_positions))
-    
-    # Xử lý Half-open interval
-    half_open_interval = motor.maxwell_export_option.solver_option.half_open_interval
-    if not half_open_interval:
-        combined_data = combined_data[:, :-1]
+
+    # Xử lý điểm đầu , cuối
+    if alternetive_first_point_data:
+        combined_data = alternetive_first_point(data = combined_data,remove_last_point = True, last_row_is_position = True)
 
     # Tính Suất điện động (Đạo hàm của từ thông theo thời gian)
     # Flux[2:] là dữ liệu pha A, B, C...

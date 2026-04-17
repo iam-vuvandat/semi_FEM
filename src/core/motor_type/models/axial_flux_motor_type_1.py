@@ -91,6 +91,10 @@ class AxialFluxMotorType1:
                 airgap               = 1.5 * 1e-3,
                 magnet_length        = 3 * 1e-3,
                 rotor_length         = 6 * 1e-3
+            ),
+            geometry_option = SimpleNamespace(
+                synchronize_with_rmxprt = True,
+                rotor_mechanical_synchronized = 0.0
             )
         )
 
@@ -170,15 +174,15 @@ class AxialFluxMotorType1:
                 ),
                 motion_setting = SimpleNamespace(
                     shaft_speed = 3000
-                )
+                ),
             ),
             current_function = None,
             current_function_for_rmxprt_export = None,
             solver_option = SimpleNamespace(
-                half_open_interval = True,
+                alternetive_first_point = True,
                 solve_immediately = True,
                 solve_only_1_step = False
-            )
+            ),
         )
 
     def create_material_database(self): 

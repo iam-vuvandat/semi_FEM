@@ -35,8 +35,10 @@ class Drive:
 
     @property
     def theta_e(self):
-        # Vi tri co hoc da la Radian (theo log), theta_e cung se la Radian
-        return self.mechanical.current_position * self.pole_pairs
+        if not self.geometry_data.geometry_option.synchronize_with_rmxprt:
+            return self.mechanical.current_position * self.pole_pairs
+        else: 
+            return (self.mechanical.current_position + self.geometry_data.geometry_option.rotor_mechanical_synchronized) * self.pole_pairs
 
     @property
     def current_function(self):

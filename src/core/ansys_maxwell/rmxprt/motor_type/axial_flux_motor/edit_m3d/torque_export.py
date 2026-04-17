@@ -2,9 +2,14 @@ import paths
 import numpy as np
 import os
 
+from src.core.solver.utils.calculate_mechanical_power import calculate_mechanical_power
+from src.core.solver.utils.alternetive_first_point import alternetive_first_point
+
 def torque_export(motor, m3d):
     project_root = paths.configure_path()
     
+    use_alt_point = motor.maxwell_export_option.solver_option.alternetive_first_point
+
     speed_rpm = getattr(motor.mechanical, 'shaft_speed', 3000)
     omega_m = (speed_rpm * 2 * np.pi) / 60 
 
@@ -80,29 +85,28 @@ def torque_export(motor, m3d):
     raw_data = np.genfromtxt(csv_path, delimiter=',', skip_header=1)
     
     time_steps = raw_data[:, time_idx] * time_multiplier
-    torque_data = raw_data[:, torque_idx] * torque_multiplier
+    torque_data = raw_data[:, torque_idx] * torque_multiplier * -1
     
-    mechanical_power_data = torque_data * omega_m
     current_positions = time_steps * omega_m 
 
+    # Ghep du lieu thanh mang 2D truoc khi xu ly dong bo va cat diem
     combined_torque = np.vstack((torque_data, current_positions))
-    
-    half_open_interval = motor.maxwell_export_option.solver_option.half_open_interval
-    if not half_open_interval:
-        combined_torque = combined_torque[:, :-1]
-        final_power_data = mechanical_power_data[:-1]
-        final_positions = current_positions[:-1]
+
+    if use_alt_point:
+        # Dong bo diem dau va xoa diem cuoi de tao khoang nua mo
+        combined_torque = alternetive_first_point(data = combined_torque,
+                                                remove_last_point = True,
+                                                last_row_is_position = True)
     else:
-        final_power_data = mechanical_power_data
-        final_positions = current_positions
+        # Neu khong dung alt_point, van phai cat bo diem cuoi de tinh toan trung binh chinh xac
+        combined_torque = combined_torque[:, :-1]
 
-    combined_torque[0, :] *= -1
-
-    combined_power = np.vstack((final_power_data, final_positions))
+    # Tinh toan cong suat co hoc tu du lieu torque da xu ly
+    power_result = calculate_mechanical_power(torque_data = combined_torque, speed_rpm = speed_rpm)
 
     motor.record.torque_fem = combined_torque.copy()
-    motor.record.mechanical_power_fem = combined_power.copy()
-    motor.record.average_mechanical_power_fem = np.mean(mechanical_power_data)
+    motor.record.mechanical_power_fem = power_result.mechanical_data.copy()
+    motor.record.average_mechanical_power_fem = power_result.average_mechanical_data
 
     print(f"Native Export: {report_name} processed.")
     return None

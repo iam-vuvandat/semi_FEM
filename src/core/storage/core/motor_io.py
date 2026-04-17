@@ -31,38 +31,42 @@ def save_motor(motor_obj, filename: str, filepath: str = None, callback=None):
     full_path = _resolve_full_path(filename, filepath)
     temp_path = full_path.with_suffix('.tmp')
 
-    # Danh sách các thuộc tính KHÔNG muốn lưu (Blacklist)
-    # Ví dụ: logger, các cache tính toán tạm thời, hoặc các đối tượng không thể pickle
+    print(f"\n--- Starting Save Operation: {full_path.name} ---")
+    if callback: callback(f"Starting save: {full_path.name}")
+
     excluded_attributes = [
         'reluctance_network'
     ]
 
-    if callback: callback(f"Filtering and preparing to save: {full_path.name}...")
-
     try:
-        # Lấy toàn bộ dictionary của đối tượng và loại bỏ các phần tử trong blacklist
+        print(f"Step 1: Filtering attributes (Blacklist: {excluded_attributes})...")
+        if callback: callback(f"Filtering and preparing to save: {full_path.name}...")
+        
         full_state = motor_obj.__dict__.copy()
         for attr in excluded_attributes:
             if attr in full_state:
                 full_state.pop(attr)
                 logger.info(f"Excluded attribute: {attr}")
 
-        # Lưu kèm theo thông tin về Class để phục hồi method khi load
         data_to_pickle = {
             "class_type": type(motor_obj), 
             "state": full_state
         }
 
+        print(f"Step 2: Serializing data to temporary file...")
         with open(temp_path, "wb") as f:
             pickle.dump(data_to_pickle, f, protocol=pickle.HIGHEST_PROTOCOL)
         
+        print(f"Step 3: Moving temporary file to final destination...")
         if temp_path.exists():
             shutil.move(str(temp_path), str(full_path))
         
+        print(f"Success: Motor saved at {full_path}")
         if callback: callback(f"Successfully saved: {full_path.name}")
         return True
 
     except Exception as e:
+        print(f"Failed: Save error - {str(e)}")
         logger.error(f"Save error: {e}")
         if callback: callback(f"Error while saving: {str(e)}")
         if temp_path.exists(): temp_path.unlink() 
@@ -75,11 +79,16 @@ def load_motor(filename: str, filepath: str = None, callback=None):
     sys.setrecursionlimit(1000000000)
     full_path = _resolve_full_path(filename, filepath)
     
+    print(f"\n--- Starting Load Operation: {full_path.name} ---")
+    if callback: callback(f"Starting load: {full_path.name}")
+
     if not full_path.exists():
+        print(f"Failed: File not found at {full_path}")
         if callback: callback(f"File not found: {full_path}")
         return None
 
     try:
+        print(f"Step 1: Reading and unpickling data from file...")
         with open(full_path, "rb") as f:
             data = pickle.load(f)
         
@@ -87,23 +96,25 @@ def load_motor(filename: str, filepath: str = None, callback=None):
         state = data.get("state")
 
         if class_type and state:
-            # 1. Tạo một instance mới của Class gốc mà không gọi hàm __init__ 
-            # (Tránh việc khởi tạo lại làm mất dữ liệu hoặc tốn thời gian)
+            print(f"Step 2: Reconstructing {class_type.__name__} instance...")
             motor = class_type.__new__(class_type)
             
-            # 2. Đổ toàn bộ dữ liệu vào instance này
+            print(f"Step 3: Updating instance dictionary with loaded state...")
             motor.__dict__.update(state)
             
-            # 3. Khởi tạo lại các thuộc tính bị loại bỏ nếu cần (ví dụ logger)
             if hasattr(motor, 'init_logger'): 
+                print(f"Step 4: Re-initializing logger...")
                 motor.init_logger()
 
+            print(f"Success: Motor loaded from {full_path}")
             if callback: callback(f"Load completed with methods: {full_path.name}")
             return motor
         
+        print("Failed: Invalid data structure in file.")
         return None
 
     except Exception as e:
+        print(f"Failed: Load error - {str(e)}")
         logger.error(f"Load error: {e}")
         if callback: callback(f"Error while loading: {str(e)}")
         return None

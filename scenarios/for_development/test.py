@@ -34,7 +34,7 @@ if solve_semiFEM:
         aft.data_processor.plot_cogging_torque(horizontal_axis="time")
         aft.data_processor.plot_mechanical_power(horizontal_axis="time")
         aft.data_processor.plot_inductance_map()
-    aft.display()
+    
     """
 
 # Visualizatn
@@ -44,7 +44,11 @@ aft.data_processor.compare_back_emf_line(horizontal_axis="time")
 aft.data_processor.compare_torque(horizontal_axis="time")
 aft.data_processor.compare_mechanical_power(horizontal_axis="time")
 aft.data_processor.compare_cogging_torque(horizontal_axis="time")
+aft.data_processor.compare_axial_force(horizontal_axis="time")
+#aft.display()
+
 motor_io.save_motor(motor_obj=aft,filename= file_name)
+
 
 
 

@@ -1,10 +1,9 @@
 import paths
 import numpy as np
 import os
-from src.core.solver.utils.duplicate_data import duplicate_data
 from src.core.solver.utils.alternetive_first_point import alternetive_first_point
 
-def cogging_torque_export(motor, m3d):
+def axial_force_export(motor, m3d):
     project_root = paths.configure_path()
     
     use_alt_point = motor.maxwell_export_option.solver_option.alternetive_first_point
@@ -15,24 +14,21 @@ def cogging_torque_export(motor, m3d):
     temp_dir = os.path.join(project_root, "data", "temp")
     os.makedirs(temp_dir, exist_ok=True)
 
-    expression = "Moving1.Torque"
-    report_name = "Cogging_Torque_Report_FEM"
+    expression = "Axial_Force.Force_z"
+    report_name = "Axial_Force_Report_FEM"
     csv_path = os.path.join(temp_dir, f"{report_name}.csv")
 
     if os.path.exists(csv_path):
         try:
             os.remove(csv_path)
         except Exception as e:
-            print(f"Warning: Could not delete old cogging file: {e}")
+            print(f"Warning: Could not delete {csv_path}: {e}")
 
     oModule = m3d.odesign.GetModule("ReportSetup")
+    
     all_reports = list(oModule.GetAllReportNames())
-
     if all_reports:
         oModule.DeleteReports(all_reports)
-        print(f"Deleted existing reports: {all_reports}")
-    else:
-        print("No reports to delete. Skipping...")
 
     oModule.CreateReport(report_name, "Transient", "Rectangular Plot", "Setup1 : Transient", 
         ["Domain:=", "Sweep"], 
@@ -56,7 +52,6 @@ def cogging_torque_export(motor, m3d):
     oModule.ExportToFile(report_name, native_path, False)
 
     if not os.path.exists(csv_path):
-        print(f"\033[91mError: Native export failed to create {csv_path}\033[0m")
         return None
 
     with open(csv_path, 'r') as f:
@@ -64,12 +59,12 @@ def cogging_torque_export(motor, m3d):
 
     time_idx = 0
     time_multiplier = 1.0
-    torque_idx = 1
-    torque_multiplier = 1.0
+    force_idx = 1
+    force_multiplier = 1.0
     
-    time_unit_map = {"[s]": 1.0, "[ms]": 1e-3, "[us]": 1e-6, "[ns]": 1e-9}
-    torque_unit_map = {"[newtonmeter]": 1.0, "[mnewtonmeter]": 1e-3, "[unewtonmeter]": 1e-6}
-
+    time_unit_map = {"[s]": 1.0, "[ms]": 1e-3, "[us]": 1e-6}
+    force_unit_map = {"[newton]": 1.0, "[mnewton]": 1e-3, "[knewton]": 1e3}
+    
     for i, col in enumerate(header):
         col_clean = col.replace('"', '').lower()
         if "time" in col_clean:
@@ -78,40 +73,32 @@ def cogging_torque_export(motor, m3d):
                 if unit in col_clean:
                     time_multiplier = mult
                     break
-        elif "torque" in col_clean:
-            torque_idx = i
-            for unit, mult in torque_unit_map.items():
+        elif "force" in col_clean:
+            force_idx = i
+            for unit, mult in force_unit_map.items():
                 if unit in col_clean:
-                    torque_multiplier = mult
+                    force_multiplier = mult
                     break
 
     raw_data = np.genfromtxt(csv_path, delimiter=',', skip_header=1)
     
-    if raw_data.size == 0:
-        print(f"\033[91mError: Exported CSV is empty.\033[0m")
-        return None
-
     time_steps = raw_data[:, time_idx] * time_multiplier
-    torque_data = raw_data[:, torque_idx] * torque_multiplier
+    force_data = raw_data[:, force_idx] * force_multiplier * -1 
     
     current_positions = time_steps * omega_m 
 
-    combined_torque = np.vstack((torque_data, current_positions))
-    combined_torque[:-1, :] *= -1
+    combined_force = np.vstack((force_data, current_positions))
     
-    # Xu ly dong bo diem dau va cat bo diem cuoi de tao khoang nua mo [0, T)
     if use_alt_point:
-        combined_torque = alternetive_first_point(data = combined_torque,
-                                                remove_last_point = True,
-                                                last_row_is_position = True)
+        combined_force = alternetive_first_point(data = combined_force,
+                                               remove_last_point = True,
+                                               last_row_is_position = True)
     else:
-        combined_torque = combined_torque[:, :-1]
-    
-    # Nhan ban du lieu tu mot chu ky cogging ra toan bo chu ky co hoc
-    combined_torque = duplicate_data(data=combined_torque, half_open_interval=True).duplicated_data
+        combined_force = combined_force[:, :-1]
 
-    motor.record.cogging_fem = combined_torque.copy()
+    motor.record.axial_force_fem = combined_force.copy()
+    # Tinh trung binh dua tren mang da duoc xu ly khoang nua mo
+    motor.record.average_axial_force_fem = np.mean(combined_force[0, :])
 
-    print("Cogging torque export successfully")
-
+    print(f"Native Export: {report_name} processed.")
     return None

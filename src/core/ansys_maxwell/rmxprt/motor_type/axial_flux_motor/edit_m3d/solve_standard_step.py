@@ -2,6 +2,7 @@ import math
 
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.flux_linkage_export import flux_linkage_export
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.torque_export import torque_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.axial_force_export import axial_force_export
 
 def solve_standard_step(m3d, motor):
     setup_name = "Setup1"
@@ -31,11 +32,6 @@ def solve_standard_step(m3d, motor):
     
     # Mac dinh time_step
     time_step_ms = stop_time_ms / n_point 
-
-    half_open_interval = motor.maxwell_export_option.solver_option.half_open_interval
-    if half_open_interval:
-        stop_time_ms -= time_step_ms
-
 
     # Truong hop dac biet: chi giai 1 buoc
     if motor.maxwell_export_option.solver_option.solve_only_1_step: 
@@ -81,6 +77,9 @@ def solve_standard_step(m3d, motor):
         
         print("Torque export starting")
         torque_export(motor=motor, m3d=m3d)
+
+        print("Axial force export starting")
+        axial_force_export(motor = motor, m3d = m3d)
         
         print("\033[92mExport data successfully\033[0m")
 

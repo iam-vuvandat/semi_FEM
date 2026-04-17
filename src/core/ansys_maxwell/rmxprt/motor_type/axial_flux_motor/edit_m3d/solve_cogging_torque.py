@@ -20,10 +20,6 @@ def solve_cogging_torque(m3d=None, motor=None):
         time_step = stop_time / n_point
         time_step_str = f"{time_step}ms"
 
-        half_open_interval = motor.maxwell_export_option.solver_option.half_open_interval
-        if half_open_interval:
-            stop_time -= time_step
-
         stop_time_str = f"{stop_time}ms"
 
         if motor.maxwell_export_option.solver_option.solve_only_1_step:
