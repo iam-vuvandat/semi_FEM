@@ -27,7 +27,7 @@ def save_motor(motor_obj, filename: str, filepath: str = None, callback=None):
     """
     Lưu motor theo phương pháp Blacklist: Lưu tất cả trừ các thuộc tính trong danh sách loại trừ.
     """
-    sys.setrecursionlimit(100000) 
+    sys.setrecursionlimit(1000) 
     full_path = _resolve_full_path(filename, filepath)
     temp_path = full_path.with_suffix('.tmp')
 
@@ -35,7 +35,7 @@ def save_motor(motor_obj, filename: str, filepath: str = None, callback=None):
     if callback: callback(f"Starting save: {full_path.name}")
 
     excluded_attributes = [
-        'reluctance_network'
+        'reluctance_network','geometry'
     ]
 
     try:
@@ -76,7 +76,7 @@ def load_motor(filename: str, filepath: str = None, callback=None):
     """
     Nạp motor và khôi phục đầy đủ cả dữ liệu lẫn các Method của Class gốc.
     """
-    sys.setrecursionlimit(1000000000)
+    sys.setrecursionlimit(1000)
     full_path = _resolve_full_path(filename, filepath)
     
     print(f"\n--- Starting Load Operation: {full_path.name} ---")

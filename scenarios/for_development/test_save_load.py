@@ -7,7 +7,7 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 
 # Option
 reload_motor = False
-file_name = "motor_test"
+file_name = "motor_test_save_load"
 export_maxwell = True
 solve_semiFEM = True
 
@@ -17,13 +17,12 @@ if reload_motor:
     aft = motor_io.load_motor(filename = file_name)
 else:
     aft = AxialFluxMotorType1()
-
-
+    aft.calculation_data.general_options.n_point = 40
     
 if solve_semiFEM:
     aft.analysis_motor()
-    aft.display()
-    """
+    #aft.display()
+    
     if reload_motor is False:
         aft.data_processor.plot_flux_linkage(horizontal_axis="time")
         aft.data_processor.plot_back_emf(horizontal_axis="time")
@@ -35,7 +34,7 @@ if solve_semiFEM:
         aft.data_processor.plot_mechanical_power(horizontal_axis="time")
         aft.data_processor.plot_inductance_map()
     
-    """
+    
 
 if export_maxwell:
     aft.export_to_rmxprt()

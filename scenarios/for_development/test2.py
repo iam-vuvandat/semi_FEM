@@ -7,7 +7,7 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 
 # Option
 reload_motor = False
-file_name = "motor_test"
+file_name = "motor_test2"
 export_maxwell = True
 solve_semiFEM = True
 
@@ -17,6 +17,10 @@ if reload_motor:
     aft = motor_io.load_motor(filename = file_name)
 else:
     aft = AxialFluxMotorType1()
+    aft.geometry_data.stator.slot_number = 30
+    aft.geometry_data.rotor.pole_number = 20
+    aft.require('geometry')
+    aft.geometry.show()
 
 
     

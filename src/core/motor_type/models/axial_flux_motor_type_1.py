@@ -101,15 +101,15 @@ class AxialFluxMotorType1:
         self.calculation_data = SimpleNamespace(
             convergence_settings = SimpleNamespace(
                 max_iteration          = 50,
-                max_relative_residual  = 1 * 1e-2,
+                max_relative_residual  = 0.1 * 1e-2,
                 material_relax         = 0.35,
                 damping_factor         = 1.0,
                 relaxation_history     = None,
                 relaxation_decay = 0.5
             ),
             general_options = SimpleNamespace(
-                n_point                = 20,
-                solve_cogging          = True,
+                n_point                = 40,
+                solve_cogging          = False,
                 solve_smooth_torque    = False,
                 solve_only_1_step      = False,
                 vectorized_optimization = True,
