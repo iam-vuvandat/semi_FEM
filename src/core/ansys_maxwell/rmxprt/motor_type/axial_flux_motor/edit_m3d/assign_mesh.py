@@ -1,4 +1,8 @@
 import numpy as np
+import math
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.calculate_band_mapping_angle import calculate_band_mapping_angle
+
+
 
 def assign_mesh(m3d, motor):
     oModule = m3d.odesign.GetModule("MeshSetup")
@@ -7,7 +11,7 @@ def assign_mesh(m3d, motor):
     mesh_setting = motor.maxwell_export_option.custom_option.mesh_setting
 
     # Trich xuat va tinh toan
-    cogging_period_mech = motor.mechanical.cogging_period_mech * (180 / np.pi) 
+    cogging_period_mech = motor.mechanical.cogging_period_mech 
     point_number_simulation = motor.calculation_data.general_options.n_point
 
     # Kiem tra tranh chia cho -1 hoac gia tri -1 tu n_point
@@ -30,11 +34,15 @@ def assign_mesh(m3d, motor):
     if clone_mesh:
         # 1. Cap nhat Cylindrical Gap Mesh Operation
         if minimum_step_rotate != -1 and moving_side_layers != -1 and static_side_layers != -1:
+            minimum_step_rotate = calculate_band_mapping_angle(delta_angle=minimum_step_rotate,
+                                                               minimum_angle= math.radians(1),
+                                                               maximum_angle= math.radians(3),
+                                                               return_string= True)
             oModule.EditCylindricalGapOp("CylindricalGap1", 
                 [
                     "NAME:CylindricalGap1",
                     "CloneMesh:="       , True,
-                    "BandMappingAngle:="    , f"{minimum_step_rotate}deg",
+                    "BandMappingAngle:="    , minimum_step_rotate,
                     "MovingSideLayers:="    , str(moving_side_layers),
                     "StaticSideLayers:="    , str(static_side_layers)
                 ])

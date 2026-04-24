@@ -17,6 +17,7 @@ from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
 from src.core.motor_type.utils.for_export_maxwell.update_maxwell_settings import update_maxwell_settings
+from src.core.motor_type.utils.for_save_load.prepare_to_save import prepare_to_save
 
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.export_to_rmxprt import export_to_rmxprt
 
@@ -155,17 +156,17 @@ class AxialFluxMotorType1:
             custom_option = SimpleNamespace(
                 mesh_setting = SimpleNamespace(
                     cylindrical_gap_1= SimpleNamespace(
-                        clone_mesh = False,
+                        clone_mesh = True,
                         mapping_angle = -1,
-                        moving_side = 1,
-                        static_side = 1
+                        moving_side = 2,
+                        static_side = 2
                     ),
 
                     band_mapping_angle = pi / 180,
                     maximum_element_length = 20 * 1e-3, # unit: m
                     airgap_element_layer = 6,
-                    moving_side_layers = 1,
-                    static_side_layers = 1,
+                    moving_side_layers = 2,
+                    static_side_layers = 2,
                     length_band_element_length = -1,
                     length_coil_element_length = -1,
                     length_mag_element_length = -1,
@@ -255,5 +256,8 @@ class AxialFluxMotorType1:
     
     def update_maxwell_setting(self):
         update_maxwell_settings(motor=self)
+
+    def prepare_to_save(self):
+        prepare_to_save(motor = self)
 
         

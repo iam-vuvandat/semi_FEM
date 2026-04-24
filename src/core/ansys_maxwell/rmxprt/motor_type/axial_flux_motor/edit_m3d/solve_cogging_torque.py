@@ -1,6 +1,9 @@
 import math
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.edit_excitation import edit_excitation
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.cogging_torque_export import cogging_torque_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.calculate_electrical_frequency import calculate_electrical_frequency
+
+
 def solve_cogging_torque(m3d=None, motor=None):
     if motor.calculation_data.general_options.solve_cogging:
         setup_name = "Setup1"
@@ -15,9 +18,11 @@ def solve_cogging_torque(m3d=None, motor=None):
         theta_sweep = motor.mechanical.cogging_period_mech
         
         stop_time = (theta_sweep / shaft_speed) * 1000
-    
+
         n_point = motor.calculation_data.general_options.n_point
         time_step = stop_time / n_point
+
+        stop_time -=time_step
         time_step_str = f"{time_step}ms"
 
         stop_time_str = f"{stop_time}ms"
@@ -38,6 +43,15 @@ def solve_cogging_torque(m3d=None, motor=None):
         setup.props["ScalarPotential"] = "Second Order"
         setup.props["SmoothBHCurve"] = False
         setup.props["FastReachSteadyState"] = False
+        pole_pairs = motor.geometry_data.rotor.pole_number / 2 
+        speed_rpm = motor.mechanical_data.shaft_speed
+
+        frequency_string = calculate_electrical_frequency(rated_speed_rpm= speed_rpm, pole_pairs= pole_pairs, return_string= True)
+
+        setup.props["FrequencyOfAddedVoltageSource"]= frequency_string
+        setup.props["IsGeneralTransient"] = True
+
+
         setup.update()
 
         m3d.oproject.Save()

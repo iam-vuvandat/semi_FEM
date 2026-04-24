@@ -14,12 +14,7 @@ def analysis_motor(motor, callback = None):
     # require calculation data
     motor.require("calculation_data")
     calculation_data = motor.calculation_data
-    conv = calculation_data.convergence_settings
     gen = calculation_data.general_options
-    
-    max_relative_residual = conv.max_relative_residual
-    max_iteration = conv.max_iteration
-    material_relax = conv.material_relax
     
     solve_cogging = gen.solve_cogging
     n_point = gen.n_point
@@ -38,7 +33,7 @@ def analysis_motor(motor, callback = None):
     delta_theta  = cogging_angle / (n_point)
     minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))
 
-    if motor.adaptive_mesh_data.n_theta != minimum_theta_cell:
+    if (motor.adaptive_mesh_data.n_theta != minimum_theta_cell) and not solve_only_1_step:
         motor.adaptive_mesh_data.n_theta = minimum_theta_cell 
         motor.just_changed("mesh")
 
@@ -59,29 +54,20 @@ def analysis_motor(motor, callback = None):
     if solve_cogging:
         motor.mechanical.reset_motor_position()
         for i in tqdm(range(n_point), desc="Solving Cogging", disable=not debug):
-           
-            
             motor.drive.apply_winding_excitation(excitation = False)
             motor.reluctance_network.solver.solve()
             cogging[:, i] = motor.maxwell_stress_tensor().mst_result[3:5]
             motor.rotate_rotor(n_step = 1)
-        
         motor.mechanical.reset_motor_position()
 
     for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
-        
-        
         motor.drive.apply_winding_excitation(excitation = True)
         motor.reluctance_network.solver.solve()
-        
-        
         motor.reluctance_network.add_elements_lite()
         flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
         mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
-        current[:, i] = motor.drive.debug_current()[:]
-        
+        current[:, i] = motor.drive.debug_current()[:]        
         motor.rotate_rotor(n_step = angle_factor)
-
 
     # Export inductance map:
     motor.mechanical.reset_motor_position()
@@ -111,7 +97,6 @@ def analysis_motor(motor, callback = None):
                 motor.drive.apply_manual_winding_excitation(id=id_val, iq=iq_val)
                 
                 motor.reluctance_network.solver.solve()
-                   
                 
                 flux_dq = motor.reluctance_network.get_flux_linkage().flux_linkage[:2, 0] * periodic_factor
                 
@@ -123,29 +108,28 @@ def analysis_motor(motor, callback = None):
         motor.record.ld_map = ld_map
         motor.record.lq_map = lq_map
 
+    if not solve_only_1_step:
 
-    shaft_speed = motor.mechanical.shaft_speed * (pi/30)
+        shaft_speed = motor.mechanical.shaft_speed * (pi/30)
 
-    flux_linkage[:-1] *= periodic_factor
-    mst_data[:-1] *= periodic_factor
-    mechanical_power = mst_data[[3,-1],:]
-    mechanical_power[0,:] *= shaft_speed
-    cogging[:-1] *= periodic_factor
+        flux_linkage[:-1] *= periodic_factor
+        mst_data[:-1] *= periodic_factor
+        mechanical_power = mst_data[[3,-1],:]
+        mechanical_power[0,:] *= shaft_speed
+        cogging[:-1] *= periodic_factor
 
+        
+        back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
+        
+        motor.record.flux_linkage = flux_linkage.copy()
+        motor.record.back_emf = back_emf.copy()
     
-    back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
-    back_emf_line = calculate_line_to_line_back_emf(data_numpy=back_emf)
+        motor.record.mechanical_power = mechanical_power.copy()
+        motor.record.torque = mst_data[[3,4],:].copy()
+        motor.record.axial_force = mst_data[[2,4],:].copy()
+        motor.record.cogging = cogging.copy()
+        motor.record.currents = current.copy()
+        motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
 
-    cogging = duplicate_data(data=cogging, half_open_interval=True).duplicated_data
-
-    motor.record.flux_linkage = flux_linkage.copy()
-    motor.record.back_emf = back_emf.copy()
-    motor.record.back_emf_line = back_emf_line.copy()
-    motor.record.mst_data = mst_data.copy()
-    motor.record.mechanical_power = mechanical_power.copy()
-    motor.record.cogging = cogging.copy()
-    motor.record.currents = current.copy()
-    motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
-
-    
-    return None
+        
+        return None

@@ -1,12 +1,20 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-def plot_flux_linkage(data_processor, horizontal_axis = "mechanical_position"):
-    record = data_processor.motor.record
-    n_phase = data_processor.motor.winding_data.phase
-    shaft_speed = (data_processor.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
+def plot_flux_linkage(data_processor, 
+                      horizontal_axis = "mechanical_position", 
+                      show_fem = True, 
+                      show_dq = False, 
+                      show_all_phase = False, 
+                      plot = False):
     
-    # Chủ động đọc thông tin từ SimpleNamespace
+    if not plot:
+        return
+        
+    motor = data_processor.motor
+    record = motor.record
+    n_phase = motor.winding_data.phase
+    shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
 
     def get_x_axis(theta_data):
@@ -14,38 +22,41 @@ def plot_flux_linkage(data_processor, horizontal_axis = "mechanical_position"):
             return theta_data / shaft_speed, r'Time ($s$)'
         else:
             return theta_data, r'Rotor Position ($rad$)'
-        
-    if hasattr(record, "flux_linkage"):
-        data = record.flux_linkage
-        # Hàng cuối cùng của mảng flux_linkage chứa dữ liệu vị trí rotor (theta)
-        x_data, x_label = get_x_axis(data[-1, :])
-        
-        fig, ax = plt.subplots(figsize=(16, 10))
-        
-        # Vẽ các thành phần d-q
-        ax.plot(x_data, data[0, :], color='black', linestyle=s.linestyles[1], 
-                label=r'$\Psi_d$', linewidth=1.5)
-        ax.plot(x_data, data[1, :], color='black', linestyle=s.linestyles[0], 
-                label=r'$\Psi_q$', linewidth=1.5)
-        
-        # Vẽ các thành phần pha
-        for i in range(n_phase):
+    
+    has_sf = hasattr(record, "flux_linkage")
+    has_fem = hasattr(record, "flux_linkage_fem") and show_fem
+
+    if not has_sf and not has_fem:
+        print("\033[93mWarning: No flux linkage data found.\033[0m")
+        return
+
+    fig, ax = plt.subplots(figsize=(16, 10))
+    x_label = ""
+    phase_indices = range(n_phase) if show_all_phase else [0]
+
+    if has_fem:
+        data_fem = record.flux_linkage_fem
+        x_fem, x_label = get_x_axis(data_fem[-1, :])
+        if show_dq:
+            ax.plot(x_fem, data_fem[0, :], color='gray', linestyle='--', alpha=0.6, label=r'FEM $\Psi_d$')
+            ax.plot(x_fem, data_fem[1, :], color='gray', linestyle=':', alpha=0.6, label=r'FEM $\Psi_q$')
+        for i in phase_indices:
             color = s.phase_colors[i % 3] if n_phase == 3 else s.colors[i % len(s.colors)]
-            ax.plot(x_data, data[2 + i, :], color=color, 
-                    label=f'Phase {chr(65+i)}', linewidth=2.0)
-            
-        # Chủ động thiết lập font chữ và cỡ chữ từ plot_style
-        ax.set_xlabel(x_label, fontsize=s.label_size, family=s.font_family)
-        ax.set_ylabel(r'Flux Linkage ($Wb$)', fontsize=s.label_size, family=s.font_family)
-        
-        # Thiết lập cỡ chữ cho các ticks
-        ax.tick_params(axis='both', which='major', labelsize=s.tick_size)
-        
-        # Thiết lập cỡ chữ cho chú thích (legend)
-        ax.legend(frameon=True, loc='best', ncol=2, fontsize=s.legend_size)
-        
-        # Chủ động thiết lập lưới
-        ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
-        
-        plt.tight_layout()
-        plt.show()
+            ax.plot(x_fem, data_fem[2 + i, :], color=color, linestyle='--', alpha=0.3, label=f'FEM Phase {chr(65+i)}')
+
+    if has_sf:
+        data_sf = record.flux_linkage
+        x_sf, x_label = get_x_axis(data_sf[-1, :])
+        if show_dq:
+            ax.plot(x_sf, data_sf[0, :], color='black', linestyle=s.linestyles[1], label=r'SF $\Psi_d$')
+            ax.plot(x_sf, data_sf[1, :], color='black', linestyle=s.linestyles[0], label=r'SF $\Psi_q$')
+        for i in phase_indices:
+            color = s.phase_colors[i % 3] if n_phase == 3 else s.colors[i % len(s.colors)]
+            ax.plot(x_sf, data_sf[2 + i, :], color=color, label=f'SF Phase {chr(65+i)}', linewidth=2.0)
+
+    ax.set_xlabel(x_label, fontsize=s.label_size)
+    ax.set_ylabel(r'Flux Linkage ($Wb$)', fontsize=s.label_size)
+    ax.legend(frameon=True, loc='best', ncol=2)
+    ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
+    plt.tight_layout()
+    plt.show()

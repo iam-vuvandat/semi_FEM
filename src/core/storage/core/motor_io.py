@@ -24,9 +24,9 @@ def _resolve_full_path(filename: str, filepath: str = None) -> Path:
     return _get_data_dir() / filename
 
 def save_motor(motor_obj, filename: str, filepath: str = None, callback=None):
-    """
-    Lưu motor theo phương pháp Blacklist: Lưu tất cả trừ các thuộc tính trong danh sách loại trừ.
-    """
+
+    motor_obj.prepare_to_save()
+
     sys.setrecursionlimit(1000) 
     full_path = _resolve_full_path(filename, filepath)
     temp_path = full_path.with_suffix('.tmp')

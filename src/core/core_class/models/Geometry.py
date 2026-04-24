@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 import ctypes
 
-# Thiết lập DPI Awareness để giao diện sắc nét trên màn hình Surface
+
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
@@ -13,10 +13,6 @@ except Exception:
 
 class Geometry:
     def __init__(self, geometry=None):
-        """
-        Khởi tạo đối tượng quản lý hình học.
-        Dữ liệu geometry là danh sách các segment (Stator, Rotor, Coils, Magnets).
-        """
         self.geometry = geometry if geometry is not None else []
 
     def show(self, plotter=None, iron_color="#D3D3D3", magnet_color="#3498DB", 

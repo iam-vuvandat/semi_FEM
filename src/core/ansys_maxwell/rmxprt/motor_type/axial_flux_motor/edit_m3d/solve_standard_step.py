@@ -3,6 +3,8 @@ import math
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.flux_linkage_export import flux_linkage_export
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.torque_export import torque_export
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.axial_force_export import axial_force_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.calculate_electrical_frequency import calculate_electrical_frequency
+
 
 def solve_standard_step(m3d, motor):
     setup_name = "Setup1"
@@ -32,6 +34,7 @@ def solve_standard_step(m3d, motor):
     
     # Mac dinh time_step
     time_step_ms = stop_time_ms / n_point 
+    stop_time_ms -= time_step_ms
 
     # Truong hop dac biet: chi giai 1 buoc
     if motor.maxwell_export_option.solver_option.solve_only_1_step: 
@@ -61,6 +64,15 @@ def solve_standard_step(m3d, motor):
     setup.props["FastReachSteadyState"] = True
     setup.props["AutoDetectSteadyState"] = True
     setup.props["OutputPerObjectCoreLoss"] = True
+
+    pole_pairs = motor.geometry_data.rotor.pole_number / 2 
+    speed_rpm = motor.mechanical_data.shaft_speed
+
+    frequency_string = calculate_electrical_frequency(rated_speed_rpm= speed_rpm, poles= pole_pairs, return_string= True)
+
+    setup.props["FrequencyOfAddedVoltageSource"]= frequency_string
+    setup.props["IsGeneralTransient"] = True
+    
     
     setup.update()
 

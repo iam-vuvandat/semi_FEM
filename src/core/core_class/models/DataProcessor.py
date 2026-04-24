@@ -6,7 +6,6 @@ import scienceplots
 from src.core.core_class.utils.for_data_processor.apply_jounal_style import apply_journal_style
 from src.core.core_class.utils.for_data_processor.plot_flux_linkage import plot_flux_linkage
 from src.core.core_class.utils.for_data_processor.plot_back_emf import plot_back_emf
-from src.core.core_class.utils.for_data_processor.plot_back_emf_line import plot_back_emf_line
 from src.core.core_class.utils.for_data_processor.plot_current import plot_current
 from src.core.core_class.utils.for_data_processor.plot_torque import plot_torque
 from src.core.core_class.utils.for_data_processor.plot_axial_force import plot_axial_force
@@ -14,79 +13,68 @@ from src.core.core_class.utils.for_data_processor.plot_cogging_torque import plo
 from src.core.core_class.utils.for_data_processor.plot_mechanical_power import plot_mechanical_power
 from src.core.core_class.utils.for_data_processor.plot_inductance_map import plot_inductance_map
 
-from src.core.core_class.utils.for_data_processor.compare_flux_linkage import compare_flux_linkage
-from src.core.core_class.utils.for_data_processor.compare_back_emf import compare_back_emf
-from src.core.core_class.utils.for_data_processor.compare_back_emf_line import compare_back_emf_line
-from src.core.core_class.utils.for_data_processor.compare_torque import compare_torque
-from src.core.core_class.utils.for_data_processor.compare_mechanical_power import compare_mechanical_power
-from src.core.core_class.utils.for_data_processor.compare_cogging_torque import compare_cogging_torque
-from src.core.core_class.utils.for_data_processor.compare_axial_force import compare_axial_force
-
-from src.core.solver.utils.synchronize_signals import synchronize_signals
 from mpl_toolkits.mplot3d import Axes3D
-
 
 class DataProcessor:
     def __init__(self, motor):
+        """
+        Lớp xử lý và phân tích dữ liệu hậu mô phỏng (Post-processing).
+
+        Properties (MBGRN - Lưu trong motor.record):
+        - flux_linkage: (phase + 3, n_point) -> [Psi_d, Psi_q, Psi_0, Psi_A, Psi_B, ..., Position]
+        - back_emf: (phase, n_point) -> Sức điện động cảm ứng (V)
+        - currents: (3 + phase, n_point) -> [i_d, i_q, i_0, i_A, i_B, ..., Position]
+        - cogging: (2, n_point) -> [Torque_cog, Position]
+        - torque: (2, n_point) -> [Torque_total, Position]
+        - axial_force: (2, n_point) -> [Force_z, Position]
+        - mechanical_power: (2, n_point) -> [Power, Position]
+        - average_mechanical_power: scalar (float)
+        - id_grid, iq_grid: (resolution,) -> Lưới dòng điện cho bản đồ độ tự cảm
+        - ld_map, lq_map: (resolution, resolution) -> Bản đồ Ld, Lq
+
+        Properties (FEM - Lưu trong motor.record):
+        - flux_linkage_fem: (phase + 3, n_steps_fem) -> [Psi_d, Psi_q, ..., Position]
+        - back_emf_fem: (phase, n_steps_fem) -> Sức điện động từ FEM (V)
+        - torque_fem: (2, n_steps_fem) -> [Torque, Position]
+        - mechanical_power_fem: (2, n_steps_fem) -> [Power, Position]
+        - average_mechanical_power_fem: scalar (float)
+        - axial_force_fem: (2, n_steps_fem) -> [Force_z, Position]
+        - average_axial_force_fem: scalar (float)
+        """
         self.motor = motor
         self.plot_style = apply_journal_style()
     
+    def plot_flux_linkage(self, horizontal_axis="mechanical_position", show_fem=True, 
+                          show_dq=False, show_all_phase=False, plot=True):
+        plot_flux_linkage(data_processor=self, horizontal_axis=horizontal_axis, 
+                          show_fem=show_fem, show_dq=show_dq, 
+                          show_all_phase=show_all_phase, plot=plot)
 
-
-    def plot_flux_linkage(self,horizontal_axis = "mechanical_position"):
-        plot_flux_linkage(data_processor= self, horizontal_axis= horizontal_axis)
-
-    def plot_back_emf(self,horizontal_axis = "mechanical_position"):
-        plot_back_emf(data_processor= self, horizontal_axis= horizontal_axis)
+    def plot_back_emf(self, horizontal_axis="mechanical_position", show_fem=True, 
+                      show_all_phases=False, plot=True):
+        
+        return plot_back_emf(data_processor=self, horizontal_axis=horizontal_axis, 
+                             show_fem=show_fem, show_all_phases=show_all_phases, plot=plot)
     
-    def plot_back_emf_line(self,horizontal_axis = "mechanical_position"):
-        plot_back_emf_line(data_processor= self, horizontal_axis= horizontal_axis)
+    def plot_current(self, horizontal_axis="mechanical_position", show_fem=True, plot=True):
+        plot_current(data_processor=self, horizontal_axis=horizontal_axis, 
+                     show_fem=show_fem, plot=plot)
 
-    def plot_current(self,horizontal_axis = "mechanical_position"):
-        plot_current(data_processor= self, horizontal_axis= horizontal_axis)
-
-    def plot_torque(self,horizontal_axis = "mechanical_position"):
-        plot_torque(data_processor= self, horizontal_axis= horizontal_axis)
+    def plot_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True):
+        plot_torque(data_processor=self, horizontal_axis=horizontal_axis, 
+                    show_fem=show_fem, plot=plot, revert=revert)
     
-    def plot_axial_force(self,horizontal_axis = "mechanical_position"):
-        plot_axial_force(data_processor= self, horizontal_axis= horizontal_axis)
+    def plot_axial_force(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True):
+        plot_axial_force(data_processor=self, horizontal_axis=horizontal_axis, 
+                         show_fem=show_fem, plot=plot, revert=revert)
     
-    def plot_cogging_torque(self,horizontal_axis = "mechanical_position"):
-        plot_cogging_torque(data_processor= self, horizontal_axis= horizontal_axis)
+    def plot_cogging_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True):
+        plot_cogging_torque(data_processor=self, horizontal_axis=horizontal_axis, 
+                            show_fem=show_fem, plot=plot, revert=revert)
 
-    def plot_mechanical_power(self,horizontal_axis = "mechanical_position"):
-        plot_mechanical_power(data_processor= self, horizontal_axis= horizontal_axis)
+    def plot_mechanical_power(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True):
+        plot_mechanical_power(data_processor=self, horizontal_axis=horizontal_axis, 
+                              show_fem=show_fem, plot=plot, revert=revert)
 
     def plot_inductance_map(self):
-        plot_inductance_map(data_processor= self)
-
-
-
-
-    def compare_flux_linkage(self,horizontal_axis = "mechanical_position", show_dq_axis = True, show_all_phases = True ):
-        compare_flux_linkage(data_processor= self, horizontal_axis= horizontal_axis, show_dq_axis= show_dq_axis, show_all_phases= show_all_phases)
-
-    def compare_back_emf(self,horizontal_axis = "mechanical_position", show_all_phases = True):
-        compare_back_emf(data_processor= self, horizontal_axis= horizontal_axis, show_all_phases= show_all_phases)
-    
-    def compare_back_emf_line(self,horizontal_axis = "mechanical_position", show_all_phases = True):
-        compare_back_emf_line(data_processor= self, horizontal_axis= horizontal_axis, show_all_phases= show_all_phases)
-        
-    def compare_torque(self,horizontal_axis = "mechanical_position", synchronize_signal = True):
-        compare_torque(data_processor= self, horizontal_axis= horizontal_axis, synchronize_signal = synchronize_signal)
-
-    def compare_mechanical_power(self,horizontal_axis = "mechanical_position", synchronize_signal = True):
-        compare_mechanical_power(data_processor= self, horizontal_axis= horizontal_axis, synchronize_signal = synchronize_signal)
-    
-    def compare_cogging_torque(self,horizontal_axis = "mechanical_position", synchronize_signal = True):
-        compare_cogging_torque(data_processor= self, horizontal_axis= horizontal_axis, synchronize_signal = synchronize_signal)
-
-    def compare_axial_force(self,horizontal_axis = "mechanical_position", synchronize_signal = True):
-        compare_axial_force(data_processor= self, horizontal_axis= horizontal_axis, synchronize_signal = synchronize_signal)
-
-
-    def synchronize_signal(self, data_true, data_pred, is_periodic=True, half_open_interval=True):
-        synchronize_signals(data_true = data_true, data_pred = data_pred, is_periodic= is_periodic, half_open_interval= half_open_interval)
-
-    
-    
+        plot_inductance_map(data_processor=self)

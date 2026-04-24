@@ -35,11 +35,8 @@ class Drive:
 
     @property
     def theta_e(self):
-        if not self.geometry_data.geometry_option.synchronize_with_rmxprt:
-            return self.mechanical.current_position * self.pole_pairs
-        else: 
-            return (self.mechanical.current_position + self.geometry_data.geometry_option.rotor_mechanical_synchronized) * self.pole_pairs
-
+        return self.mechanical.current_position * self.pole_pairs
+        
     @property
     def current_function(self):
         functions = []

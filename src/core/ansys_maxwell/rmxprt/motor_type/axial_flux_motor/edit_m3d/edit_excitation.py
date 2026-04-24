@@ -1,4 +1,7 @@
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.winding_direction_setup import winding_direction_setup
+
 def edit_excitation(m3d, motor, disable_excitation=False):
+    
     motor.update_maxwell_setting()
     current_functions = motor.maxwell_export_option.current_function_for_rmxprt_export
     oModule = m3d.odesign.GetModule("BoundarySetup")
@@ -35,7 +38,7 @@ def edit_excitation(m3d, motor, disable_excitation=False):
                 "ParentBndID:="         , winding_name,
                 "Conductor number:="    , turns_val,
                 "Winding:="             , winding_name,
-                "Point out of terminal:=", False
+                "Point out of terminal:=", True
             ])
 
     status_msg = "DISABLED (0A)" if disable_excitation else "ENABLED"

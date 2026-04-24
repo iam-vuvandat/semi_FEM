@@ -11,25 +11,15 @@ class Output:
     flux_linkage: Any
 
 def get_flux_linkage(reluctance_network):
-    """
-    Calculates the total flux linkage for all phases based on the current magnetic state.
-    Strictly follows the refactored original variable names.
-    """
     poles = reluctance_network.geometry_data.rotor.pole_number 
     current_position = reluctance_network.mechanical.current_position
 
-    mesh_data = reluctance_network.mesh.adaptive_mesh_data
-    
-    # 3. PHÂN TÍCH PHẦN TỬ ĐỂ XÁC ĐỊNH SỐ PHA
     elements = reluctance_network.elements.flatten()
     phase_number = elements[0].element_winding_vector.size
     
-    # Khởi tạo tổng từ thông liên kết Psi cho từng pha
     psi_total = np.zeros(phase_number)
     
-    # 4. TÍCH PHÂN TỪ THÔNG TRÊN TOÀN BỘ PHẦN TỬ
     for element in elements:
-        # Lấy vector pháp tuyến của dây quấn (Radial, Theta, Axial)
         winding_normal = element.winding_normal
         theta = winding_normal[1]
         

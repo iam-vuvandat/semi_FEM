@@ -21,30 +21,26 @@ def create_geometry(motor,
                     create_tooth = True,
                     create_stator_yoke = True):
 
-    
+    motor.require('mechanical')
     geometry = []
     
-    # Truy cập các container chứa tham số nguyên bản
     stator = motor.geometry_data.stator
     rotor  = motor.geometry_data.rotor
     mmf_offset = motor.winding_data.mmf_offset
-
-    rotor_angle_offset+= mmf_offset
-
-
-    geometry_option = motor.geometry_data.geometry_option
+    rotor_angle_offset+= mmf_offset 
     
-    synchronize_with_rmxprt = geometry_option.synchronize_with_rmxprt
+    synchronize_with_rmxprt = motor.geometry_data.geometry_option.synchronize_with_rmxprt
     if synchronize_with_rmxprt:
         offset_rotor_for_rmxprt = (2* pi / (rotor.pole_number)) / 2
         offset_stator_for_rmxprt = (2 * pi) / (stator.slot_number)
         stator_angle_offset += offset_stator_for_rmxprt
         rotor_angle_offset += offset_rotor_for_rmxprt
 
-        geometry_option.rotor_mechanical_synchronized = offset_rotor_for_rmxprt - offset_stator_for_rmxprt
-        print(f"\033[92m[DEBUG] RMxprt Synchronization: rotor_mechanical_synchronized = {geometry_option.rotor_mechanical_synchronized:.6f} rad\033[0m")
-    
- 
+        # update current_position:
+        motor.mechanical.current_position += offset_rotor_for_rmxprt - offset_stator_for_rmxprt
+        motor.geometry_data.geometry_option.rotor_mechanical_synchronized = offset_rotor_for_rmxprt - offset_stator_for_rmxprt
+        print("In create_geometry: motor.mechanical.current_position updated to ",motor.mechanical.current_position)
+        
     rotor_yoke_mesh = create_tube(inner_radius=rotor.shaft_hole_diameter/2,
                                   outer_radius=rotor.rotor_lam_dia/2,
                                   height = rotor.rotor_length)
