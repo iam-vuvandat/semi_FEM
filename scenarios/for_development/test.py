@@ -6,7 +6,7 @@ from src.core.storage.core import motor_io
 from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1
 
 # Option
-reload_motor = True
+reload_motor = False
 file_name = "motor_test"
 export_maxwell = True
 solve_semiFEM = True
@@ -21,7 +21,7 @@ else:
     aft.geometry_data.rotor.pole_number = 20
     aft.just_changed('geometry')
 
-    aft.calculation_data.general_options.n_point = 10
+    aft.calculation_data.general_options.n_point = 3
     aft.maxwell_export_option.solver_option.solve_immediately = True
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.just_changed('calculation_data')
@@ -32,7 +32,8 @@ if export_maxwell:
     pass
 
 if solve_semiFEM:
-    aft.analysis_motor()
+    #aft.analysis_motor()
+    pass
 
 
 

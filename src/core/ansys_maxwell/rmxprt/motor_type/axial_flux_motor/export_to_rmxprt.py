@@ -22,6 +22,9 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.solve_co
 
 def export_to_rmxprt(motor = None):
 
+    # require property
+    motor.require('geometry')
+
     # General init
     init_window()
     rmxprt = init_rmxprt(motor = motor)
