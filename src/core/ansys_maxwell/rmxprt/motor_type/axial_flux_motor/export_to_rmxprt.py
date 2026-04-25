@@ -54,6 +54,12 @@ def export_to_rmxprt(motor = None):
     solve_standard_step(m3d= m3d, motor= motor)
     solve_cogging_torque(m3d= m3d, motor= motor)
 
+    # close after completed
+    if motor.maxwell_export_option.solver_option.close_after_completed is True:
+        init_window()
+
+
+
 
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1

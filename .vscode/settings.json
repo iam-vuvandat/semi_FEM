@@ -9,7 +9,7 @@
                           "**/*.project_root":  true,
                           "**/*.log":  true,
                           "**/*.spec":  true,
-                          "**/paths.py": true,
+                          
                       },
     "files.autoSave":  "afterDelay",
     "files.autoSaveDelay":  1000,

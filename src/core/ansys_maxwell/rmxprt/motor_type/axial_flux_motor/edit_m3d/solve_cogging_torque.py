@@ -46,7 +46,7 @@ def solve_cogging_torque(m3d=None, motor=None):
         pole_pairs = motor.geometry_data.rotor.pole_number / 2 
         speed_rpm = motor.mechanical_data.shaft_speed
 
-        frequency_string = calculate_electrical_frequency(rated_speed_rpm= speed_rpm, pole_pairs= pole_pairs, return_string= True)
+        frequency_string = calculate_electrical_frequency(rated_speed_rpm= speed_rpm, poles= pole_pairs, return_string= True)
 
         setup.props["FrequencyOfAddedVoltageSource"]= frequency_string
         setup.props["IsGeneralTransient"] = True

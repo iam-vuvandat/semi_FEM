@@ -22,9 +22,9 @@ from src.core.motor_type.utils.for_save_load.prepare_to_save import prepare_to_s
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.export_to_rmxprt import export_to_rmxprt
 
 pi = math.pi
-
 class AxialFluxMotorType1:
     def __init__(self):
+        self.motor_type = "axial_flux_motor_type_1"
         self.motor_state_manager = MotorStateManager()
         self.data_processor = DataProcessor(motor=self)
 
@@ -182,7 +182,8 @@ class AxialFluxMotorType1:
             solver_option = SimpleNamespace(
                 alternetive_first_point = True,
                 solve_immediately = True,
-                solve_only_1_step = False
+                solve_only_1_step = False,
+                close_after_completed = True
             ),
         )
 
