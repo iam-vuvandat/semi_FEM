@@ -146,7 +146,7 @@ class AxialFluxMotorType1:
         )
 
         self.drive_data = SimpleNamespace(
-            i_rms = 10.0,
+            i_rms = 5.0,
             phase_advanced = 0.0
         )
 
