@@ -1,4 +1,5 @@
 import numpy as np
+import pyvista as pv
 from pyvista.plotting.renderer import Renderer 
 from pyvistaqt import BackgroundPlotter
 import ctypes
@@ -28,6 +29,9 @@ except Exception:
 
 
 def show_motor(motor):
+    # Thiết lập độ dày nét vẽ toàn cục (ví dụ: 0.5 là rất mảnh, 2.0 là dày)
+    pv.global_theme.line_width = 1.0
+
     # 1. Kiểm tra thuộc tính
     motor.require('geometry')
     motor.require('mesh')
@@ -46,7 +50,7 @@ def show_motor(motor):
     
     sym_factor = int(getattr(reluctance_network, 'symmetry_factor', 1)) if reluctance_network else 1
     grid_full, dim_full = _build_full_grid(grid_sector, dim_sector, sym_factor)
-
+    
     # 4. Khởi tạo Plotter
     pl = BackgroundPlotter(title="Integrated Motor Viewer", window_size=(1600, 900))
     pl.set_background("#FFFFFF")
@@ -57,7 +61,7 @@ def show_motor(motor):
     _add_cylindrical_axes_static(pl, base_len)
 
     # 5. Cấu hình UI & Trạng thái
-    colors_net = {0: "#444444", 1: "#1976D2", 2: "#FF3333", 3: "#FF9900", 4: "#3366FF"}
+    colors_net = {0: "#444444", 1: "#1976D2", 2: "#FF3333", 3: "#FF9900", 4: "#FF3333"}
     sargs = dict(title="Flux Density (T)", title_font_size=20, label_font_size=16,
                  n_labels=6, fmt="%.2f", vertical=True, position_x=0.92, position_y=0.15,
                  height=0.7, width=0.04, color='black', shadow=False)

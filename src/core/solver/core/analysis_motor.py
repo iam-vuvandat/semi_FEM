@@ -21,9 +21,6 @@ def analysis_motor(motor, callback = None):
     debug = gen.debug
     solve_only_1_step = gen.solve_only_1_step
 
-    if solve_only_1_step:
-        n_point = 1
-
     phases = motor.winding_data.phase 
     epsilon = 1e-12
     symmetry_factor = motor.mechanical.symmetry_factor
@@ -50,6 +47,9 @@ def analysis_motor(motor, callback = None):
     current = np.zeros((3 + phases, n_point))
 
     mechanical_power = np.zeros((2,n_point))
+
+    if solve_only_1_step:
+        n_point = 1
 
     if solve_cogging:
         motor.mechanical.reset_motor_position()

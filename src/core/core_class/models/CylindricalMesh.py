@@ -32,6 +32,9 @@ class CylindricalMesh:
         self.Y = self.R * np.sin(self.Theta)
         self.adaptive_mesh_data = adaptive_mesh_data
 
+    def show_detail_mesh(self):
+        pass
+
     def get_cell_centers(self):
         """Tính toán tọa độ tâm của từng cell trong lưới."""
         r_c = (self.r_nodes[:-1] + self.r_nodes[1:]) / 2

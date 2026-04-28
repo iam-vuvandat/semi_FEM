@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # --- THAM SỐ ĐIỀU CHỈNH ---
-r_min, r_max = 70.0, 100.0      
+r_min, r_max = 60.0, 150     
 n_r = 6                      
 
-theta_start, theta_end = 0, 270 * np.pi / 180 
+theta_start, theta_end = 0, 100 * np.pi / 180 
 n_theta = 36      
 
 z_start, z_end = 0, 60         

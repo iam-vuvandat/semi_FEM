@@ -6,7 +6,7 @@ pi = math.pi
 io = MotorIO()
 
 # Options
-reload_motor = False
+reload_motor = True
 
 #file_name = "motor_test" # irms = 10A
 file_name = "motor_test1" # irms = 5A
@@ -23,18 +23,27 @@ else:
     aft.geometry_data.rotor.pole_number = 20
     aft.just_changed('geometry')
 
-    aft.calculation_data.general_options.n_point = 15
-    aft.calculation_data.general_options.solve_cogging = True
+    aft.calculation_data.general_options.n_point = 50
+    aft.calculation_data.general_options.solve_cogging = False
     aft.maxwell_export_option.solver_option.solve_immediately = True
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.just_changed('calculation_data')
 
+    aft.maxwell_export_option.solver_option.close_after_completed = False
+
+
 if solve_semiFEM:
+    
+    
     aft.analysis_motor()
+    aft.display()
 
 if export_maxwell:
-    #aft.export_to_rmxprt()
+    aft.export_to_rmxprt()
     pass
+
+
+
     
 dp = aft.data_processor
 

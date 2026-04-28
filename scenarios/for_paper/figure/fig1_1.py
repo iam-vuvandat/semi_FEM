@@ -1,90 +1,107 @@
 import numpy as np
-import pyvista as pv
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-# --- THAM SỐ ĐIỀU CHỈNH ---
-r_min, r_max = 48.0, 95.0
-n_r = 8
+# --- THAM SỐ HÌNH HỌC ---
+r1, r2 = 85.0, 100.0
+t1, t2 = np.radians(30), np.radians(60)
+z1, z2 = 10.0, 25.0
 
-theta_start, theta_end = 0, 100 * np.pi / 180
-n_theta = 8
+# --- CẤU HÌNH THẨM MỸ (SOLID COMPONENTS) ---
+color_mesh = '#1f77b4'
+color_node = '#1A1A1A'         # Nút trung tâm
+color_mmf = '#D62728'          # Nguồn MMF
+color_reluctance = '#FF7F0E'   # Từ trở
+color_branch = '#888888'       # Nhánh dẫn mảnh
+alpha_voxel = 0.08
 
-z_start, z_end = 0, 60
-n_z = 5
+fig_width = 14
+fig_height = fig_width / 1.618
 
-# Màu sắc phong cách khoa học: Xanh nhạt thanh thoát -> Trắng
-color_start = "#7FB3D5"  
-color_end = "#FFFFFF"    
+fig = plt.figure(figsize=(fig_width, fig_height))
+ax = fig.add_subplot(111, projection='3d')
 
-# --- KHỞI TẠO TỌA ĐỘ ---
-R = np.linspace(r_min, r_max, n_r)
-Theta = np.linspace(theta_start, theta_end, n_theta)
-Z = np.linspace(z_start, z_end, n_z)
+def draw_sphere(ax, center, radius, color):
+    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j]
+    x = center[0] + radius * np.cos(u) * np.sin(v)
+    y = center[1] + radius * np.sin(u) * np.sin(v)
+    z = center[2] + radius * np.cos(v)
+    ax.plot_surface(x, y, z, color=color, alpha=1.0, linewidth=0, antialiased=True, shade=True)
 
-points = []
-cells = []
-cell_types = []
-cell_data_radius = []
+def draw_cylinder(ax, start, end, radius, color):
+    v = end - start
+    mag = np.linalg.norm(v)
+    if mag <= 0: return
+    v_unit = v / mag
+    not_v = np.array([1, 0, 0]) if (abs(v_unit[0]) < 0.9) else np.array([0, 1, 0])
+    n1 = np.cross(v_unit, not_v)
+    n1 /= np.linalg.norm(n1)
+    n2 = np.cross(v_unit, n1)
+    t = np.linspace(0, mag, 2)
+    theta = np.linspace(0, 2 * np.pi, 25)
+    t, theta = np.meshgrid(t, theta)
+    X, Y, Z = [start[i] + v_unit[i] * t + radius * np.sin(theta) * n1[i] + radius * np.cos(theta) * n2[i] for i in [0, 1, 2]]
+    ax.plot_surface(X, Y, Z, color=color, alpha=1.0, linewidth=0, antialiased=True, shade=True)
 
-node_idx = 0
-for i in range(len(R) - 1):
-    for j in range(len(Theta) - 1):
-        for k in range(len(Z) - 1):
-            r_v = [R[i], R[i+1]]
-            t_v = [Theta[j], Theta[j+1]]
-            z_v = [Z[k], Z[k+1]]
+# 1. Vẽ Voxel (Vỏ phần tử)
+v_pts = np.array([
+    [r1 * np.cos(t1), r1 * np.sin(t1), z1], [r1 * np.cos(t2), r1 * np.sin(t2), z1],
+    [r2 * np.cos(t2), r2 * np.sin(t2), z1], [r2 * np.cos(t1), r2 * np.sin(t1), z1],
+    [r1 * np.cos(t1), r1 * np.sin(t1), z2], [r1 * np.cos(t2), r1 * np.sin(t2), z2],
+    [r2 * np.cos(t2), r2 * np.sin(t2), z2], [r2 * np.cos(t1), r2 * np.sin(t1), z2]
+])
+faces = [[v_pts[0], v_pts[1], v_pts[2], v_pts[3]], [v_pts[4], v_pts[5], v_pts[6], v_pts[7]], 
+         [v_pts[0], v_pts[1], v_pts[5], v_pts[4]], [v_pts[2], v_pts[3], v_pts[7], v_pts[6]], 
+         [v_pts[1], v_pts[2], v_pts[6], v_pts[5]], [v_pts[4], v_pts[7], v_pts[3], v_pts[0]]]
+ax.add_collection3d(Poly3DCollection(faces, alpha=alpha_voxel, facecolors=color_mesh, edgecolors='black', linewidths=0.3))
 
-            # Tọa độ 8 đỉnh của phần tử MBGRN 3D
-            v = np.array([
-                [r_v[0] * np.cos(t_v[0]), r_v[0] * np.sin(t_v[0]), z_v[0]],
-                [r_v[0] * np.cos(t_v[1]), r_v[0] * np.sin(t_v[1]), z_v[0]],
-                [r_v[1] * np.cos(t_v[1]), r_v[1] * np.sin(t_v[1]), z_v[0]],
-                [r_v[1] * np.cos(t_v[0]), r_v[1] * np.sin(t_v[0]), z_v[0]],
-                [r_v[0] * np.cos(t_v[0]), r_v[0] * np.sin(t_v[0]), z_v[1]],
-                [r_v[0] * np.cos(t_v[1]), r_v[0] * np.sin(t_v[1]), z_v[1]],
-                [r_v[1] * np.cos(t_v[1]), r_v[1] * np.sin(t_v[1]), z_v[1]],
-                [r_v[1] * np.cos(t_v[0]), r_v[1] * np.sin(t_v[0]), z_v[1]]
-            ])
-            
-            points.extend(v)
-            cell = [8, node_idx, node_idx+1, node_idx+2, node_idx+3, 
-                       node_idx+4, node_idx+5, node_idx+6, node_idx+7]
-            cells.extend(cell)
-            cell_types.append(pv.CellType.HEXAHEDRON)
-            cell_data_radius.append(i)
-            node_idx += 8
-
-grid = pv.UnstructuredGrid(cells, cell_types, points)
-grid.cell_data['RadiusIndex'] = cell_data_radius
-
-# --- THIẾT LẬP HIỂN THỊ PHONG CÁCH KHOA HỌC ---
-plotter = pv.Plotter(window_size=[1000, 1000])
-plotter.set_background("white")
-plotter.enable_anti_aliasing() 
-
-# add_mesh với các thiết lập tối giản
-plotter.add_mesh(
-    grid, 
-    scalars='RadiusIndex',
-    cmap=[color_start, color_end],
-    show_edges=True, 
-    edge_color="black", 
-    line_width=1.5,      
-    opacity=1.0,         # Không trong suốt để giống Matplotlib nhất
-    show_scalar_bar=False,
-    lighting=False       # Tắt lighting để màu sắc phẳng và sạch
-)
-
-# Chụp góc nhìn camera
-def save_cam():
-    print(f"\nplotter.camera_position = {plotter.camera_position}")
-
-plotter.add_key_event("c", save_cam)
-
-# Góc nhìn tiêu chuẩn
-plotter.camera_position = [
-    (245.82, -180.45, 175.21), 
-    (22.15, 36.40, 30.00), 
-    (-0.38, 0.25, 0.89)
+# 2. Tọa độ nút và các thành phần
+center_node = np.mean(v_pts, axis=0)
+face_centers = [
+    np.mean(v_pts[[0,1,5,4]], axis=0), np.mean(v_pts[[2,3,7,6]], axis=0), 
+    np.mean(v_pts[[0,3,7,4]], axis=0), np.mean(v_pts[[1,2,6,5]], axis=0), 
+    np.mean(v_pts[[0,1,2,3]], axis=0), np.mean(v_pts[[4,5,6,7]], axis=0)  
 ]
 
-plotter.show()
+node_rad = 0.55
+mmf_rad = 1.0
+rel_rad = 0.45
+
+# 3. Vẽ nút trung tâm
+draw_sphere(ax, center_node, radius=node_rad, color=color_node)
+
+# 4. Vẽ các nhánh rời rạc (Không hiển thị phần nằm trong khối đặc)
+for f_center in face_centers:
+    vec_full = f_center - center_node
+    L = np.linalg.norm(vec_full)
+    u = vec_full / L
+    
+    # Xác định các điểm mốc trên nhánh (theo tỉ lệ % chiều dài)
+    # Từ trở: 15% đến 45%
+    p_rel_start = center_node + u * (L * 0.15)
+    p_rel_end   = center_node + u * (L * 0.45)
+    
+    # Nguồn MMF: Tâm tại 80%
+    p_mmf_center = center_node + u * (L * 0.80)
+    
+    # --- VẼ KHỐI ĐẶC TRƯỚC ---
+    draw_cylinder(ax, p_rel_start, p_rel_end, radius=rel_rad, color=color_reluctance)
+    draw_sphere(ax, p_mmf_center, radius=mmf_rad, color=color_mmf)
+    
+    # --- VẼ CÁC ĐOẠN NHÁNH MẢNH (Chỉ vẽ phần hở) ---
+    # Đoạn 1: Từ bề mặt nút trung tâm đến đầu Từ trở
+    draw_cylinder(ax, center_node + u * node_rad, p_rel_start, radius=0.05, color=color_branch)
+    
+    # Đoạn 2: Từ cuối Từ trở đến bề mặt nguồn MMF
+    draw_cylinder(ax, p_rel_end, p_mmf_center - u * mmf_rad, radius=0.05, color=color_branch)
+    
+    # Đoạn 3: Từ bề mặt nguồn MMF đến tâm mặt (biên phần tử)
+    draw_cylinder(ax, p_mmf_center + u * mmf_rad, f_center, radius=0.05, color=color_branch)
+
+# Thiết lập hiển thị
+ax.set_axis_off()
+ax.set_box_aspect([1, 1, 0.8])
+ax.view_init(elev=22, azim=-52)
+
+plt.tight_layout()
+plt.show()
