@@ -23,6 +23,7 @@ else:
     aft.material_data.air = "default"
     aft.material_data.magnet_type = "NdFe30"
     aft.material_data.iron_type = "steel_1008"
+    aft.just_changed('material_data')
 
     # winding_data
     aft.winding_data.phase = 3
@@ -31,9 +32,11 @@ else:
     aft.winding_data.parallel_path = 1
     aft.winding_data.winding_layer = 2
     aft.winding_data.mmf_offset = 0.0
+    aft.just_changed('winding_data')
 
     # mechanical_data
     aft.mechanical_data.shaft_speed = 3000
+    aft.just_changed('mechanical_data')
 
     # geometry_data - stator
     aft.geometry_data.stator.slot_number = 30
@@ -42,15 +45,16 @@ else:
     aft.geometry_data.stator.slot_opening = 2 * 1e-3
     aft.geometry_data.stator.wdg_extension_inner = 0
     aft.geometry_data.stator.wdg_extension_outer = 0
-    aft.geometry_data.stator.slot_width = 7 * 1e-3
+    aft.geometry_data.stator.slot_width = 5 * 1e-3
     aft.geometry_data.stator.slot_depth = 15 * 1e-3
     aft.geometry_data.stator.slot_corner_radius = 0
     aft.geometry_data.stator.tooth_tip_depth = 2 * 1e-3
     aft.geometry_data.stator.tooth_tip_angle = 30
     aft.geometry_data.stator.stator_length = 25 * 1e-3
+    
 
     # geometry_data - rotor
-    aft.geometry_data.rotor.pole_number = 10
+    aft.geometry_data.rotor.pole_number = 20
     aft.geometry_data.rotor.rotor_lam_dia = 150 * 1e-3
     aft.geometry_data.rotor.magnet_arc = 160
     aft.geometry_data.rotor.magnet_embed_depth = 5 * 1e-3
@@ -66,6 +70,7 @@ else:
     # geometry_data - geometry_option
     aft.geometry_data.geometry_option.synchronize_with_rmxprt = True
     aft.geometry_data.geometry_option.rotor_mechanical_synchronized = 0.0
+    aft.just_changed('geometry_data')
 
     # calculation_data - convergence_settings
     aft.calculation_data.convergence_settings.max_iteration = 50
@@ -88,6 +93,7 @@ else:
     aft.calculation_data.export_inductance_options.current_min = 1.0
     aft.calculation_data.export_inductance_options.current_max = 15.0
     aft.calculation_data.export_inductance_options.current_resolution = 10
+    aft.just_changed('calculation_data')
 
     # adaptive_mesh_data
     aft.adaptive_mesh_data.n_r_in = 2
@@ -107,10 +113,13 @@ else:
     aft.adaptive_mesh_data.n_z_out_air = 2
     aft.adaptive_mesh_data.use_symmetry_factor = True
     aft.adaptive_mesh_data.periodic_boundary = True
+    aft.just_changed('mesh')
 
     # drive_data
     aft.drive_data.i_rms = 5.0
     aft.drive_data.phase_advanced = 0.0
+    aft.just_changed('drive')
+    
 
     # maxwell_export_option
     aft.maxwell_export_option.ansys_electronic_version = "2025.2"
@@ -142,6 +151,7 @@ else:
     aft.maxwell_export_option.solver_option.close_after_completed = False
 
 if solve_semiFEM:
+    aft.display()
     aft.analysis_motor()
     aft.display()
 

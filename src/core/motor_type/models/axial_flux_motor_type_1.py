@@ -102,6 +102,8 @@ class AxialFluxMotorType1:
         self.calculation_data = SimpleNamespace(
             convergence_settings = SimpleNamespace(
                 max_iteration          = 50,
+                exact_residual_error   = False,
+                minimum_iteration_required = -1,
                 max_relative_residual  = 0.1 * 1e-2,
                 material_relax         = 0.35,
                 damping_factor         = 1.0,
@@ -114,6 +116,7 @@ class AxialFluxMotorType1:
                 solve_smooth_torque    = False,
                 solve_only_1_step      = False,
                 vectorized_optimization = True,
+                
                 get_geometric_error    = False,
                 debug                  = True
             ),  

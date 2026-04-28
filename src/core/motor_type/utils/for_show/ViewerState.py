@@ -39,7 +39,7 @@ class ViewerState:
         
         self.pos_i, self.pos_j, self.pos_k = 0, 0, 0
         self.show_mesh_lines = False
-        self.show_axes = True
+        self.show_axes = False
         self.axes_scale = 1.0
 
         self.pl.enable_lightkit()

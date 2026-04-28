@@ -1,0 +1,422 @@
+semi_FEM/
+├── .gitignore
+├── .project_root
+├── LICENSE
+├── README.md
+├── batch.log
+├── extract_project_tree.py
+├── main.py
+├── paths.py
+├── project_structure.txt
+├── requirements.txt
+├── scenarios
+│   ├── for_development
+│   │   ├── batch.log
+│   │   ├── good_result
+│   │   │   ├── batch.log
+│   │   │   ├── excute_motor.py
+│   │   │   ├── good_result1.py
+│   │   │   ├── paths.py
+│   │   │   ├── test2.py
+│   │   │   ├── test_new_pyaedt.py
+│   │   │   └── test_vectorized.py
+│   │   ├── logo
+│   │   │   └── paths.py
+│   │   ├── paths.py
+│   │   ├── test.py
+│   │   ├── test2.py
+│   │   ├── test_pyaedt.py
+│   │   │   ├── paths.py
+│   │   │   └── test_pyaedt.py
+│   │   ├── test_rmxprt.py
+│   │   ├── test_save_load.py
+│   │   └── test_show_motor.py
+│   ├── for_paper
+│   │   ├── figure
+│   │   │   ├── boundary.py
+│   │   │   ├── discrete.py
+│   │   │   ├── fig1.py
+│   │   │   ├── fig1_1.py
+│   │   │   ├── fig1_2.py
+│   │   │   ├── fig1_3.py
+│   │   │   ├── fig1_4.py
+│   │   │   ├── fig2.py
+│   │   │   ├── fig3.py
+│   │   │   ├── fig4.py
+│   │   │   ├── fig5.py
+│   │   │   ├── fig_boundary.py
+│   │   │   ├── fig_motor_and_mesh.py
+│   │   │   └── paths.py
+│   │   ├── paths.py
+│   │   └── script
+│   │       ├── paths.py
+│   │       └── valinate_with_fem.py
+│   └── paths.py
+├── semiFEM_Solver.spec
+├── src
+│   ├── core
+│   │   ├── ansys_maxwell
+│   │   │   ├── document
+│   │   │   │   ├── maxwell3D
+│   │   │   │   │   ├── band_definition.py
+│   │   │   │   │   ├── m3d_full_methods_report.txt
+│   │   │   │   │   ├── method.py
+│   │   │   │   │   ├── paths.py
+│   │   │   │   │   └── solution_data_method.txt
+│   │   │   │   ├── paths.py
+│   │   │   │   └── rmxprt
+│   │   │   │       ├── method.py
+│   │   │   │       ├── paths.py
+│   │   │   │       └── rmxprt_full_methods_report.txt
+│   │   │   ├── paths.py
+│   │   │   └── rmxprt
+│   │   │       ├── motor_type
+│   │   │       │   ├── axial_flux_motor
+│   │   │       │   │   ├── edit_m3d
+│   │   │       │   │   │   ├── assign_mesh.py
+│   │   │       │   │   │   ├── axial_force_export.py
+│   │   │       │   │   │   ├── calculate_band_mapping_angle.py
+│   │   │       │   │   │   ├── calculate_electrical_frequency.py
+│   │   │       │   │   │   ├── cogging_torque_export.py
+│   │   │       │   │   │   ├── edit_excitation.py
+│   │   │       │   │   │   ├── edit_motion_setting.py
+│   │   │       │   │   │   ├── flux_linkage_export.py
+│   │   │       │   │   │   ├── paths.py
+│   │   │       │   │   │   ├── setup_axial_force_calculation.py
+│   │   │       │   │   │   ├── solve_cogging_torque.py
+│   │   │       │   │   │   ├── solve_standard_step.py
+│   │   │       │   │   │   ├── torque_export.py
+│   │   │       │   │   │   └── winding_direction_setup.py
+│   │   │       │   │   ├── edit_machine
+│   │   │       │   │   │   ├── change_motor_type.py
+│   │   │       │   │   │   └── paths.py
+│   │   │       │   │   ├── edit_rotor
+│   │   │       │   │   │   ├── edit_magnet.py
+│   │   │       │   │   │   ├── edit_rotor.py
+│   │   │       │   │   │   └── paths.py
+│   │   │       │   │   ├── edit_solver
+│   │   │       │   │   │   ├── edit_solver.py
+│   │   │       │   │   │   └── paths.py
+│   │   │       │   │   ├── edit_stator
+│   │   │       │   │   │   ├── edit_stator.py
+│   │   │       │   │   │   ├── edit_stator_core.py
+│   │   │       │   │   │   ├── edit_stator_slot.py
+│   │   │       │   │   │   ├── edit_stator_winding.py
+│   │   │       │   │   │   └── paths.py
+│   │   │       │   │   ├── export_to_rmxprt.py
+│   │   │       │   │   └── paths.py
+│   │   │       │   └── paths.py
+│   │   │       ├── paths.py
+│   │   │       └── setup
+│   │   │           ├── init_window.py
+│   │   │           ├── open_rmxprt.py
+│   │   │           └── paths.py
+│   │   ├── core_class
+│   │   │   ├── models
+│   │   │   │   ├── CylindricalMesh.py
+│   │   │   │   ├── DataProcessor.py
+│   │   │   │   ├── Drive.py
+│   │   │   │   ├── Element.py
+│   │   │   │   ├── ElementLite.py
+│   │   │   │   ├── Geometry.py
+│   │   │   │   ├── LoopFlux.py
+│   │   │   │   ├── MagneticPotential.py
+│   │   │   │   ├── MaxwellIntegrationSurface.py
+│   │   │   │   ├── Mechanical.py
+│   │   │   │   ├── ReluctanceNetwork.py
+│   │   │   │   ├── Segment.py
+│   │   │   │   ├── VectorizedElements.py
+│   │   │   │   └── paths.py
+│   │   │   ├── paths.py
+│   │   │   └── utils
+│   │   │       ├── for_data_processor
+│   │   │       │   ├── apply_jounal_style.py
+│   │   │       │   ├── paths.py
+│   │   │       │   ├── plot_axial_force.py
+│   │   │       │   ├── plot_back_emf.py
+│   │   │       │   ├── plot_back_emf_line.py
+│   │   │       │   ├── plot_cogging_torque.py
+│   │   │       │   ├── plot_current.py
+│   │   │       │   ├── plot_flux_linkage.py
+│   │   │       │   ├── plot_inductance_map.py
+│   │   │       │   ├── plot_mechanical_power.py
+│   │   │       │   └── plot_torque.py
+│   │   │       ├── for_element
+│   │   │       │   ├── copy_of_extract_element_info.py
+│   │   │       │   ├── extract_element_info.py
+│   │   │       │   ├── find_branch_magnetic_source.py
+│   │   │       │   ├── find_element_dimension.py
+│   │   │       │   ├── find_element_segment_dimension_ratio.py
+│   │   │       │   ├── find_flat_position.py
+│   │   │       │   ├── find_flux_density.py
+│   │   │       │   ├── find_flux_direct.py
+│   │   │       │   ├── find_magnet_source.py
+│   │   │       │   ├── find_minimum_reluctance.py
+│   │   │       │   ├── find_neighbor_elements.py
+│   │   │       │   ├── find_own_magnetic_potential.py
+│   │   │       │   ├── find_relative_permeability.py
+│   │   │       │   ├── find_reluctance_updated.py
+│   │   │       │   ├── find_vacuum_reluctance.py
+│   │   │       │   ├── find_winding_source.py
+│   │   │       │   ├── get_element_volume.py
+│   │   │       │   ├── get_neighbor_elements_position.py
+│   │   │       │   ├── paths.py
+│   │   │       │   └── set_element_reluctance_at_zero.py
+│   │   │       ├── for_reluctance_network
+│   │   │       │   ├── access_elements.py
+│   │   │       │   ├── add_elements_lite.py
+│   │   │       │   ├── create_elements.py
+│   │   │       │   ├── create_loop_flux.py
+│   │   │       │   ├── create_magnetic_potential.py
+│   │   │       │   ├── create_system_variable.py
+│   │   │       │   ├── create_vectorized_elements.py
+│   │   │       │   ├── create_winding_current.py
+│   │   │       │   ├── display_elements.py
+│   │   │       │   ├── display_reluctance_network.py
+│   │   │       │   ├── find_geometry_dimension_in_mesh.py
+│   │   │       │   ├── get_flux_linkage.py
+│   │   │       │   ├── get_geometric_error.py
+│   │   │       │   ├── paths.py
+│   │   │       │   ├── rotate_reluctance_network.py
+│   │   │       │   ├── set_minimum_reluctance.py
+│   │   │       │   ├── set_reluctance_at_zero.py
+│   │   │       │   ├── show_reluctance_network.py
+│   │   │       │   ├── update_elements_from_vectorized.py
+│   │   │       │   └── update_reluctance_network.py
+│   │   │       ├── for_vectorized_elements
+│   │   │       │   ├── create_vectorized_elements.py
+│   │   │       │   ├── find_neighbor_indices.py
+│   │   │       │   ├── paths.py
+│   │   │       │   ├── rotate_for_vectorized_elements.py
+│   │   │       │   ├── update_permeability.py
+│   │   │       │   ├── update_reluctance.py
+│   │   │       │   ├── update_vectorized_elements.py
+│   │   │       │   ├── update_vectorized_flux_density_average.py
+│   │   │       │   ├── update_vectorized_flux_density_direct.py
+│   │   │       │   ├── update_vectorized_flux_direct.py
+│   │   │       │   ├── update_vectorized_magnetic_source.py
+│   │   │       │   ├── update_vectorized_winding_source.py
+│   │   │       │   └── update_winding_current.py
+│   │   │       └── paths.py
+│   │   ├── material
+│   │   │   ├── core
+│   │   │   │   ├── lookup_BH_curve.py
+│   │   │   │   └── paths.py
+│   │   │   ├── models
+│   │   │   │   ├── Iron.py
+│   │   │   │   ├── Magnet.py
+│   │   │   │   ├── MaterialDataBase.py
+│   │   │   │   └── paths.py
+│   │   │   ├── paths.py
+│   │   │   ├── test
+│   │   │   │   ├── paths.py
+│   │   │   │   ├── test_BH_curve.py
+│   │   │   │   ├── test_find_max_permeance.py
+│   │   │   │   ├── test_lookup.py
+│   │   │   │   └── test_staircase.py
+│   │   │   └── utils
+│   │   │       ├── continuous_permeability.py
+│   │   │       ├── find_maximum_permeance.py
+│   │   │       ├── find_permeability_at_zero.py
+│   │   │       ├── paths.py
+│   │   │       ├── smooth_BH_curve.py
+│   │   │       └── staircase_permeability.py
+│   │   ├── motor_type
+│   │   │   ├── models
+│   │   │   │   ├── Container.py
+│   │   │   │   ├── MotorStateManager.py
+│   │   │   │   ├── axial_flux_motor_type_1.py
+│   │   │   │   ├── paths.py
+│   │   │   │   ├── record.py
+│   │   │   │   └── simple_geometry_for_paper.py
+│   │   │   ├── paths.py
+│   │   │   └── utils
+│   │   │       ├── for_axial_flux_motor_type_1
+│   │   │       │   ├── batch.log
+│   │   │       │   ├── create_adaptive_mesh.py
+│   │   │       │   ├── create_geometry.py
+│   │   │       │   ├── export_to_maxwell.py
+│   │   │       │   ├── for_export_maxwell
+│   │   │       │   │   ├── apply_symmetry_factor.py
+│   │   │       │   │   ├── create_balloon.py
+│   │   │       │   │   ├── create_concentrated_winding.py
+│   │   │       │   │   ├── create_custom_mesh.py
+│   │   │       │   │   ├── create_distributed_winding.py
+│   │   │       │   │   ├── create_magnet.py
+│   │   │       │   │   ├── create_moving_band.py
+│   │   │       │   │   ├── create_rotor_yoke.py
+│   │   │       │   │   ├── create_stator.py
+│   │   │       │   │   ├── create_winding.py
+│   │   │       │   │   ├── paths.py
+│   │   │       │   │   └── setup_axial_force_calculation.py
+│   │   │       │   ├── maxwell_stress_tensor.py
+│   │   │       │   ├── paths.py
+│   │   │       │   └── rotate_rotor.py
+│   │   │       ├── for_create_geometry
+│   │   │       │   ├── create_arc.py
+│   │   │       │   ├── create_convex_loft.py
+│   │   │       │   ├── create_cylinder.py
+│   │   │       │   ├── create_cylindrical_shell_segment.py
+│   │   │       │   ├── create_frustum_loft.py
+│   │   │       │   ├── create_loft_mesh.py
+│   │   │       │   ├── create_smart_poligon.py
+│   │   │       │   ├── create_smart_surface.py
+│   │   │       │   ├── create_symmetry_sector.py
+│   │   │       │   ├── create_tube.py
+│   │   │       │   ├── cut_geometry_by_sector.py
+│   │   │       │   ├── extrude_mesh_to_3d.py
+│   │   │       │   ├── extrude_polygon_between_z.py
+│   │   │       │   ├── find_cogging_period.py
+│   │   │       │   ├── find_symmetry_factor.py
+│   │   │       │   ├── find_winding_matrix.py
+│   │   │       │   ├── get_geometry_in_sector.py
+│   │   │       │   ├── paths.py
+│   │   │       │   ├── reload.py
+│   │   │       │   ├── rotate_mesh_z.py
+│   │   │       │   └── rotate_point_z.py
+│   │   │       ├── for_export_maxwell
+│   │   │       │   ├── cogging_torque_export.py
+│   │   │       │   ├── create_coil.py
+│   │   │       │   ├── create_conductor.py
+│   │   │       │   ├── disable_excitation.py
+│   │   │       │   ├── flux_linkage_export.py
+│   │   │       │   ├── init_project.py
+│   │   │       │   ├── init_window.py
+│   │   │       │   ├── paths.py
+│   │   │       │   ├── solve_cogging_torque.py
+│   │   │       │   ├── solve_standard_step.py
+│   │   │       │   ├── torque_export.py
+│   │   │       │   └── update_maxwell_settings.py
+│   │   │       ├── for_save_load
+│   │   │       │   └── prepare_to_save.py
+│   │   │       ├── for_show
+│   │   │       │   ├── ViewerState.py
+│   │   │       │   ├── _add_cylindrical_axes_static.py
+│   │   │       │   ├── _build_full_grid.py
+│   │   │       │   ├── _process_grid_indices.py
+│   │   │       │   ├── _setup_viewer_ui.py
+│   │   │       │   ├── paths.py
+│   │   │       │   └── show_motor.py
+│   │   │       ├── for_winding
+│   │   │       │   ├── generate_motor_winding_analysis.py
+│   │   │       │   └── paths.py
+│   │   │       ├── paths.py
+│   │   │       ├── simple_geometry_for_paper.py
+│   │   │       │   └── paths.py
+│   │   │       └── test
+│   │   │           ├── paths.py
+│   │   │           └── test_tool.py
+│   │   ├── paths.py
+│   │   ├── solver
+│   │   │   ├── core
+│   │   │   │   ├── analysis_motor.py
+│   │   │   │   ├── create_loop_flux_equation.py
+│   │   │   │   ├── create_magnetic_potential_equation.py
+│   │   │   │   ├── paths.py
+│   │   │   │   └── solve.py
+│   │   │   ├── model
+│   │   │   │   ├── Solver.py
+│   │   │   │   └── paths.py
+│   │   │   ├── paths.py
+│   │   │   └── utils
+│   │   │       ├── adaptive_broyden_iteration_for_magnetic_potential.py
+│   │   │       ├── alternetive_first_point.py
+│   │   │       ├── broyden_iteration_for_magnetic_potential.py
+│   │   │       ├── calculate_line_to_line_back_emf.py
+│   │   │       ├── calculate_mechanical_power.py
+│   │   │       ├── convert_to_dq.py
+│   │   │       ├── decompose_harmonics.py
+│   │   │       ├── duplicate_data.py
+│   │   │       ├── find_relaxation_decay.py
+│   │   │       ├── get_target_data_offset.py
+│   │   │       ├── get_waveform_nrmse.py
+│   │   │       ├── paths.py
+│   │   │       ├── periodic_derivative.py
+│   │   │       ├── plot_in_cylindrical_space.py
+│   │   │       ├── synchronize_signals.py
+│   │   │       └── update_dq_axis.py
+│   │   └── storage
+│   │       ├── core
+│   │       │   ├── MotorIO.py
+│   │       │   ├── motor_io.py
+│   │       │   ├── paths.py
+│   │       │   ├── workspace.pkl
+│   │       │   └── workspace.py
+│   │       ├── paths.py
+│   │       └── utils
+│   │           └── for_motor_io
+│   │               ├── for_load
+│   │               │   ├── load_axial_flux_motor_type_1.py
+│   │               │   └── read_mbgrn_to_parameter.py
+│   │               └── for_save
+│   │                   └── save_axial_flux_motor_type_1.py
+│   ├── paths.py
+│   └── ui
+│       ├── assets
+│       │   ├── layout.txt
+│       │   ├── logo.png
+│       │   └── paths.py
+│       ├── main_window
+│       │   ├── core
+│       │   │   ├── main_window.py
+│       │   │   └── paths.py
+│       │   ├── paths.py
+│       │   └── utils
+│       │       ├── general_setup.py
+│       │       └── paths.py
+│       ├── menus
+│       │   ├── core
+│       │   │   ├── file_menu.py
+│       │   │   ├── main_menu.py
+│       │   │   └── paths.py
+│       │   ├── paths.py
+│       │   └── utils
+│       │       ├── for_file_menu
+│       │       │   ├── create_actions.py
+│       │       │   └── paths.py
+│       │       ├── for_main_menu
+│       │       │   ├── create_main_menu.py
+│       │       │   └── paths.py
+│       │       └── paths.py
+│       ├── paths.py
+│       └── widget
+│           ├── calculation
+│           │   ├── calculation.py
+│           │   ├── init_ui.py
+│           │   └── paths.py
+│           ├── geometry
+│           │   ├── geometry.py
+│           │   ├── init_ui.py
+│           │   └── paths.py
+│           ├── input_data
+│           │   ├── init_ui.py
+│           │   ├── input_data.py
+│           │   └── paths.py
+│           ├── maxwell_interface
+│           │   ├── init_ui.py
+│           │   ├── maxwell_interface.py
+│           │   └── paths.py
+│           ├── mesh
+│           │   ├── init_ui.py
+│           │   ├── mesh.py
+│           │   └── paths.py
+│           ├── paths.py
+│           ├── widget
+│           │   ├── core
+│           │   │   ├── paths.py
+│           │   │   └── widget.py
+│           │   ├── paths.py
+│           │   └── utils
+│           │       ├── bind_input.py
+│           │       ├── paths.py
+│           │       ├── setup_calculation_widget.py
+│           │       ├── setup_geometry_widget.py
+│           │       ├── setup_input_data_widget.py
+│           │       ├── setup_maxwell_interface_widget.py
+│           │       ├── setup_mesh_widget.py
+│           │       └── setup_winding_widget.py
+│           └── winding
+│               ├── init_ui.py
+│               ├── paths.py
+│               └── winding.py
+└── sync_paths.py
