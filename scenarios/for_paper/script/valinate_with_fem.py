@@ -80,7 +80,7 @@ else:
     aft.calculation_data.convergence_settings.relaxation_decay = 0.5
 
     # calculation_data - general_options
-    aft.calculation_data.general_options.n_point = 40
+    aft.calculation_data.general_options.n_point = 20
     aft.calculation_data.general_options.solve_cogging = True
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
@@ -97,19 +97,19 @@ else:
 
     # adaptive_mesh_data
     aft.adaptive_mesh_data.n_r_in = 2
-    aft.adaptive_mesh_data.n_r_1 = 4
-    aft.adaptive_mesh_data.n_r_2 = 7
-    aft.adaptive_mesh_data.n_r_3 = 4
+    aft.adaptive_mesh_data.n_r_1 = 2
+    aft.adaptive_mesh_data.n_r_2 = 4
+    aft.adaptive_mesh_data.n_r_3 = 2
     aft.adaptive_mesh_data.n_r_out = 2
     aft.adaptive_mesh_data.n_theta = 150
     aft.adaptive_mesh_data.n_z_in_air = 2
-    aft.adaptive_mesh_data.n_z_rotor_yoke = 6
-    aft.adaptive_mesh_data.n_z_magnet = 4
+    aft.adaptive_mesh_data.n_z_rotor_yoke = 3
+    aft.adaptive_mesh_data.n_z_magnet = 2
     aft.adaptive_mesh_data.n_z_airgap = 5
-    aft.adaptive_mesh_data.n_z_tooth_tip_1 = 3
-    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 6
-    aft.adaptive_mesh_data.n_z_tooth_body = 8
-    aft.adaptive_mesh_data.n_z_stator_yoke = 6
+    aft.adaptive_mesh_data.n_z_tooth_tip_1 = 2
+    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 2
+    aft.adaptive_mesh_data.n_z_tooth_body = 4
+    aft.adaptive_mesh_data.n_z_stator_yoke = 2
     aft.adaptive_mesh_data.n_z_out_air = 2
     aft.adaptive_mesh_data.use_symmetry_factor = True
     aft.adaptive_mesh_data.periodic_boundary = True
@@ -151,7 +151,7 @@ else:
     aft.maxwell_export_option.solver_option.close_after_completed = False
 
 if solve_semiFEM:
-    aft.display()
+    
     aft.analysis_motor()
     aft.display()
 
