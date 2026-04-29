@@ -29,7 +29,7 @@ def axial_force_export(motor, m3d):
     time_idx, force_idx = 0, 1
     time_mult, force_mult = 1.0, 1.0
     time_unit_map = {"[s]": 1.0, "[ms]": 1e-3, "[us]": 1e-6, "[ns]": 1e-9, "[min]": 60.0, "[h]": 3600.0}
-    force_unit_map = {"[n]": 1.0, "[N]": 1.0, "[kn]": 1000.0, "[kN]": 1000.0, "[mn]": 1e-3, "[mN]": 1e-3, "[kgf]": 9.80665, "[lbf]": 4.44822}
+    force_unit_map = {"[n]": 1.0, "[N]": 1.0, "[knewton]": 1000.0, "[kNewton]": 1000.0, "[mnewton]": 1e-3, "[mNewton]": 1e-3, "[kgf]": 9.80665, "[lbf]": 4.44822}
     
     for i, col in enumerate(header):
         col_clean = col.replace('"', '').lower()

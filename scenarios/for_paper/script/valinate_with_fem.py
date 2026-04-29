@@ -5,10 +5,15 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 pi = math.pi
 io = MotorIO()
 
+# Close Ansys Maxwell
+from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
+init_window()
+
 # Options
 reload_motor = False
 
-file_name = "motor_for_paper" 
+#file_name = "motor_for_paper" 
+file_name = "motor_for_paper1" 
 export_maxwell = True
 solve_semiFEM = True
 
@@ -77,10 +82,10 @@ else:
     aft.calculation_data.convergence_settings.max_relative_residual = 0.1 * 1e-2
     aft.calculation_data.convergence_settings.material_relax = 0.35
     aft.calculation_data.convergence_settings.damping_factor = 1.0
-    aft.calculation_data.convergence_settings.relaxation_decay = 0.5
+    aft.calculation_data.convergence_settings.relaxation_decay = 0.9
 
     # calculation_data - general_options
-    aft.calculation_data.general_options.n_point = 20
+    aft.calculation_data.general_options.n_point = 10
     aft.calculation_data.general_options.solve_cogging = True
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
@@ -166,6 +171,7 @@ dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_
 dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
 dp.plot_torque(horizontal_axis="time", show_fem=True)
 dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
+aft.record.cogging_fem[0,:] *= 1e-3
 dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
 dp.plot_axial_force(horizontal_axis="time", show_fem=True)
 
