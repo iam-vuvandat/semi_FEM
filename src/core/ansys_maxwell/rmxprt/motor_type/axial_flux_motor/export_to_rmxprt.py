@@ -1,3 +1,5 @@
+from nbconvert import export
+
 import paths
 
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
@@ -19,6 +21,7 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.setup_ax
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.assign_mesh import assign_mesh
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.solve_standard_step import solve_standard_step
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.solve_cogging_torque import solve_cogging_torque
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.export_solution_data import export_solution_data
 
 def export_to_rmxprt(motor = None):
 
@@ -50,9 +53,11 @@ def export_to_rmxprt(motor = None):
     setup_axial_force_calculation(m3d = m3d)
     assign_mesh(m3d= m3d, motor= motor)
 
-    # solve
+    # solve and export solution data
     solve_standard_step(m3d= m3d, motor= motor)
+    
     solve_cogging_torque(m3d= m3d, motor= motor)
+  
 
     # close after completed
     if motor.maxwell_export_option.solver_option.close_after_completed is True:

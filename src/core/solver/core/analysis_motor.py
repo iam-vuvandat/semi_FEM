@@ -2,6 +2,8 @@ import paths
 import numpy as np
 import math 
 from tqdm import tqdm
+import time
+from src.core.storage.utils.for_measure.get_python_process_memory import get_python_process_memory
 
 pi = math.pi
 from src.core.solver.utils.periodic_derivative import periodic_derivative
@@ -10,7 +12,7 @@ from src.core.solver.utils.calculate_line_to_line_back_emf import calculate_line
 
 
 def analysis_motor(motor, callback = None):
-
+    begin_time = time.perf_counter()
     # require calculation data
     motor.require("calculation_data")
     calculation_data = motor.calculation_data
@@ -60,6 +62,8 @@ def analysis_motor(motor, callback = None):
             motor.rotate_rotor(n_step = 1)
         motor.mechanical.reset_motor_position()
 
+
+    
     for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
         motor.drive.apply_winding_excitation(excitation = True)
         motor.reluctance_network.solver.solve()
@@ -68,6 +72,9 @@ def analysis_motor(motor, callback = None):
         mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
         current[:, i] = motor.drive.debug_current()[:]        
         motor.rotate_rotor(n_step = angle_factor)
+
+    
+    total_time = time.perf_counter() - begin_time
 
     # Export inductance map:
     motor.mechanical.reset_motor_position()
@@ -108,6 +115,10 @@ def analysis_motor(motor, callback = None):
         motor.record.ld_map = ld_map
         motor.record.lq_map = lq_map
 
+    
+    end_time = time.perf_counter()
+    memory_used =   get_python_process_memory()
+
     if not solve_only_1_step:
 
         shaft_speed = motor.mechanical.shaft_speed * (pi/30)
@@ -131,5 +142,16 @@ def analysis_motor(motor, callback = None):
         motor.record.currents = current.copy()
         motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
 
+
+    motor.record.time_solved = total_time
+    motor.record.memory_used = memory_used
+    motor.record.elements = motor.mesh.total_cells
+    motor.record.matrix_size = motor.mesh.total_cells - 1 
+
+    # In thông tin thu được (màu lục)
+    print(f"\033[92mSimulation Summary - Time: {motor.record.time_solved}s | "
+          f"Memory: {motor.record.memory_used:.2f} MB | "
+          f"Elements: {motor.record.elements} | "
+          f"Matrix Size: {motor.record.matrix_size}\033[0m")
         
-        return None
+    return None

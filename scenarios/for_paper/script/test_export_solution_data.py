@@ -14,7 +14,7 @@ reload_motor = False
 
 #file_name = "motor_for_paper" 
 #file_name = "motor_for_paper1" 
-file_name = "motor_for_paper2" 
+file_name = "test_export_solution_data" 
 
 export_maxwell = True
 solve_semiFEM = True
@@ -80,15 +80,15 @@ else:
     aft.just_changed('geometry_data')
 
     # calculation_data - convergence_settings
-    aft.calculation_data.convergence_settings.max_iteration = 46
+    aft.calculation_data.convergence_settings.max_iteration = 100
     aft.calculation_data.convergence_settings.max_relative_residual = 0.1 * 1e-2
     aft.calculation_data.convergence_settings.material_relax = 0.35
     aft.calculation_data.convergence_settings.damping_factor = 1.0
     aft.calculation_data.convergence_settings.relaxation_decay = 0.9
 
     # calculation_data - general_options
-    aft.calculation_data.general_options.n_point = 50
-    aft.calculation_data.general_options.solve_cogging = True
+    aft.calculation_data.general_options.n_point = 5
+    aft.calculation_data.general_options.solve_cogging = False
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.calculation_data.general_options.vectorized_optimization = True
@@ -103,21 +103,21 @@ else:
     aft.just_changed('calculation_data')
 
     # adaptive_mesh_data
-    aft.adaptive_mesh_data.n_r_in = 2
-    aft.adaptive_mesh_data.n_r_1 = 2
-    aft.adaptive_mesh_data.n_r_2 = 4
-    aft.adaptive_mesh_data.n_r_3 = 2
-    aft.adaptive_mesh_data.n_r_out = 2
+    aft.adaptive_mesh_data.n_r_in = 1
+    aft.adaptive_mesh_data.n_r_1 = 3
+    aft.adaptive_mesh_data.n_r_2 = 6
+    aft.adaptive_mesh_data.n_r_3 = 3
+    aft.adaptive_mesh_data.n_r_out = 1
     aft.adaptive_mesh_data.n_theta = 150
-    aft.adaptive_mesh_data.n_z_in_air = 2
+    aft.adaptive_mesh_data.n_z_in_air = 1
     aft.adaptive_mesh_data.n_z_rotor_yoke = 3
-    aft.adaptive_mesh_data.n_z_magnet = 2
-    aft.adaptive_mesh_data.n_z_airgap = 5
-    aft.adaptive_mesh_data.n_z_tooth_tip_1 = 2
-    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 2
-    aft.adaptive_mesh_data.n_z_tooth_body = 4
-    aft.adaptive_mesh_data.n_z_stator_yoke = 2
-    aft.adaptive_mesh_data.n_z_out_air = 2
+    aft.adaptive_mesh_data.n_z_magnet = 3
+    aft.adaptive_mesh_data.n_z_airgap = 3
+    aft.adaptive_mesh_data.n_z_tooth_tip_1 = 3
+    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 6
+    aft.adaptive_mesh_data.n_z_tooth_body = 6
+    aft.adaptive_mesh_data.n_z_stator_yoke = 3
+    aft.adaptive_mesh_data.n_z_out_air = 1
     aft.adaptive_mesh_data.use_symmetry_factor = True
     aft.adaptive_mesh_data.periodic_boundary = True
     aft.just_changed('mesh')
@@ -133,7 +133,7 @@ else:
     aft.maxwell_export_option.use_default_option = True
 
     # maxwell_export_option - custom_option - mesh_setting
-    aft.maxwell_export_option.custom_option.mesh_setting.cylindrical_gap_1.clone_mesh = True
+    aft.maxwell_export_option.custom_option.mesh_setting.cylindrical_gap_1.clone_mesh = False
     aft.maxwell_export_option.custom_option.mesh_setting.cylindrical_gap_1.mapping_angle = -1
     aft.maxwell_export_option.custom_option.mesh_setting.cylindrical_gap_1.moving_side = 2
     aft.maxwell_export_option.custom_option.mesh_setting.cylindrical_gap_1.static_side = 2
@@ -142,10 +142,10 @@ else:
     aft.maxwell_export_option.custom_option.mesh_setting.airgap_element_layer = 6
     aft.maxwell_export_option.custom_option.mesh_setting.moving_side_layers = 2
     aft.maxwell_export_option.custom_option.mesh_setting.static_side_layers = 2
-    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = 1.5
-    aft.maxwell_export_option.custom_option.mesh_setting.length_coil_element_length = 1.5
-    aft.maxwell_export_option.custom_option.mesh_setting.length_mag_element_length = 1.5
-    aft.maxwell_export_option.custom_option.mesh_setting.length_main_element_length = 3
+    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_coil_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_mag_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_main_element_length = -1
     aft.maxwell_export_option.custom_option.mesh_setting.length_region_element_length = -1
 
     # maxwell_export_option - custom_option - motion_setting
@@ -157,13 +157,14 @@ else:
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
     aft.maxwell_export_option.solver_option.close_after_completed = False
 
+if solve_semiFEM:
+    aft.analysis_motor()
+    aft.display()
+
 
 if export_maxwell:
     aft.export_to_rmxprt()
 
-if solve_semiFEM:
-    aft.analysis_motor()
-    aft.display()
 
 
 
@@ -175,7 +176,6 @@ dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_
 dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
 dp.plot_torque(horizontal_axis="time", show_fem=True)
 dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-aft.record.cogging_fem[0,:] *= 1e-3
 dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
 dp.plot_axial_force(horizontal_axis="time", show_fem=True)
 
