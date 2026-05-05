@@ -10,7 +10,7 @@ def init_rmxprt(project_name = "rmxprt_test", motor = None):
     rmxprt = Rmxprt(version=version, new_desktop=True, non_graphical=False)
     
     project_root = paths.configure_path()
-    save_path = os.path.join(project_root, "Ansys_Projects")
+    save_path = os.path.join(project_root, "data","temp")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 

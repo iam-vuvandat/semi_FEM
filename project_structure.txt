@@ -50,6 +50,7 @@ semi_FEM/
 │   │   ├── paths.py
 │   │   └── script
 │   │       ├── paths.py
+│   │       ├── test_export_solution_data.py
 │   │       └── valinate_with_fem.py
 │   └── paths.py
 ├── semiFEM_Solver.spec
@@ -80,6 +81,7 @@ semi_FEM/
 │   │   │       │   │   │   ├── cogging_torque_export.py
 │   │   │       │   │   │   ├── edit_excitation.py
 │   │   │       │   │   │   ├── edit_motion_setting.py
+│   │   │       │   │   │   ├── export_solution_data.py
 │   │   │       │   │   │   ├── flux_linkage_export.py
 │   │   │       │   │   │   ├── paths.py
 │   │   │       │   │   │   ├── setup_axial_force_calculation.py
@@ -295,7 +297,30 @@ semi_FEM/
 │   │   │       │   ├── _build_full_grid.py
 │   │   │       │   ├── _process_grid_indices.py
 │   │   │       │   ├── _setup_viewer_ui.py
+│   │   │       │   ├── for_viewer_state
+│   │   │       │   │   ├── _redraw_wireframe.py
+│   │   │       │   │   ├── _rescale_camera.py
+│   │   │       │   │   ├── _safe_add.py
+│   │   │       │   │   ├── _safe_remove.py
+│   │   │       │   │   ├── _update_limits.py
+│   │   │       │   │   ├── get_current_data.py
+│   │   │       │   │   ├── init_static_layers.py
+│   │   │       │   │   ├── next_frame.py
+│   │   │       │   │   ├── pre_frame.py
+│   │   │       │   │   ├── render.py
+│   │   │       │   │   ├── resize_axes.py
+│   │   │       │   │   ├── toggle_axes_btn.py
+│   │   │       │   │   ├── toggle_bmap_btn.py
+│   │   │       │   │   ├── toggle_geometry_btn.py
+│   │   │       │   │   ├── toggle_mesh_btn.py
+│   │   │       │   │   ├── toggle_play.py
+│   │   │       │   │   ├── toggle_symmetry_btn.py
+│   │   │       │   │   ├── update_camera_info.py
+│   │   │       │   │   ├── update_static_visibility.py
+│   │   │       │   │   └── update_text_info.py
 │   │   │       │   ├── paths.py
+│   │   │       │   ├── save_gif.py
+│   │   │       │   ├── save_screenshot_hd.py
 │   │   │       │   └── show_motor.py
 │   │   │       ├── for_winding
 │   │   │       │   ├── generate_motor_winding_analysis.py
@@ -344,6 +369,9 @@ semi_FEM/
 │   │       │   └── workspace.py
 │   │       ├── paths.py
 │   │       └── utils
+│   │           ├── for_measure
+│   │           │   ├── get_python_process_memory.py
+│   │           │   └── measure_memory.py
 │   │           └── for_motor_io
 │   │               ├── for_load
 │   │               │   ├── load_axial_flux_motor_type_1.py

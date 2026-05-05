@@ -14,7 +14,8 @@ aft.just_changed('geometry_data')
 aft.calculation_data.general_options.solve_only_1_step = True
 aft.just_changed('calculation_data')
 
-aft.display()
-aft.analysis_motor()
+
+
+#aft.analysis_motor()
 aft.display()
     

@@ -87,7 +87,7 @@ else:
     aft.calculation_data.convergence_settings.relaxation_decay = 0.9
 
     # calculation_data - general_options
-    aft.calculation_data.general_options.n_point = 50
+    aft.calculation_data.general_options.n_point = 30
     aft.calculation_data.general_options.solve_cogging = True
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
@@ -142,10 +142,10 @@ else:
     aft.maxwell_export_option.custom_option.mesh_setting.airgap_element_layer = 6
     aft.maxwell_export_option.custom_option.mesh_setting.moving_side_layers = 2
     aft.maxwell_export_option.custom_option.mesh_setting.static_side_layers = 2
-    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = 1.5
-    aft.maxwell_export_option.custom_option.mesh_setting.length_coil_element_length = 1.5
-    aft.maxwell_export_option.custom_option.mesh_setting.length_mag_element_length = 1.5
-    aft.maxwell_export_option.custom_option.mesh_setting.length_main_element_length = 3
+    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_coil_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_mag_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_main_element_length = -1
     aft.maxwell_export_option.custom_option.mesh_setting.length_region_element_length = -1
 
     # maxwell_export_option - custom_option - motion_setting
