@@ -29,7 +29,7 @@ def create_adaptive_mesh(motor):
     radial_segments = []
     radial_min = rotor.shaft_hole_diameter/2 if stator.stator_bore_dia > rotor.shaft_hole_diameter else stator.stator_bore_dia/2
 
-    r_curr = radial_min * 0.9
+    r_curr = radial_min * 0.001
     r_inner = np.linspace(r_curr, rotor.shaft_hole_diameter / 2, nr_in + 1)
     radial_segments.append(r_inner)
     r_curr = r_inner[-1]
@@ -52,7 +52,8 @@ def create_adaptive_mesh(motor):
     else:
         r_curr += rl3
 
-    r_outer = np.linspace(r_curr, r_curr * 1.1, nr_out + 1)
+    # Sửa đổi: Mở rộng bán kính ngoài thêm một đoạn bằng bán kính trong (shaft_hole_diameter / 2)
+    r_outer = np.linspace(r_curr, r_curr + (rotor.shaft_hole_diameter / 2), nr_out + 1)
     radial_segments.append(r_outer[1:])
     radial_coordinates = np.concatenate(radial_segments)
 

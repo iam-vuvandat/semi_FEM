@@ -12,6 +12,12 @@ def _setup_viewer_ui(pl, state, sym_factor, has_results):
     if view_menu:
         view_menu.clear() 
         
+        act_iso = QAction("View ISO", pl.app_window)
+        act_iso.triggered.connect(state.view_iso)
+        view_menu.addAction(act_iso)
+        
+        view_menu.addSeparator()
+        
         act_geo = QAction("Show Geometry", pl.app_window); act_geo.setCheckable(True); act_geo.setChecked(state.show_geometry)
         act_geo.triggered.connect(state.toggle_geometry_btn); view_menu.addAction(act_geo)
         state.ref_act_geo = act_geo
