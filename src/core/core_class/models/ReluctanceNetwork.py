@@ -102,22 +102,6 @@ class ReluctanceNetwork:
                                                   load_factor= load_factor,
                                                   debug = debug)
     
-    def solve(self,
-              max_iteration=50,
-              max_relative_residual=0.005, 
-              material_relax=0.35, 
-              damping_factor=1.0,   
-              debug=True):
-        
-        solve(reluctance_network= self,
-              max_relative_residual = max_relative_residual,
-              max_iteration= max_iteration,
-              material_relax= material_relax,
-              damping_factor= damping_factor,
-              debug= debug)
-
-
-
     def rotate(self,
                z_indices = [0,1,2],
                n_step = 1):

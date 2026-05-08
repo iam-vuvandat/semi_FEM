@@ -18,4 +18,4 @@ aft.just_changed('calculation_data')
 
 aft.analysis_motor()
 aft.display()
-    
+     

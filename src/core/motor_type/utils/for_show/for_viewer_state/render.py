@@ -30,7 +30,12 @@ def render(viewer_state):
         for mid in range(5): viewer_state._safe_remove(f"mat_{mid}")
         target = render_mesh if has_sel else render_mesh.threshold(0.1, scalars="MatID")
         if target.n_cells > 0:
-            viewer_state._safe_add(target, scalars="FluxB", cmap="jet", clim=[0, 2.0],
+            # Cập nhật bộ 10 màu theo yêu cầu (từ thấp đến cao)
+            ansys_colors = [
+                "#0000FF", "#0072FF", "#00E3FF", "#00FFAA", "#00FF35", 
+                "#38FF00", "#38FF00", "#AAFF00", "#FFE300", "#FF0000"
+            ]
+            viewer_state._safe_add(target, scalars="FluxB", cmap=ansys_colors, n_colors=10, clim=[0, 2.0],
                             lighting=False, scalar_bar_args=viewer_state.sargs, show_scalar_bar=True, name="dynamic_mesh")
         else: viewer_state._safe_remove("dynamic_mesh")
     else:
