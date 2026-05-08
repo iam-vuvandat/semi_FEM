@@ -32,7 +32,7 @@ def find_geometry_dimension_in_mesh(geometry,
     count_out_of_bounds = 0
     count_fallback = 0
     
-    for seg in tqdm(segments, desc="Processing"):
+    for seg in tqdm(segments, desc="Calculating the geometric dimensions"):
         # Mặc định reset dimension về [0,0,0] nếu cần, hoặc giữ nguyên
         # Ở đây ta sẽ tính toán giá trị mới
         

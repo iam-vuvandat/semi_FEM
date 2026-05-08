@@ -62,18 +62,28 @@ def plot_flux_linkage(data_processor,
         data_mrn = record.flux_linkage
         x_mrn, x_label = get_x_axis(data_mrn[-1, :])
         
+        mrn_linestyle = '-' if not has_fem else 'None'
+        mrn_linewidth = 2.5 if not has_fem else 0
+        mrn_markersize = 0 if not has_fem else 10
+        
         if show_dq:
-            ax_wave.plot(x_mrn, data_mrn[0, :], color='black', marker=s.markers[0], linestyle='None', 
+            ax_wave.plot(x_mrn, data_mrn[0, :], color='black', 
+                        marker=s.markers[0] if has_fem else None, 
+                        linestyle=mrn_linestyle, linewidth=mrn_linewidth,
                         markevery=max(1, len(x_mrn)//20), label=r'$\Psi_d$ (MRN)')
-            ax_wave.plot(x_mrn, data_mrn[1, :], color='black', marker=s.markers[1], linestyle='None', 
+            ax_wave.plot(x_mrn, data_mrn[1, :], color='black', 
+                        marker=s.markers[1] if has_fem else None, 
+                        linestyle=mrn_linestyle, linewidth=mrn_linewidth,
                         markevery=max(1, len(x_mrn)//20), label=r'$\Psi_q$ (MRN)')
             
         for i in phase_indices:
             color = s.phase_colors[i % 3] if n_phase == 3 else s.colors[i % len(s.colors)]
             marker = s.markers[i % len(s.markers)]
             phase_char = chr(97 + i)
-            ax_wave.plot(x_mrn, data_mrn[2 + i, :], color=color, marker=marker, linestyle='None', 
-                        markersize=10, markevery=max(1, len(x_mrn)//15), 
+            ax_wave.plot(x_mrn, data_mrn[2 + i, :], color=color, 
+                        marker=marker if has_fem else None, 
+                        linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                        markersize=mrn_markersize, markevery=max(1, len(x_mrn)//15), 
                         label=r'$\Psi_{' + phase_char + r'}$ (MRN)')
 
     ax_wave.set_xlabel(x_label, fontsize=s.label_size)
@@ -94,14 +104,22 @@ def plot_flux_linkage(data_processor,
             signal_mrn_a = record.flux_linkage[2, :]
             amps_mrn, _ = decompose_harmonics(signal_mrn_a, n_harmonics=max_h)
             h_orders = np.arange(len(amps_mrn))
-            ax_harm.bar(h_orders - 0.15, amps_mrn, width=0.3, color=color_mrn, 
+            
+            bar_offset = -0.15 if has_fem else 0
+            bar_width = 0.3 if has_fem else 0.6
+            
+            ax_harm.bar(h_orders + bar_offset, amps_mrn, width=bar_width, color=color_mrn, 
                         label=r'$\Psi_a$ (MRN)', alpha=0.9)
         
         if has_fem:
             signal_fem_a = record.flux_linkage_fem[2, :]
             amps_fem, _ = decompose_harmonics(signal_fem_a, n_harmonics=max_h)
             h_orders = np.arange(len(amps_fem))
-            ax_harm.bar(h_orders + 0.15, amps_fem, width=0.3, color=color_fem, 
+            
+            bar_offset = 0.15 if has_mrn else 0
+            bar_width = 0.3 if has_mrn else 0.6
+            
+            ax_harm.bar(h_orders + bar_offset, amps_fem, width=bar_width, color=color_fem, 
                         label=r'$\Psi_a$ (FEM)', alpha=0.8)
 
         ax_harm.set_xlabel('Harmonic Order', fontsize=s.label_size)
