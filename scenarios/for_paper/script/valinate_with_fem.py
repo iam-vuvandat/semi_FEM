@@ -88,7 +88,7 @@ else:
 
     # calculation_data - general_options
     aft.calculation_data.general_options.n_point = 30
-    aft.calculation_data.general_options.solve_cogging = True
+    aft.calculation_data.general_options.solve_cogging = False
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.calculation_data.general_options.vectorized_optimization = True
@@ -157,12 +157,17 @@ else:
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
     aft.maxwell_export_option.solver_option.close_after_completed = False
 
+if export_maxwell:
+    aft.export_to_rmxprt()
+
 if solve_semiFEM:
     aft.analysis_motor()
     aft.display()
 
-if export_maxwell:
-    aft.export_to_rmxprt()
+
+
+
+
 
 
 

@@ -164,10 +164,6 @@ if solve_semiFEM:
 if export_maxwell:
     aft.export_to_rmxprt()
 
-
-
-
-
 if not reload_motor:
     io.save(motor=aft, path=file_name)
 
