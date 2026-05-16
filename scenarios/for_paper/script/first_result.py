@@ -11,13 +11,11 @@ init_window()
 
 # Options
 reload_motor = False
-
-#file_name = "motor_for_paper" 
-#file_name = "motor_for_paper1" 
-file_name = "motor_for_paper2" 
+file_name = "motor_for_paper" 
 
 export_maxwell = True
 solve_semiFEM = True
+
 
 if reload_motor:
     export_maxwell = False
@@ -155,7 +153,7 @@ else:
     aft.maxwell_export_option.solver_option.alternetive_first_point = True
     aft.maxwell_export_option.solver_option.solve_immediately = True
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
-    aft.maxwell_export_option.solver_option.close_after_completed = False
+    aft.maxwell_export_option.solver_option.close_after_completed = True
 
 if export_maxwell:
     aft.export_to_rmxprt()
@@ -163,13 +161,6 @@ if export_maxwell:
 if solve_semiFEM:
     aft.analysis_motor()
     aft.display()
-
-
-
-
-
-
-
 
 
 
@@ -181,7 +172,6 @@ dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_
 dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
 dp.plot_torque(horizontal_axis="time", show_fem=True)
 dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-aft.record.cogging_fem[0,:] *= 1e-3
 dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
 dp.plot_axial_force(horizontal_axis="time", show_fem=True)
 

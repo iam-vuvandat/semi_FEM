@@ -12,12 +12,12 @@ GOC_KET_THUC_DEG = 10.0
 CHIEU_CAO_MIN = 10.0
 CHIEU_CAO_MAX = 20.0
 
-show_r0 = False
+show_r0 = True
 show_r1 = True
 show_theta0 = True
 show_theta1 = True
 show_z0 = False
-show_z1 = True
+show_z1 = False
 
 BAN_KINH_NUT_TRUNG_TAM = 0.2
 BAN_KINH_NGUON_MMF = 0.5

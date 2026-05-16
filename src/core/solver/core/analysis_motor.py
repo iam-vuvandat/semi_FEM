@@ -19,6 +19,7 @@ def analysis_motor(motor, callback = None):
     gen = calculation_data.general_options
     
     solve_cogging = gen.solve_cogging
+    solve_standard = gen.solve_standard
     n_point = gen.n_point
     debug = gen.debug
     solve_only_1_step = gen.solve_only_1_step
@@ -50,8 +51,9 @@ def analysis_motor(motor, callback = None):
 
     mechanical_power = np.zeros((2,n_point))
 
-    if solve_only_1_step:
+    if solve_only_1_step is True:
         n_point = 1
+        print("\033[93mNotice: Solve only first step\033[0m")
 
     if solve_cogging:
         motor.mechanical.reset_motor_position()
@@ -62,16 +64,15 @@ def analysis_motor(motor, callback = None):
             motor.rotate_rotor(n_step = 1)
         motor.mechanical.reset_motor_position()
 
-
-    
-    for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
-        motor.drive.apply_winding_excitation(excitation = True)
-        motor.reluctance_network.solver.solve()
-        motor.reluctance_network.add_elements_lite()
-        flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
-        mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
-        current[:, i] = motor.drive.debug_current()[:]        
-        motor.rotate_rotor(n_step = angle_factor)
+    if solve_standard:
+        for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
+            motor.drive.apply_winding_excitation(excitation = True)
+            motor.reluctance_network.solver.solve()
+            motor.reluctance_network.add_elements_lite()
+            flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
+            mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
+            current[:, i] = motor.drive.debug_current()[:]        
+            motor.rotate_rotor(n_step = angle_factor)
 
     
     total_time = time.perf_counter() - begin_time

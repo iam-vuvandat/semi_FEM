@@ -14,9 +14,9 @@ CHIEU_CAO_MIN = 0.0
 CHIEU_CAO_MAX = 60
 
 # 2. Độ thưa của lưới (Grid Density)
-SO_LOP_BAN_KINH = 4
-SO_PHAN_DOAN_GOC = 6
-SO_LOP_CHIEU_CAO = 3  
+SO_LOP_BAN_KINH = 6
+SO_PHAN_DOAN_GOC = 10
+SO_LOP_CHIEU_CAO = 2
 
 # 3. Kích thước linh kiện MRN (Component Dimensions)
 BAN_KINH_NUT_TRUNG_TAM = 0.2

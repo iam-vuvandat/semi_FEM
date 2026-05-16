@@ -112,6 +112,7 @@ class AxialFluxMotorType1:
             ),
             general_options = SimpleNamespace(
                 n_point                = 40,
+                solve_standard         = True,
                 solve_cogging          = False,
                 solve_smooth_torque    = False,
                 solve_only_1_step      = False,
