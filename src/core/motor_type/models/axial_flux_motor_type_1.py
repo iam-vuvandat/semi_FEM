@@ -15,6 +15,8 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.create_adaptive_mesh 
 from src.core.motor_type.utils.for_show.show_motor import show_motor
 from src.core.solver.core.analysis_motor import analysis_motor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor import maxwell_stress_tensor
+from src.core.motor_type.utils.for_axial_flux_motor_type_1.airgap_flux_density_export import airgap_flux_density_export
+
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
 from src.core.motor_type.utils.for_export_maxwell.update_maxwell_settings import update_maxwell_settings
 from src.core.motor_type.utils.for_save_load.prepare_to_save import prepare_to_save
@@ -240,6 +242,9 @@ class AxialFluxMotorType1:
 
     def maxwell_stress_tensor(self):
         return maxwell_stress_tensor(motor = self)
+    
+    def export_airgap_flux_density(self):
+        return airgap_flux_density_export(motor = self)
 
     def display(self):
         show_motor(motor=self)

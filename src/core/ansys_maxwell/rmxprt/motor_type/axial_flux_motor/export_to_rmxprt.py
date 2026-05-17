@@ -15,6 +15,9 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_rotor.edit_r
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_rotor.edit_magnet import edit_magnet
 
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_solver.edit_solver import edit_solver
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.field_calculation_setup import field_calculation_setup
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.create_airgap_probe_line import create_airgap_probe_line
+
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.edit_motion_setting import edit_motion_setting
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.edit_excitation import edit_excitation
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.setup_axial_force_calculation import setup_axial_force_calculation
@@ -45,7 +48,8 @@ def export_to_rmxprt(motor = None):
 
     # Edit Solver 
     m3d= edit_solver(rmxprt= rmxprt, motor= motor)
-
+    field_calculation_setup(m3d = m3d)
+    create_airgap_probe_line(m3d = m3d, motor = motor)
 
     # edit m3d
     edit_motion_setting(m3d = m3d, motor = motor)

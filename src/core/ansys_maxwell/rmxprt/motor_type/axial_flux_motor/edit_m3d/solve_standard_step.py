@@ -5,6 +5,7 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.torque_e
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.axial_force_export import axial_force_export
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.calculate_electrical_frequency import calculate_electrical_frequency
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.export_solution_data import export_solution_data
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.airgap_flux_density_export import airgap_flux_density_export
 
 
 def solve_standard_step(m3d, motor):
@@ -96,6 +97,9 @@ def solve_standard_step(m3d, motor):
 
             print("Axial force export starting")
             axial_force_export(motor = motor, m3d = m3d)
+
+            print("Airgap flux density export starting")
+            airgap_flux_density_export(motor = motor, m3d = m3d)
             
             print("\033[92mExport data successfully\033[0m")
 

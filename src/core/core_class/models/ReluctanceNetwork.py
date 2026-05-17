@@ -17,6 +17,7 @@ from src.core.core_class.utils.for_reluctance_network.get_geometric_error import
 from src.core.core_class.utils.for_reluctance_network.display_elements import display_elements
 from src.core.core_class.utils.for_reluctance_network.create_vectorized_elements import init_vectorized_elements
 from src.core.core_class.utils.for_reluctance_network.update_elements_from_vectorized import update_elements_from_vectorized
+from src.core.core_class.utils.for_reluctance_network.get_airgap_flux_density import get_airgap_flux_density
 
 # Solver Core
 from src.core.solver.model.Solver import Solver
@@ -125,3 +126,5 @@ class ReluctanceNetwork:
     def refresh_elements(self):
         update_elements_from_vectorized(reluctance_network= self)
     
+    def export_airgap_flux_density(self,path_sweep = [0,-1,0]):
+        return get_airgap_flux_density(reluctance_network= self, path_sweep= path_sweep)

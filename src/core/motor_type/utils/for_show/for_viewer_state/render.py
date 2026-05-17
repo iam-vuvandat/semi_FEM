@@ -30,10 +30,10 @@ def render(viewer_state):
         for mid in range(5): viewer_state._safe_remove(f"mat_{mid}")
         target = render_mesh if has_sel else render_mesh.threshold(0.1, scalars="MatID")
         if target.n_cells > 0:
-            # Cập nhật bộ 10 màu theo yêu cầu (từ thấp đến cao)
-            ansys_colors = ['#0000FF','#0036FF','#006BFF','#00A1FF','#00D7FF','#00FFF2','#00FFBC','#00FF86','#00FF51','#51FF00','#86FF00','#BCFF00','#F2FF00','#FFD700','#FFA100','#FF6B00','#FF3600','#FF0000']
+            # Các màu
+            ansys_colors = ['#0000FF','#0036FF','#006BFF','#00A1FF','#00D7FF','#00FFF2','#00FFBC','#00FF86','#00FF51','#00FF1B','#1BFF00','#51FF00','#86FF00','#BCFF00','#F2FF00','#FFD700','#FFA100','#FF6B00','#FF3600','#FF0000']
             
-            viewer_state._safe_add(target, scalars="FluxB", cmap=ansys_colors, n_colors=100, clim=[0, 2.0],
+            viewer_state._safe_add(target, scalars="FluxB", cmap=ansys_colors, n_colors=20, clim=[0, 2.0],
                             lighting=False, scalar_bar_args=viewer_state.sargs, show_scalar_bar=True, name="dynamic_mesh")
         else: viewer_state._safe_remove("dynamic_mesh")
     else:
@@ -50,3 +50,4 @@ def render(viewer_state):
             except Exception: viewer_state._safe_remove(f"mat_{mid}")
     viewer_state.update_text_info()
     viewer_state.pl.render()
+    

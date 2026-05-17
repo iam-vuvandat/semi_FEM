@@ -15,7 +15,7 @@ file_name = "motor_for_paper"
 
 export_maxwell = True
 solve_semiFEM = True
-
+only_update_motor = True
 
 if reload_motor:
     export_maxwell = False
@@ -80,9 +80,9 @@ else:
     # calculation_data - convergence_settings
     aft.calculation_data.convergence_settings.max_iteration = 46
     aft.calculation_data.convergence_settings.max_relative_residual = 0.1 * 1e-2
-    aft.calculation_data.convergence_settings.material_relax = 0.35
+    aft.calculation_data.convergence_settings.material_relax = 0.2
     aft.calculation_data.convergence_settings.damping_factor = 1.0
-    aft.calculation_data.convergence_settings.relaxation_decay = 0.9
+    aft.calculation_data.convergence_settings.relaxation_decay = 1.0
 
     # calculation_data - general_options
     aft.calculation_data.general_options.n_point = 30
@@ -155,23 +155,21 @@ else:
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
     aft.maxwell_export_option.solver_option.close_after_completed = True
 
-if export_maxwell:
+if export_maxwell and not only_update_motor:
     aft.export_to_rmxprt()
 
-if solve_semiFEM:
+if solve_semiFEM and not only_update_motor:
     aft.analysis_motor()
-    aft.display()
-
-
 
 if not reload_motor:
     io.save(motor=aft, path=file_name)
 
-dp = aft.data_processor
-dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_all_phase= True)
-dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
-dp.plot_torque(horizontal_axis="time", show_fem=True)
-dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
-dp.plot_axial_force(horizontal_axis="time", show_fem=True)
+if not only_update_motor:
+    dp = aft.data_processor
+    dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_all_phase= True)
+    dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
+    dp.plot_torque(horizontal_axis="time", show_fem=True)
+    dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
+    dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
+    dp.plot_axial_force(horizontal_axis="time", show_fem=True)
 
