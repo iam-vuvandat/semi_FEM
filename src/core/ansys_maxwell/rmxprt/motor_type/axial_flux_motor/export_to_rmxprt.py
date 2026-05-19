@@ -1,6 +1,6 @@
-from nbconvert import export
-
 import paths
+
+import time 
 
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 from src.core.ansys_maxwell.rmxprt.setup.open_rmxprt import init_rmxprt
@@ -27,7 +27,7 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.solve_co
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.export_solution_data import export_solution_data
 
 def export_to_rmxprt(motor = None):
-
+    begin_time = time.perf_counter()
     # require property
     motor.require('geometry')
 
@@ -67,8 +67,10 @@ def export_to_rmxprt(motor = None):
     if motor.maxwell_export_option.solver_option.close_after_completed is True:
         init_window()
 
-
-
+    end_time =  time.perf_counter()
+    total_time = end_time - begin_time
+    motor.record.total_time_fem = total_time
+    print("Time simulation (FEM):",total_time)
 
 if __name__ == "__main__":
     from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorType1

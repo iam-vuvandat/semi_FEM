@@ -3,6 +3,7 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.edit_exc
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.cogging_torque_export import cogging_torque_export
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.calculate_electrical_frequency import calculate_electrical_frequency
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.export_solution_data import export_solution_data
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.airgap_flux_density_export import airgap_flux_density_export
 
 
 def solve_cogging_torque(m3d=None, motor=None):
@@ -61,6 +62,8 @@ def solve_cogging_torque(m3d=None, motor=None):
             m3d.analyze_setup(setup_name)
             cogging_torque_export(motor=motor, m3d=m3d)
 
+            motor.record.airgap_flux_density_fem_no_load = airgap_flux_density_export(motor = motor, m3d = m3d).copy()
+    
         print(f"\033[92msolve_cogging_torque return: True\033[0m")
         export_solution_data(m3d = m3d, motor = motor)
         return True

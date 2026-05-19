@@ -101,7 +101,6 @@ def airgap_flux_density_export(motor, m3d):
     b_magnitude = np.sqrt(b_radial**2 + b_tangential**2 + b_axial**2)
 
     combined_data = np.vstack((b_radial, b_tangential, b_axial, b_magnitude, angular_positions))
-    motor.record.airgap_flux_density_fem = combined_data.copy()
     
     print(f"\033[92mSuccess: Airgap flux density components exported\033[0m")
-    return True
+    return combined_data

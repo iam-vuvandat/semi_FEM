@@ -56,13 +56,9 @@ def export_solution_data(m3d,motor):
                 if val_mb > max_memory_mb:
                     max_memory_mb = val_mb
                     
-    print(f"\033[92mSolution Data Extracted - Time: {total_time_sec}s | Elements: {max_elements} | Matrix: {max_matrix} | Memory: {max_memory_mb:.2f} MB\033[0m")
+    print(f"\033[92mSolution Data Extracted - Elements: {max_elements} | Matrix: {max_matrix} | Memory: {max_memory_mb:.2f} MB\033[0m")
 
-    if hasattr(motor.record,"time_solved_fem"):
-        motor.record.time_solved_fem += total_time_sec
-    else:
-        motor.record.time_solved_fem = total_time_sec
-
+    
     if hasattr(motor.record,"total_elements_fem"):
         pass
     else:
@@ -78,7 +74,6 @@ def export_solution_data(m3d,motor):
     else:
         motor.record.memory_used_fem = max_memory_mb
     return {
-        "total_time_sec": total_time_sec,
         "max_elements": max_elements,
         "max_matrix": max_matrix,
         "max_memory_mb": max_memory_mb

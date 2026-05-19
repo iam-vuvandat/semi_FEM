@@ -13,6 +13,7 @@ from src.core.core_class.utils.for_data_processor.plot_cogging_torque import plo
 from src.core.core_class.utils.for_data_processor.plot_mechanical_power import plot_mechanical_power
 from src.core.core_class.utils.for_data_processor.plot_inductance_map import plot_inductance_map
 from src.core.core_class.utils.for_data_processor.plot_airgap_flux_density import plot_airgap_flux_density
+from src.core.core_class.utils.for_data_processor.plot_airgap_flux_density_no_load import plot_airgap_flux_density_no_load
 
 
 from mpl_toolkits.mplot3d import Axes3D
@@ -48,6 +49,10 @@ class DataProcessor:
 
     def plot_airgap_flux_density(self, horizontal_axis="mechanical_position", show_fem=True, plot=True):
         plot_airgap_flux_density(data_processor=self, horizontal_axis=horizontal_axis, 
+                                 show_fem=show_fem, plot=plot)
+
+    def plot_airgap_flux_density_no_load(self, horizontal_axis="mechanical_position", show_fem=True, plot=True):
+        plot_airgap_flux_density_no_load(data_processor=self, horizontal_axis=horizontal_axis, 
                                  show_fem=show_fem, plot=plot)
     
     def plot_flux_linkage(self, horizontal_axis="mechanical_position", show_fem=True, 

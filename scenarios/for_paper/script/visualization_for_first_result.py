@@ -16,9 +16,9 @@ aft.calculation_data.general_options.solve_cogging  = False
 aft.calculation_data.general_options.solve_only_1_step = True
 
 # Option
-visualization_under_no_load = False
-
+visualization_under_no_load = True
 visualization_reluctance_network_first = False
+
 
 if visualization_under_no_load:
     aft.drive_data.i_rms = 0.0
@@ -51,13 +51,15 @@ if visualization_reluctance_network_first:
     aft.analysis_motor()
     aft.display()
 
+
+
 # Visualization for FEM
 aft.maxwell_export_option.solver_option.solve_only_1_step = True
 aft.maxwell_export_option.solver_option.close_after_completed = False
 aft.export_to_rmxprt()
 
 
-aft.data_processor.plot_airgap_flux_density()
+
 
 if not visualization_reluctance_network_first:
     # Visualization for Reluctance Network
@@ -65,4 +67,6 @@ if not visualization_reluctance_network_first:
     aft.display()
 
 
+print(aft.record.airgap_flux_density)
+aft.data_processor.plot_airgap_flux_density()
 

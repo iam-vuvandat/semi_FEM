@@ -45,6 +45,8 @@ def analysis_motor(motor, callback = None):
 
     phase_number = motor.winding_data.phase
     flux_linkage = np.zeros((phase_number + 3, n_point))
+    airgap_flux_density = None
+    airgap_flux_density_no_load = None
     cogging = np.zeros((2, n_point))
     mst_data = np.zeros((5, n_point))
     current = np.zeros((3 + phases, n_point))
@@ -61,17 +63,26 @@ def analysis_motor(motor, callback = None):
             motor.drive.apply_winding_excitation(excitation = False)
             motor.reluctance_network.solver.solve()
             cogging[:, i] = motor.maxwell_stress_tensor().mst_result[3:5]
+
+            if i == 0: 
+                airgap_flux_density = motor.export_airgap_flux_density()
+
             motor.rotate_rotor(n_step = 1)
         motor.mechanical.reset_motor_position()
 
     if solve_standard:
         for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
+            
             motor.drive.apply_winding_excitation(excitation = True)
             motor.reluctance_network.solver.solve()
             motor.reluctance_network.add_elements_lite()
             flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
             mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
-            current[:, i] = motor.drive.debug_current()[:]        
+            current[:, i] = motor.drive.debug_current()[:]   
+
+            if i == 0: 
+                airgap_flux_density = motor.export_airgap_flux_density()
+
             motor.rotate_rotor(n_step = angle_factor)
 
     
@@ -120,6 +131,11 @@ def analysis_motor(motor, callback = None):
     end_time = time.perf_counter()
     memory_used =   get_python_process_memory()
 
+    if airgap_flux_density is not None:
+        motor.record.airgap_flux_density = airgap_flux_density.copy()
+    if airgap_flux_density_no_load is not None:
+        motor.record.airgap_flux_density_no_load = airgap_flux_density_no_load.copy()
+
     if not solve_only_1_step:
 
         shaft_speed = motor.mechanical.shaft_speed * (pi/30)
@@ -133,6 +149,7 @@ def analysis_motor(motor, callback = None):
         
         back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
         
+        
         motor.record.flux_linkage = flux_linkage.copy()
         motor.record.back_emf = back_emf.copy()
     
@@ -142,7 +159,7 @@ def analysis_motor(motor, callback = None):
         motor.record.cogging = cogging.copy()
         motor.record.currents = current.copy()
         motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
-
+        
 
     motor.record.time_solved = total_time
     motor.record.memory_used = memory_used

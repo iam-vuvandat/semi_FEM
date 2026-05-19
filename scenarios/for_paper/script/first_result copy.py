@@ -5,36 +5,17 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 pi = math.pi
 io = MotorIO()
 
-
-# Options
-
-reload_motor = False
-only_update_motor = False
-
-
 # Close Ansys Maxwell
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Options
+reload_motor = False
 file_name = "motor_for_paper" 
 
 export_maxwell = True
 solve_semiFEM = True
-
+only_update_motor = True
 
 if reload_motor:
     export_maxwell = False
@@ -105,7 +86,7 @@ else:
 
     # calculation_data - general_options
     aft.calculation_data.general_options.n_point = 30
-    aft.calculation_data.general_options.solve_cogging = True
+    aft.calculation_data.general_options.solve_cogging = False
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.calculation_data.general_options.vectorized_optimization = True
@@ -140,7 +121,7 @@ else:
     aft.just_changed('mesh')
 
     # drive_data
-    aft.drive_data.i_rms = 5.0
+    aft.drive_data.i_rms = 10.0
     aft.drive_data.phase_advanced = 0.0
     aft.just_changed('drive')
     
@@ -185,11 +166,7 @@ if not reload_motor:
 
 if not only_update_motor:
     dp = aft.data_processor
-
-
-    print(aft.record.cogging_fem)
     dp.plot_airgap_flux_density()
-    dp.plot_airgap_flux_density_no_load()
     dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_all_phase= True)
     dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
     dp.plot_torque(horizontal_axis="time", show_fem=True)
