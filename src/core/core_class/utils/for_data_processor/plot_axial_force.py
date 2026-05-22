@@ -21,7 +21,12 @@ def plot_axial_force(data_processor,
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
-            return theta_data / shaft_speed, r'Time ($s$)'
+            time_data = theta_data / shaft_speed
+            max_time = np.max(time_data)
+            if max_time < 0.1:
+                return time_data * 1e3, r'Time ($ms$)'
+            else:
+                return time_data, r'Time ($s$)'
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
@@ -35,45 +40,51 @@ def plot_axial_force(data_processor,
     plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
     
-    val_mrn, val_fem = None, None
     x_label = ""
+    color_fem = '#7F7F7F'  
+    color_mrn = '#B22222'  
+
+    all_y_values = []
 
     if has_fem:
         data_fem = record.axial_force_fem
         x_fem, x_label = get_x_axis(data_fem[-1, :])
         val_fem = data_fem[0, :] * fem_mult
-        average_fem = np.mean(val_fem)
+        all_y_values.extend(val_fem)
         
-        ax.plot(x_fem, val_fem, color='black', linestyle='-', linewidth=1.0, 
-                label='Axial Force (FEM)')
-        ax.axhline(y=average_fem, color='black', linestyle=':', alpha=0.5, 
-                   label=f'Average Axial Force (FEM): {average_fem:.2f} N')
+        average_fem = np.mean(val_fem)
+        label_fem = r'Axial Force (FEM, $F_{avg}$ = ' + f'{average_fem:.2f} N)'
+        
+        ax.plot(x_fem, val_fem, color=color_fem, linestyle='-', linewidth=1.5, 
+                label=label_fem)
 
     if has_mrn:
         data_mrn = record.axial_force
         x_mrn, x_label = get_x_axis(data_mrn[-1, :])
         val_mrn = data_mrn[0, :]
-        average_mrn = np.mean(val_mrn)
+        all_y_values.extend(val_mrn)
         
-        ax.plot(x_mrn, val_mrn, color='red', linestyle='-', linewidth=3.5, 
-                label='Axial Force (MRN)')
-        ax.axhline(y=average_mrn, color='red', linestyle='--', alpha=0.8, 
-                   label=f'Average Axial Force (MRN): {average_mrn:.2f} N')
-
-    all_active_vals = []
-    if val_mrn is not None: all_active_vals.extend(val_mrn)
-    if val_fem is not None: all_active_vals.extend(val_fem)
-    
-    if all_active_vals:
-        overall_average = np.mean(all_active_vals)
-        max_deviation = np.max(np.abs(np.array(all_active_vals) - overall_average))
-        padding = max_deviation * 1.5 if max_deviation > 0 else 10.0
-        ax.set_ylim(overall_average - padding, overall_average + padding)
+        average_mrn = np.mean(val_mrn)
+        label_mrn = r'Axial Force (MRN, $F_{avg}$ = ' + f'{average_mrn:.2f} N)'
+        
+        ax.plot(x_mrn, val_mrn, color=color_mrn, linestyle='-', linewidth=3.0, 
+                label=label_mrn)
 
     ax.set_xlabel(x_label, fontsize=s.label_size)
     ax.set_ylabel('Axial Force (N)', fontsize=s.label_size)
-    ax.legend(frameon=True, loc='best', fontsize=s.legend_size, ncol=2)
-    ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
+    ax.legend(frameon=True, loc='best', fontsize=s.legend_size)
+    ax.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
+    ax.margins(x=0)
+    
+    if all_y_values:
+        y_min = np.min(all_y_values)
+        y_max = np.max(all_y_values)
+        y_range = y_max - y_min
+        if y_range == 0:
+            y_range = 1.0
+            
+        padding = 0.15 * y_range
+        ax.set_ylim(y_min - padding, y_max + padding)
     
     plt.tight_layout()
     plt.show()

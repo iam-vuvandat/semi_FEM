@@ -59,7 +59,6 @@ def export_to_rmxprt(motor = None):
 
     # solve and export solution data
     solve_standard_step(m3d= m3d, motor= motor)
-    
     solve_cogging_torque(m3d= m3d, motor= motor)
   
 

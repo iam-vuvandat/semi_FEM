@@ -17,7 +17,7 @@ def apply_journal_style():
         'font.serif': ['Times New Roman'],
         'axes.grid': True,
         'grid.linestyle': '-',
-        'grid.linewidth': 0.05,
+        'grid.linewidth': 0.01,
         'xtick.direction': 'in',
         'ytick.direction': 'in',
     }

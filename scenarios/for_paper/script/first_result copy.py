@@ -10,12 +10,12 @@ from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
 # Options
-reload_motor = False
-file_name = "motor_for_paper" 
+reload_motor = True
+file_name = "motor_for_paper_2" 
 
 export_maxwell = True
-solve_semiFEM = True
-only_update_motor = True
+solve_semiFEM = False
+only_update_motor = False
 
 if reload_motor:
     export_maxwell = False
@@ -40,7 +40,7 @@ else:
     aft.just_changed('winding_data')
 
     # mechanical_data
-    aft.mechanical_data.shaft_speed = 3000
+    aft.mechanical_data.shaft_speed = 1
     aft.just_changed('mechanical_data')
 
     # geometry_data - stator
@@ -85,8 +85,8 @@ else:
     aft.calculation_data.convergence_settings.relaxation_decay = 1.0
 
     # calculation_data - general_options
-    aft.calculation_data.general_options.n_point = 30
-    aft.calculation_data.general_options.solve_cogging = False
+    aft.calculation_data.general_options.n_point = 20
+    aft.calculation_data.general_options.solve_cogging = True
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.calculation_data.general_options.vectorized_optimization = True
@@ -140,7 +140,7 @@ else:
     aft.maxwell_export_option.custom_option.mesh_setting.airgap_element_layer = 6
     aft.maxwell_export_option.custom_option.mesh_setting.moving_side_layers = 2
     aft.maxwell_export_option.custom_option.mesh_setting.static_side_layers = 2
-    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = -1
+    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = 1
     aft.maxwell_export_option.custom_option.mesh_setting.length_coil_element_length = -1
     aft.maxwell_export_option.custom_option.mesh_setting.length_mag_element_length = -1
     aft.maxwell_export_option.custom_option.mesh_setting.length_main_element_length = -1
@@ -155,6 +155,7 @@ else:
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
     aft.maxwell_export_option.solver_option.close_after_completed = True
 
+    aft.calculation_data.general_options.solve_standard = False
 if export_maxwell and not only_update_motor:
     aft.export_to_rmxprt()
 

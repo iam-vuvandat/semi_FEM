@@ -21,7 +21,12 @@ def plot_torque(data_processor,
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
-            return theta_data / shaft_speed, r'Time ($s$)'
+            time_data = theta_data / shaft_speed
+            max_time = np.max(time_data)
+            if max_time < 0.1:
+                return time_data * 1e3, r'Time ($ms$)'
+            else:
+                return time_data, r'Time ($s$)'
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
@@ -33,25 +38,57 @@ def plot_torque(data_processor,
     ax = plt.gca()
     x_label = ""
 
-    # Vẽ FEM trước: Màu đen, mảnh (linewidth=1.0), nét liền
+    # Cấu hình bộ màu: Đỏ đô trầm và Xám học thuật dịu
+    color_fem = '#7F7F7F'  # Màu xám dịu (Muted Gray)
+    color_mrn = '#B22222'  # Đỏ đô trầm (Firebrick Red)
+
+    # Khởi tạo mảng lưu giá trị để tính giới hạn trục Y
+    all_y_values = []
+
+    # Vẽ FEM trước: Nét liền, mảnh
     if has_fem:
         data_fem = record.torque_fem
         x_fem, x_label = get_x_axis(data_fem[-1, :])
         val_fem = data_fem[0, :] * fem_mult
-        ax.plot(x_fem, val_fem, color='black', linestyle='-', linewidth=1.0, 
-                label='Torque (FEM)')
+        all_y_values.extend(val_fem)
+        
+        avg_fem = np.mean(val_fem)
+        label_fem = r'Torque (FEM, $T_{avg}$ = ' + f'{avg_fem:.2f} Nm)'
+        
+        ax.plot(x_fem, val_fem, color=color_fem, linestyle='-', linewidth=1.5, 
+                label=label_fem)
 
-    # Vẽ MRN sau để nằm đè lên: Màu đỏ, đậm (linewidth=3.5), nét liền
+    # Vẽ MBGRN sau đè lên: Nét liền, đậm, không dùng marker
     if has_mrn:
         data_mrn = record.torque
         x_mrn, x_label = get_x_axis(data_mrn[-1, :])
-        ax.plot(x_mrn, data_mrn[0, :], color='red', linestyle='-', linewidth=3.5, 
-                label='Torque (MRN)')
+        val_mrn = data_mrn[0, :]
+        all_y_values.extend(val_mrn)
+        
+        avg_mrn = np.mean(val_mrn)
+        label_mrn = r'Torque (MBGRN, $T_{avg}$ = ' + f'{avg_mrn:.2f} Nm)'
+        
+        ax.plot(x_mrn, val_mrn, color=color_mrn, linestyle='-', linewidth=3.0, 
+                label=label_mrn)
+
+    # Tự động tính toán giới hạn trục Y để chừa khoảng trống lề trên và lề dưới
+    if all_y_values:
+        y_min = np.min(all_y_values)
+        y_max = np.max(all_y_values)
+        y_range = y_max - y_min
+        if y_range == 0:
+            y_range = 1.0  # Tránh lỗi chia cho 0 nếu đồ thị là đường thẳng tuyệt đối
+            
+        # Chừa ra biên độ 15% dải dữ liệu cho lề trên và lề dưới
+        padding = 0.15 * y_range
+        ax.set_ylim(y_min - padding, y_max + padding)
 
     ax.set_xlabel(x_label, fontsize=s.label_size)
     ax.set_ylabel('Torque (Nm)', fontsize=s.label_size)
-    ax.legend(frameon=True, loc='lower right', fontsize=s.legend_size)
-    ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
+    
+    ax.legend(frameon=True, loc='best', fontsize=s.legend_size)
+    ax.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
+    ax.margins(x=0)
     
     plt.tight_layout()
     plt.show()

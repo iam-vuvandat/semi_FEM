@@ -25,7 +25,12 @@ def plot_flux_linkage(data_processor,
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
-            return theta_data / shaft_speed, r'Time ($s$)'
+            time_data = theta_data / shaft_speed
+            max_time = np.max(time_data)
+            if max_time < 0.1:
+                return time_data * 1e3, r'Time ($ms$)'
+            else:
+                return time_data, r'Time ($s$)'
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
@@ -39,6 +44,13 @@ def plot_flux_linkage(data_processor,
     phase_indices = range(n_phase) if show_all_phase else [0]
     max_h = 15
 
+    # Cấu hình bộ màu Muted Classic theo yêu cầu
+    color_r = '#B22222'  # Firebrick Red
+    color_t = '#1F4E79'  # Navy Blue
+    color_z = '#595959'  # Dim Gray
+    
+    phase_colors_muted = [color_r, color_t, color_z]
+
     # --- FIGURE 1: WAVEFORM (DẠNG SÓNG) ---
     plt.figure(figsize=(fig_width, fig_height))
     ax_wave = plt.gca()
@@ -49,13 +61,13 @@ def plot_flux_linkage(data_processor,
         x_fem, x_label = get_x_axis(data_fem[-1, :])
         
         if show_dq:
-            ax_wave.plot(x_fem, data_fem[0, :], color='black', linestyle='-', linewidth=3.5, label=r'$\Psi_d$ (FEM)')
-            ax_wave.plot(x_fem, data_fem[1, :], color='black', linestyle='-', linewidth=3.5, label=r'$\Psi_q$ (FEM)')
+            ax_wave.plot(x_fem, data_fem[0, :], color=color_r, linestyle='-', linewidth=2.0, label=r'$\Psi_d$ (FEM)')
+            ax_wave.plot(x_fem, data_fem[1, :], color=color_t, linestyle='-', linewidth=2.0, label=r'$\Psi_q$ (FEM)')
             
         for i in phase_indices:
-            color = s.phase_colors[i % 3] if n_phase == 3 else s.colors[i % len(s.colors)]
+            color = phase_colors_muted[i % len(phase_colors_muted)]
             phase_char = chr(97 + i)
-            ax_wave.plot(x_fem, data_fem[2 + i, :], color=color, linestyle='-', linewidth=2.5, 
+            ax_wave.plot(x_fem, data_fem[2 + i, :], color=color, linestyle='-', linewidth=1.8, 
                         label=r'$\Psi_{' + phase_char + r'}$ (FEM)')
 
     if has_mrn:
@@ -63,39 +75,41 @@ def plot_flux_linkage(data_processor,
         x_mrn, x_label = get_x_axis(data_mrn[-1, :])
         
         mrn_linestyle = '-' if not has_fem else 'None'
-        mrn_linewidth = 2.5 if not has_fem else 0
-        mrn_markersize = 0 if not has_fem else 10
+        mrn_linewidth = 1.8 if not has_fem else 0
+        mrn_markersize = 0 if not has_fem else 5
         
         if show_dq:
-            ax_wave.plot(x_mrn, data_mrn[0, :], color='black', 
-                        marker=s.markers[0] if has_fem else None, 
+            ax_wave.plot(x_mrn, data_mrn[0, :], color=color_r, 
+                        marker='o' if has_fem else None, 
                         linestyle=mrn_linestyle, linewidth=mrn_linewidth,
-                        markevery=max(1, len(x_mrn)//20), label=r'$\Psi_d$ (MRN)')
-            ax_wave.plot(x_mrn, data_mrn[1, :], color='black', 
-                        marker=s.markers[1] if has_fem else None, 
+                        markersize=mrn_markersize, markevery=1, label=r'$\Psi_d$ (MBGRN)')
+            ax_wave.plot(x_mrn, data_mrn[1, :], color=color_t, 
+                        marker='s' if has_fem else None, 
                         linestyle=mrn_linestyle, linewidth=mrn_linewidth,
-                        markevery=max(1, len(x_mrn)//20), label=r'$\Psi_q$ (MRN)')
+                        markersize=mrn_markersize, markevery=1, label=r'$\Psi_q$ (MBGRN)')
             
         for i in phase_indices:
-            color = s.phase_colors[i % 3] if n_phase == 3 else s.colors[i % len(s.colors)]
-            marker = s.markers[i % len(s.markers)]
+            color = phase_colors_muted[i % len(phase_colors_muted)]
+            marker = s.markers[i % len(s.markers)] if hasattr(s, 'markers') else 'o'
             phase_char = chr(97 + i)
             ax_wave.plot(x_mrn, data_mrn[2 + i, :], color=color, 
                         marker=marker if has_fem else None, 
                         linestyle=mrn_linestyle, linewidth=mrn_linewidth,
-                        markersize=mrn_markersize, markevery=max(1, len(x_mrn)//15), 
-                        label=r'$\Psi_{' + phase_char + r'}$ (MRN)')
+                        markersize=mrn_markersize, markevery=1, 
+                        label=r'$\Psi_{' + phase_char + r'}$ (MBGRN)')
 
     ax_wave.set_xlabel(x_label, fontsize=s.label_size)
     ax_wave.set_ylabel(r'Flux Linkage ($Wb$)', fontsize=s.label_size)
-    ax_wave.legend(frameon=True, loc='lower right', ncol=2, fontsize=s.legend_size)
-    ax_wave.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
+    
+    ax_wave.legend(frameon=True, loc='lower right', ncol=3, fontsize=s.legend_size)
+    ax_wave.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
+    ax_wave.margins(x=0)
     plt.tight_layout()
 
     # --- FIGURE 2: HARMONIC (PHỔ SÓNG HÀI) ---
     if show_harmonic:
-        color_mrn = '#4477AA' # Blue
-        color_fem = '#EE6677' # Red
+        color_harm_mbgrn = '#1F4E79' 
+        color_harm_fem = '#B22222'   
 
         plt.figure(figsize=(fig_width, fig_height))
         ax_harm = plt.gca()
@@ -108,8 +122,8 @@ def plot_flux_linkage(data_processor,
             bar_offset = -0.15 if has_fem else 0
             bar_width = 0.3 if has_fem else 0.6
             
-            ax_harm.bar(h_orders + bar_offset, amps_mrn, width=bar_width, color=color_mrn, 
-                        label=r'$\Psi_a$ (MRN)', alpha=0.9)
+            ax_harm.bar(h_orders + bar_offset, amps_mrn, width=bar_width, color=color_harm_mbgrn, 
+                        label=r'$\Psi_a$ (MBGRN)', alpha=0.9)
         
         if has_fem:
             signal_fem_a = record.flux_linkage_fem[2, :]
@@ -119,14 +133,14 @@ def plot_flux_linkage(data_processor,
             bar_offset = 0.15 if has_mrn else 0
             bar_width = 0.3 if has_mrn else 0.6
             
-            ax_harm.bar(h_orders + bar_offset, amps_fem, width=bar_width, color=color_fem, 
+            ax_harm.bar(h_orders + bar_offset, amps_fem, width=bar_width, color=color_harm_fem, 
                         label=r'$\Psi_a$ (FEM)', alpha=0.8)
 
         ax_harm.set_xlabel('Harmonic Order', fontsize=s.label_size)
         ax_harm.set_ylabel('Amplitude (Wb)', fontsize=s.label_size)
         ax_harm.set_xticks(h_orders)
         ax_harm.legend(frameon=True, loc='upper right', fontsize=s.legend_size)
-        ax_harm.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
+        ax_harm.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
         plt.tight_layout()
 
     plt.show()

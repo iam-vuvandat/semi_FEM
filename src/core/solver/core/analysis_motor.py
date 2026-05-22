@@ -65,7 +65,7 @@ def analysis_motor(motor, callback = None):
             cogging[:, i] = motor.maxwell_stress_tensor().mst_result[3:5]
 
             if i == 0: 
-                airgap_flux_density = motor.export_airgap_flux_density()
+                airgap_flux_density_no_load = motor.export_airgap_flux_density()
 
             motor.rotate_rotor(n_step = 1)
         motor.mechanical.reset_motor_position()

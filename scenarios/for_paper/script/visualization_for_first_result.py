@@ -9,22 +9,34 @@ io = MotorIO()
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
+# Option
+visualization_under_no_load = False
+visualization_reluctance_network_first = False
+refine_mesh = False
+
+
+
+
+
+
+
+
+
+
+
 file_name = "motor_for_paper" 
 aft = io.load(path=file_name)
 aft.calculation_data.general_options.solve_standard = True
 aft.calculation_data.general_options.solve_cogging  = False
 aft.calculation_data.general_options.solve_only_1_step = True
 
-# Option
-visualization_under_no_load = True
-visualization_reluctance_network_first = False
 
 
 if visualization_under_no_load:
     aft.drive_data.i_rms = 0.0
     aft.just_changed('drive_data')
 
-refine_mesh = True
+
 if refine_mesh:
     aft.adaptive_mesh_data.n_r_in = 1
     aft.adaptive_mesh_data.n_r_1 = 4
