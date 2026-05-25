@@ -29,8 +29,17 @@ def torque_export(motor, m3d):
     time_idx, torque_idx = 0, 1
     time_mult, torque_mult = 1.0, 1.0
     time_unit_map = {"[s]": 1.0, "[ms]": 1e-3, "[us]": 1e-6, "[ns]": 1e-9, "[min]": 60.0, "[h]": 3600.0}
-    torque_unit_map = {"[n.m]": 1.0, "[nm]": 1.0, "[N.m]": 1.0, "[Nm]": 1.0, "[kN.m]": 1000.0, "[kNm]": 1000.0, "[kn.m]": 1000.0, "[knm]": 1000.0, "[mN.m]": 1e-3, "[mNm]": 1e-3, "[kgf.cm]": 0.0980665}
- 
+    torque_unit_map = {
+        "[n.m]": 1.0, 
+        "[nm]": 1.0, 
+        "[kN.m]".lower(): 1000.0, 
+        "[kNm]".lower(): 1000.0, 
+        "[mN.m]".lower(): 1e-3, 
+        "[mNm]".lower(): 1e-3, 
+        "[mnewtonmeter]": 1e-3, 
+        "[kgf.cm]": 0.0980665
+    }
+    
     for i, col in enumerate(header):
         col_clean = col.replace('"', '').lower()
         if "time" in col_clean:

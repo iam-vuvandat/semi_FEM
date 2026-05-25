@@ -1,6 +1,5 @@
 from src.core.core_class.models.Element import Element
 import numpy as np 
-from tqdm import tqdm
 
 def create_elements(reluctance_network, debug=True, callback=None):
 
@@ -12,25 +11,42 @@ def create_elements(reluctance_network, debug=True, callback=None):
     elements = np.empty((nr, nt, nz), dtype=object, order='F')
     reluctance_network.elements = elements
 
-    with tqdm(total=total_elements, desc="Creating Elements", disable=not debug) as pbar:
-        for i_z in range(nz):
-            for i_t in range(nt):
-                for i_r in range(nr):
-                    position = (i_r, i_t, i_z)
+    if debug is True:
+        print("\033[94m\033[0m")
+        print(f"\033[94mIn function create_elements.\033[0m")
+        print("\033[94m{\033[0m")
+        print(f"\033[94m    Total elements to create: {total_elements}\033[0m")
+
+    for i_z in range(nz):
+        for i_t in range(nt):
+            for i_r in range(nr):
+                position = (i_r, i_t, i_z)
+                
+                elements[i_r, i_t, i_z] = Element(
+                    position=position,
+                    reluctance_network=reluctance_network)
+                
+                current_index = i_z * (nt * nr) + i_t * nr + i_r + 1
+                
+                if current_index % 50 == 0 or current_index == total_elements:
+                    percent = (current_index / total_elements) * 100
+                    if debug is True:
+                        print(f"\r\033[94m    Creating Elements: {percent:.1f}%\033[0m", end="", flush=True)
+                    else:
+                        print(f"\rCreating Elements: {percent:.1f}%", end="", flush=True)
+                
+                if callback:
+                    if current_index % 50 == 0 or current_index == total_elements:
+                        progress_val = int((current_index / total_elements) * 100)
+                        callback(f"Creating elements: {current_index}/{total_elements}", progress_val)
                     
-                    elements[i_r, i_t, i_z] = Element(
-                        position=position,
-                        reluctance_network=reluctance_network)
-                    
-                    pbar.update(1)
-                    
-                    if callback:
-                        current_index = i_z * (nt * nr) + i_t * nr + i_r + 1
-                        # Cap nhat moi khi xong 50 phan tu de toi uu toc do UI
-                        if current_index % 50 == 0 or current_index == total_elements:
-                            progress_val = int((current_index / total_elements) * 100)
-                            # Khop voi chu ky callback(message, progress)
-                            callback(f"Creating elements: {current_index}/{total_elements}", progress_val)
-                    
+    print()
+
     reluctance_network.update_reluctance_network(magnetic_potential=reluctance_network.magnetic_potential)
+    
+    if debug is True:
+        print("\033[94mIn function create_elements: Elements creation and network update completed.\033[0m")
+        print("\033[94m}\033[0m")
+        print("\033[94m\033[0m")
+
     return elements

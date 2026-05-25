@@ -46,6 +46,7 @@ class ReluctanceNetwork:
         self.magnetic_potential = magnetic_potential
         self.winding_current = winding_current
         self.vectorized_elements = None
+        
         find_geometry_dimension_in_mesh(geometry= geometry,
                                         mesh= mesh)
         

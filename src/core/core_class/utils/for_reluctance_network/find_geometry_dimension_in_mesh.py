@@ -1,10 +1,9 @@
 import numpy as np
 import trimesh
-from tqdm import tqdm
 
 def find_geometry_dimension_in_mesh(geometry, 
                                     mesh,
-                                    debug = False):
+                                    debug = True):
     """
     Đo đạc kích thước [r, theta, z] của các segment trong không gian lưới.
     Cập nhật trực tiếp thuộc tính: seg.dimension = np.array([r, theta, z]).
@@ -27,12 +26,24 @@ def find_geometry_dimension_in_mesh(geometry,
     grid_z_min, grid_z_max = z_nodes[0], z_nodes[-1]
     
     if debug is True:
-        print(f"[INFO] Measuring Segments within Mesh Grid...")
+        print("\033[94m\033[0m")
+        print(f"\033[94mIn function find_geometry_dimension_in_mesh.\033[0m")
+        print("\033[94m{\033[0m")
+        print(f"\033[94m    Measuring Segments within Mesh Grid...\033[0m")
     
     count_out_of_bounds = 0
     count_fallback = 0
     
-    for seg in tqdm(segments, desc="Calculating the geometric dimensions"):
+    total_segments = len(segments)
+    
+    for idx, seg in enumerate(segments):
+        if total_segments > 0:
+            percent = (idx + 1) / total_segments * 100
+            if debug is True:
+                print(f"\r\033[94m    Calculating the geometric dimensions: {percent:.1f}%\033[0m", end="", flush=True)
+            else:
+                print(f"\rCalculating the geometric dimensions: {percent:.1f}%", end="", flush=True)
+            
         # Mặc định reset dimension về [0,0,0] nếu cần, hoặc giữ nguyên
         # Ở đây ta sẽ tính toán giá trị mới
         
@@ -149,10 +160,14 @@ def find_geometry_dimension_in_mesh(geometry,
         # --- BƯỚC 6: CẬP NHẬT DIMENSION CHO SEGMENT ---
         seg.dimension = np.array([r_val, theta_val, z_val])
 
+    print() # Xuống dòng sau khi chạy xong vòng lặp để không đè lên log tiếp theo
+
     if debug is True:
         if count_out_of_bounds > 0:
-            print(f"[INFO] Skipped {count_out_of_bounds} segments completely out of mesh bounds.")
+            print(f"\033[94m    Skipped {count_out_of_bounds} segments completely out of mesh bounds.\033[0m")
         if count_fallback > 0:
-            print(f"[WARNING] Used fallback dimension for {count_fallback} segments (Mesh too coarse).")
+            print(f"\033[94m    Warning: Used fallback dimension for {count_fallback} segments (Mesh too coarse).\033[0m")
         
-        print("[INFO] Dimensions calculation completed.")
+        print("\033[94mIn function find_geometry_dimension_in_mesh: Dimensions calculation completed.\033[0m")
+        print("\033[94m}\033[0m")
+        print("\033[94m\033[0m")

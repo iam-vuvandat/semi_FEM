@@ -2,12 +2,12 @@ import os
 import numpy as np
 import paths
 
-def airgap_flux_density_export(motor, m3d):
+def airgap_flux_density_export(motor, m3d, name = "airgap_line_in_load"):
     project_root = paths.configure_path()
     temp_dir = os.path.join(project_root, "data", "temp")
     os.makedirs(temp_dir, exist_ok=True)
 
-    report_name = "Airgap_Flux_Density_Report_FEM"
+    report_name = name
     csv_path = os.path.join(temp_dir, f"{report_name}.csv")
 
     if os.path.exists(csv_path):
@@ -20,7 +20,7 @@ def airgap_flux_density_export(motor, m3d):
 
     oModule.CreateReport(report_name, "Fields", "Rectangular Plot", "Setup1 : Transient", 
         [
-            "Context:=", "Airgap_Probe_Line",
+            "Context:=", name,
             "PointCount:=", 50
         ], 
         ["Distance:=", ["All"], "Time:=", ["0.0s"], "fractions:=", ["Nominal"], "halfAxial:=", ["Nominal"], 

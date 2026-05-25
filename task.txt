@@ -1,0 +1,1 @@
+- Sửa phần đo chiều dài khe hở không khí ở chế độ không tải trong ansys maxwell 

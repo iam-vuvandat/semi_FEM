@@ -37,11 +37,36 @@ class MotorIO:
         return p
 
     def save(self, motor, path=None):
+        full_path = self._resolve_full_path(path)
+        print(f"\033[94mIn function MotorIO.save: {full_path.name}\033[0m")
+        print("\033[94m{\033[0m")
+
         if motor.motor_type == "axial_flux_motor_type_1":
-            return save_axial_flux_motor_type_1(motor_io=self,motor= motor, path = path)
+            print(f"\033[94m    Step 1: Routing save to save_axial_flux_motor_type_1...\033[0m")
+            result = save_axial_flux_motor_type_1(motor_io=self, motor=motor, path=path)
+            print(f"\033[94m    Success: Completed MotorIO.save flow.\033[0m")
+            print("\033[94m}\033[0m\n")
+            return result
         
+        print("\033[94m    Failed: Unsupported motor type.\033[0m")
+        print("\033[94m}\033[0m\n")
+        return None
         
     def load(self, path=None):
-        read_mbgrn_to_parameter(motor_io= self, path= path)
+        full_path = self._resolve_full_path(path)
+        print(f"\033[94mIn function MotorIO.load: {full_path.name}\033[0m")
+        print("\033[94m{\033[0m")
+
+        print(f"\033[94m    Step 1: Executing read_mbgrn_to_parameter...\033[0m")
+        read_mbgrn_to_parameter(motor_io=self, path=path)
+        
         if self.motor_parameter.motor_type == "axial_flux_motor_type_1":
-            return load_axial_flux_motor_type_1(motor_io= self)
+            print(f"\033[94m    Step 2: Routing load to load_axial_flux_motor_type_1...\033[0m")
+            result = load_axial_flux_motor_type_1(motor_io=self)
+            print(f"\033[94m    Success: Completed MotorIO.load flow.\033[0m")
+            print("\033[94m}\033[0m\n")
+            return result
+        
+        print("\033[94m    Failed: Unsupported motor type in loaded parameters.\033[0m")
+        print("\033[94m}\033[0m\n")
+        return None

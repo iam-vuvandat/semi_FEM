@@ -62,7 +62,9 @@ def solve_cogging_torque(m3d=None, motor=None):
             m3d.analyze_setup(setup_name)
             cogging_torque_export(motor=motor, m3d=m3d)
 
-            motor.record.airgap_flux_density_fem_no_load = airgap_flux_density_export(motor = motor, m3d = m3d).copy()
+            motor.record.airgap_flux_density_fem_no_load = airgap_flux_density_export(motor = motor, 
+                                                                                      m3d = m3d,
+                                                                                      name = "airgap_line_no_load").copy()
     
         print(f"\033[92msolve_cogging_torque return: True\033[0m")
         export_solution_data(m3d = m3d, motor = motor)

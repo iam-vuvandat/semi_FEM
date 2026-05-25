@@ -49,8 +49,8 @@ def export_to_rmxprt(motor = None):
     # Edit Solver 
     m3d= edit_solver(rmxprt= rmxprt, motor= motor)
     field_calculation_setup(m3d = m3d)
-    create_airgap_probe_line(m3d = m3d, motor = motor)
-
+    create_airgap_probe_line(m3d = m3d, motor = motor,name = "airgap_line_in_load")
+    create_airgap_probe_line(m3d = m3d, motor = motor,name = "airgap_line_no_load")
     # edit m3d
     edit_motion_setting(m3d = m3d, motor = motor)
     edit_excitation(m3d = m3d, motor = motor)

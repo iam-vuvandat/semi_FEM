@@ -1,6 +1,6 @@
 import numpy as np
 
-def create_airgap_probe_line(m3d, motor):
+def create_airgap_probe_line(m3d, motor, name = "airgap_line_in_load"):
     # geometry data extract
     inner_radius = (motor.geometry_data.stator.stator_bore_dia / 2) * 1e3 # unit: mm
     outer_radius = (motor.geometry_data.stator.stator_lam_dia / 2) * 1e3 # unit: mm
@@ -33,7 +33,7 @@ def create_airgap_probe_line(m3d, motor):
     m3d.modeler.create_polyline(
         points=points,
         segment_type="Arc",
-        name="Airgap_Probe_Line",
+        name=name,
         non_model=True
     )
 

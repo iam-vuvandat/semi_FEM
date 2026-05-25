@@ -20,16 +20,21 @@ class Mechanical:
         self.slot_arc = (2*np.pi) / self.geometry_data.stator.slot_number
         self.pole_arc = (2*np.pi) / self.geometry_data.rotor.pole_number
 
-        print(f"\033[92min mechanical: cogging_period_mech: {self.cogging_period_mech} rad ({math.degrees(self.cogging_period_mech)} deg), "
-              f"slot_arc: {self.slot_arc} rad ({math.degrees(self.slot_arc)} deg), "
-              f"pole_arc: {self.pole_arc} rad ({math.degrees(self.pole_arc)} deg), "
-              f"symmetry_factor: {self.symmetry_factor}\033[0m")
+        print(f"\033[94mIn function Mechanical.__init__:\033[0m")
+        print("\033[94m{\033[0m")
+        print(f"\033[94m    cogging_period_mech: {self.cogging_period_mech} rad ({math.degrees(self.cogging_period_mech)} deg)\033[0m")
+        print(f"\033[94m    slot_arc: {self.slot_arc} rad ({math.degrees(self.slot_arc)} deg)\033[0m")
+        print(f"\033[94m    pole_arc: {self.pole_arc} rad ({math.degrees(self.pole_arc)} deg)\033[0m")
+        print(f"\033[94m    symmetry_factor: {self.symmetry_factor}\033[0m")
+        print("\033[94m}\033[0m\n")
         
     
     def reset_motor_position(self):
         motor = self.motor
         step_rotated = int(self.step_rotated)
-        if step_rotated !=0:
+        if step_rotated != 0:
+            print(f"\033[94mIn function Mechanical.reset_motor_position:\033[0m")
+            print("\033[94m{\033[0m")
             motor.rotate_rotor(n_step = - step_rotated)
-            print(f"rotated {-step_rotated} step, current_position: {motor.mechanical.current_position}")
-                
+            print(f"\033[94m    Success: rotated {-step_rotated} step, current_position: {motor.mechanical.current_position}\033[0m")
+            print("\033[94m}\033[0m\n")

@@ -1,12 +1,15 @@
 import numpy as np 
 import matplotlib.pyplot as plt
+from src.core.solver.utils.duplicate_data import duplicate_data
 
 def plot_cogging_torque(data_processor, 
                         horizontal_axis = "mechanical_position", 
                         show_fem = True, 
                         plot = False, 
-                        revert = True):
+                        revert = True,
+                        num_periods = 1):
     
+
     if not plot:
         return
         
@@ -51,6 +54,9 @@ def plot_cogging_torque(data_processor,
 
     if has_fem:
         data_fem = record.cogging_fem
+        if num_periods > 1:
+            data_fem = duplicate_data(data_fem, half_open_interval=True, num_periods=num_periods).duplicated_data
+            
         x_fem, x_label = get_x_axis(data_fem[1, :])
         cogging_fem_val = data_fem[0, :] * fem_mult
         all_y_values.extend(cogging_fem_val)
@@ -62,6 +68,9 @@ def plot_cogging_torque(data_processor,
 
     if has_mrn:
         data_mrn = record.cogging
+        if num_periods > 1:
+            data_mrn = duplicate_data(data_mrn, half_open_interval=True, num_periods=num_periods).duplicated_data
+            
         x_mrn, x_label = get_x_axis(data_mrn[1, :])
         cogging_mrn_val = data_mrn[0, :]
         all_y_values.extend(cogging_mrn_val)

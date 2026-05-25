@@ -7,9 +7,9 @@ io = MotorIO()
 
 # Options
 
-reload_motor = False
+reload_motor = True
 only_update_motor = False
-solve_under_no_load = False
+solve_under_no_load = True
 
 # Close Ansys Maxwell
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
@@ -137,7 +137,7 @@ else:
     aft.just_changed('mesh')
 
     # drive_data
-    aft.drive_data.i_rms = 0
+    aft.drive_data.i_rms = 10.0
     aft.drive_data.phase_advanced = 0.0
     aft.just_changed('drive')
     
@@ -175,7 +175,7 @@ else:
 
 
 if solve_under_no_load: 
-    aft.drive_data.i_rms = 10.0
+    aft.drive_data.i_rms = 0.0
     aft.just_changed('drive')
 
 if export_maxwell and not only_update_motor:
@@ -197,6 +197,6 @@ if not only_update_motor:
     dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
     dp.plot_torque(horizontal_axis="time", show_fem=True)
     dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-    dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
+    dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False, num_periods= 5)
     dp.plot_axial_force(horizontal_axis="time", show_fem=True)
 

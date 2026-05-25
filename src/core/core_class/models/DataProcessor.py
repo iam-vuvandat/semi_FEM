@@ -79,9 +79,9 @@ class DataProcessor:
         plot_axial_force(data_processor=self, horizontal_axis=horizontal_axis, 
                          show_fem=show_fem, plot=plot, revert=revert)
     
-    def plot_cogging_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True):
+    def plot_cogging_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True, num_periods = 1):
         plot_cogging_torque(data_processor=self, horizontal_axis=horizontal_axis, 
-                            show_fem=show_fem, plot=plot, revert=revert)
+                            show_fem=show_fem, plot=plot, revert=revert, num_periods= num_periods)
 
     def plot_mechanical_power(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert= False):
         plot_mechanical_power(data_processor=self, horizontal_axis=horizontal_axis, 

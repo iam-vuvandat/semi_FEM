@@ -99,7 +99,9 @@ def solve_standard_step(m3d, motor):
             axial_force_export(motor = motor, m3d = m3d)
 
             print("Airgap flux density export starting")
-            motor.record.airgap_flux_density_fem = airgap_flux_density_export(motor = motor, m3d = m3d).copy()
+            motor.record.airgap_flux_density_fem = airgap_flux_density_export(motor = motor, 
+                                                                              m3d = m3d, 
+                                                                              name = "airgap_line_in_load" ).copy()
     
             print("\033[92mExport data successfully\033[0m")
 
