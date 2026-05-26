@@ -7,9 +7,6 @@ def plot_torque(data_processor,
                 plot = False, 
                 revert = True):
     
-    if not plot:
-        return
-        
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -34,7 +31,7 @@ def plot_torque(data_processor,
     has_fem = hasattr(record, "torque_fem") and show_fem
     fem_mult = -1 if revert else 1
 
-    plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
     x_label = ""
 
@@ -91,4 +88,8 @@ def plot_torque(data_processor,
     ax.margins(x=0)
     
     plt.tight_layout()
-    plt.show()
+    
+    if plot:
+        plt.show()
+        
+    return fig_wave

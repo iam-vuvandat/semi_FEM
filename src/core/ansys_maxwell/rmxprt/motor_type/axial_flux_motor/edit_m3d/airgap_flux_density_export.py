@@ -21,7 +21,7 @@ def airgap_flux_density_export(motor, m3d, name = "airgap_line_in_load"):
     oModule.CreateReport(report_name, "Fields", "Rectangular Plot", "Setup1 : Transient", 
         [
             "Context:=", name,
-            "PointCount:=", 50
+            "PointCount:=", 100
         ], 
         ["Distance:=", ["All"], "Time:=", ["0.0s"], "fractions:=", ["Nominal"], "halfAxial:=", ["Nominal"], 
          "endRegion:=", ["Nominal"], "delta:=", ["Nominal"], "conds:=", ["Nominal"], 

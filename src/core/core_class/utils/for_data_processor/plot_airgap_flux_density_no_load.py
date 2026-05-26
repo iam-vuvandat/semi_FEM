@@ -1,14 +1,13 @@
 import numpy as np 
 import matplotlib.pyplot as plt
+from src.core.solver.utils.decompose_harmonics import decompose_harmonics
 
 def plot_airgap_flux_density_no_load(data_processor, 
                                      horizontal_axis="mechanical_position", 
                                      show_fem=True, 
+                                     show_harmonic=True,
                                      plot=False):
     
-    if not plot:
-        return
-        
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -26,11 +25,11 @@ def plot_airgap_flux_density_no_load(data_processor,
     has_mrn = hasattr(record, "airgap_flux_density_no_load")
     has_fem = hasattr(record, "airgap_flux_density_no_load_fem") and show_fem
 
-    plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
     x_label = ""
 
-    # Bộ màu Muted Classic nghiêm túc
+    # Đồng bộ bộ màu Muted Classic từ plot_flux_linkage
     color_r = '#B22222'  # Firebrick Red
     color_t = '#1F4E79'  # Navy Blue
     color_z = '#595959'  # Dim Gray
@@ -59,4 +58,63 @@ def plot_airgap_flux_density_no_load(data_processor,
     ax.margins(x=0)
     
     plt.tight_layout()
-    plt.show()
+
+    fig_harm = None
+    if show_harmonic:
+        max_h = 15
+        # Đồng bộ màu sắc cột biểu đồ phổ hài (MBGRN: Navy Blue #1F4E79, FEM: Firebrick Red #B22222)
+        color_harm_mbgrn = '#1F4E79' 
+        color_harm_fem = '#B22222'   
+
+        components = [
+            {"idx": 0, "label_mrn": r'$B_r$ (MBGRN)', "label_fem": r'$B_r$ (FEM)', "title": "Radial Component ($B_r$)", "unit": "mT", "scale": 1e3},
+            {"idx": 1, "label_mrn": r'$B_t$ (MBGRN)', "label_fem": r'$B_t$ (FEM)', "title": "Tangential Component ($B_t$)", "unit": "T", "scale": 1.0},
+            {"idx": 2, "label_mrn": r'$B_z$ (MBGRN)', "label_fem": r'$B_z$ (FEM)', "title": "Axial Component ($B_z$)", "unit": "T", "scale": 1.0}
+        ]
+
+        fig_harm, axs = plt.subplots(3, 1, figsize=(fig_width, fig_height * 2.2), sharex=True)
+        
+        for i, comp in enumerate(components):
+            ax_harm = axs[i]
+            idx = comp["idx"]
+            scale = comp["scale"]
+            
+            if has_mrn:
+                signal_mrn = record.airgap_flux_density_no_load[idx, :]
+                amps_mrn, _ = decompose_harmonics(signal_mrn, n_harmonics=max_h)
+                h_orders = np.arange(len(amps_mrn))
+                
+                bar_offset = -0.15 if has_fem else 0
+                bar_width = 0.3 if has_fem else 0.6
+                
+                ax_harm.bar(h_orders + bar_offset, amps_mrn * scale, width=bar_width, color=color_harm_mbgrn, 
+                            label=comp["label_mrn"], alpha=0.9)
+            
+            if has_fem:
+                signal_fem = record.airgap_flux_density_no_load_fem[idx, :]
+                amps_fem, _ = decompose_harmonics(signal_fem, n_harmonics=max_h)
+                h_orders = np.arange(len(amps_fem))
+                
+                bar_offset = 0.15 if has_mrn else 0
+                bar_width = 0.3 if has_fem else 0.6
+                
+                ax_harm.bar(h_orders + bar_offset, amps_fem * scale, width=bar_width, color=color_harm_fem, 
+                            label=comp["label_fem"], alpha=0.8)
+
+            ax_harm.set_ylabel(f'Amplitude ({comp["unit"]})', fontsize=s.label_size)
+            ax_harm.set_title(comp["title"], fontsize=s.label_size, pad=5)
+            ax_harm.legend(frameon=True, loc='upper right', fontsize=s.legend_size)
+            ax_harm.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
+            
+            ax_harm.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x:.2f}"))
+        
+        axs[-1].set_xlabel('Harmonic Order', fontsize=s.label_size)
+        axs[-1].set_xticks(h_orders)
+        
+        plt.tight_layout()
+        plt.subplots_adjust(hspace=0.3)
+
+    if plot:
+        plt.show()
+        
+    return fig_wave, fig_harm

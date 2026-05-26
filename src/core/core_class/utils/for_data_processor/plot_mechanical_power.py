@@ -7,9 +7,6 @@ def plot_mechanical_power(data_processor,
                           plot = False, 
                           revert = True):
     
-    if not plot:
-        return
-        
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -29,7 +26,7 @@ def plot_mechanical_power(data_processor,
     has_mrn = hasattr(record, "mechanical_power")
     has_fem = hasattr(record, "mechanical_power_fem") and show_fem
 
-    plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
     x_label = ""
 
@@ -59,4 +56,8 @@ def plot_mechanical_power(data_processor,
     ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
     
     plt.tight_layout()
-    plt.show()
+    
+    if plot:
+        plt.show()
+        
+    return fig_wave

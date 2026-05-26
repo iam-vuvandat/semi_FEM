@@ -9,13 +9,9 @@ def plot_cogging_torque(data_processor,
                         revert = True,
                         num_periods = 1):
     
-
-    if not plot:
-        return
-        
     motor = data_processor.motor
     if not hasattr(motor, "record"):
-        return
+        return None
 
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60
@@ -41,9 +37,9 @@ def plot_cogging_torque(data_processor,
 
     if not has_mrn and not has_fem:
         print("\033[93mWarning: No cogging torque data found in record.\033[0m")
-        return
+        return None
 
-    plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
     x_label = ""
 
@@ -99,4 +95,8 @@ def plot_cogging_torque(data_processor,
         ax.set_ylim(y_min - padding, y_max + padding)
             
     plt.tight_layout()
-    plt.show()
+    
+    if plot:
+        plt.show()
+        
+    return fig_wave

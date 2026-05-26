@@ -21,23 +21,23 @@ from mpl_toolkits.mplot3d import Axes3D
 class DataProcessor:
     def __init__(self, motor):
         """
-        Lớp xử lý và phân tích dữ liệu hậu mô phỏng (Post-processing).
+        Class for post-processing and analyzing simulation data.
 
-        Properties (MBGRN - Lưu trong motor.record):
+        Properties (MBGRN - Stored in motor.record):
         - flux_linkage: (phase + 3, n_point) -> [Psi_d, Psi_q, Psi_0, Psi_A, Psi_B, ..., Position]
-        - back_emf: (phase, n_point) -> Sức điện động cảm ứng (V)
+        - back_emf: (phase, n_point) -> Induced Back Electromotive Force (V)
         - currents: (3 + phase, n_point) -> [i_d, i_q, i_0, i_A, i_B, ..., Position]
         - cogging: (2, n_point) -> [Torque_cog, Position]
         - torque: (2, n_point) -> [Torque_total, Position]
         - axial_force: (2, n_point) -> [Force_z, Position]
         - mechanical_power: (2, n_point) -> [Power, Position]
         - average_mechanical_power: scalar (float)
-        - id_grid, iq_grid: (resolution,) -> Lưới dòng điện cho bản đồ độ tự cảm
-        - ld_map, lq_map: (resolution, resolution) -> Bản đồ Ld, Lq
+        - id_grid, iq_grid: (resolution,) -> Current grid arrays for the inductance map
+        - ld_map, lq_map: (resolution, resolution) -> Ld and Lq inductance maps
 
-        Properties (FEM - Lưu trong motor.record):
+        Properties (FEM - Stored in motor.record):
         - flux_linkage_fem: (phase + 3, n_steps_fem) -> [Psi_d, Psi_q, ..., Position]
-        - back_emf_fem: (phase, n_steps_fem) -> Sức điện động từ FEM (V)
+        - back_emf_fem: (phase, n_steps_fem) -> Back EMF from FEM solver (V)
         - torque_fem: (2, n_steps_fem) -> [Torque, Position]
         - mechanical_power_fem: (2, n_steps_fem) -> [Power, Position]
         - average_mechanical_power_fem: scalar (float)
@@ -47,45 +47,44 @@ class DataProcessor:
         self.motor = motor
         self.plot_style = apply_journal_style()
 
-    def plot_airgap_flux_density(self, horizontal_axis="mechanical_position", show_fem=True, plot=True):
-        plot_airgap_flux_density(data_processor=self, horizontal_axis=horizontal_axis, 
-                                 show_fem=show_fem, plot=plot)
+    def plot_airgap_flux_density(self, horizontal_axis="mechanical_position", show_fem=True, show_harmonic=True, plot=True):
+        return plot_airgap_flux_density(data_processor=self, horizontal_axis=horizontal_axis, 
+                                        show_fem=show_fem, show_harmonic=show_harmonic, plot=plot)
 
-    def plot_airgap_flux_density_no_load(self, horizontal_axis="mechanical_position", show_fem=True, plot=True):
-        plot_airgap_flux_density_no_load(data_processor=self, horizontal_axis=horizontal_axis, 
-                                 show_fem=show_fem, plot=plot)
+    def plot_airgap_flux_density_no_load(self, horizontal_axis="mechanical_position", show_fem=True, show_harmonic=True, plot=True):
+        return plot_airgap_flux_density_no_load(data_processor=self, horizontal_axis=horizontal_axis, 
+                                                show_fem=show_fem, show_harmonic=show_harmonic, plot=plot)
     
     def plot_flux_linkage(self, horizontal_axis="mechanical_position", show_fem=True, 
                           show_dq=False, show_all_phase=False, plot=True):
-        plot_flux_linkage(data_processor=self, horizontal_axis=horizontal_axis, 
-                          show_fem=show_fem, show_dq=show_dq, 
-                          show_all_phase=show_all_phase, plot=plot)
+        return plot_flux_linkage(data_processor=self, horizontal_axis=horizontal_axis, 
+                                 show_fem=show_fem, show_dq=show_dq, 
+                                 show_all_phase=show_all_phase, plot=plot)
 
     def plot_back_emf(self, horizontal_axis="mechanical_position", show_fem=True, 
                       show_all_phases=False, plot=True):
-        
         return plot_back_emf(data_processor=self, horizontal_axis=horizontal_axis, 
                              show_fem=show_fem, show_all_phases=show_all_phases, plot=plot)
     
     def plot_current(self, horizontal_axis="mechanical_position", show_fem=True, plot=True):
-        plot_current(data_processor=self, horizontal_axis=horizontal_axis, 
-                     show_fem=show_fem, plot=plot)
+        return plot_current(data_processor=self, horizontal_axis=horizontal_axis, 
+                            show_fem=show_fem, plot=plot)
 
-    def plot_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert= False):
-        plot_torque(data_processor=self, horizontal_axis=horizontal_axis, 
-                    show_fem=show_fem, plot=plot, revert=revert)
+    def plot_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=False):
+        return plot_torque(data_processor=self, horizontal_axis=horizontal_axis, 
+                           show_fem=show_fem, plot=plot, revert=revert)
     
     def plot_axial_force(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True):
-        plot_axial_force(data_processor=self, horizontal_axis=horizontal_axis, 
-                         show_fem=show_fem, plot=plot, revert=revert)
+        return plot_axial_force(data_processor=self, horizontal_axis=horizontal_axis, 
+                                show_fem=show_fem, plot=plot, revert=revert)
     
-    def plot_cogging_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True, num_periods = 1):
-        plot_cogging_torque(data_processor=self, horizontal_axis=horizontal_axis, 
-                            show_fem=show_fem, plot=plot, revert=revert, num_periods= num_periods)
+    def plot_cogging_torque(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=True, num_periods=1):
+        return plot_cogging_torque(data_processor=self, horizontal_axis=horizontal_axis, 
+                                   show_fem=show_fem, plot=plot, revert=revert, num_periods=num_periods)
 
-    def plot_mechanical_power(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert= False):
-        plot_mechanical_power(data_processor=self, horizontal_axis=horizontal_axis, 
-                              show_fem=show_fem, plot=plot, revert=revert)
+    def plot_mechanical_power(self, horizontal_axis="mechanical_position", show_fem=True, plot=True, revert=False):
+        return plot_mechanical_power(data_processor=self, horizontal_axis=horizontal_axis, 
+                                     show_fem=show_fem, plot=plot, revert=revert)
 
-    def plot_inductance_map(self):
-        plot_inductance_map(data_processor=self)
+    def plot_inductance_map(self, plot=True):
+        return plot_inductance_map(data_processor=self, plot=plot)

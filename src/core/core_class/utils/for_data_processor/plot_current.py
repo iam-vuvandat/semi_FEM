@@ -1,12 +1,12 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-def plot_current(data_processor, horizontal_axis = "mechanical_position"):
+def plot_current(data_processor, horizontal_axis = "mechanical_position", show_fem = True, plot = False):
     record = data_processor.motor.record
     n_phase = data_processor.motor.winding_data.phase
     shaft_speed = (data_processor.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     
-    # Chủ động đọc các thông số từ SimpleNamespace
+    # 主動 đọc các thông số từ SimpleNamespace
     s = data_processor.plot_style
 
     def get_x_axis(theta_data):
@@ -15,6 +15,7 @@ def plot_current(data_processor, horizontal_axis = "mechanical_position"):
         else:
             return theta_data, r'Rotor Position ($rad$)'
         
+    fig = None
     if hasattr(record, "currents"):
         data = record.currents
         # Hàng cuối cùng của currents là vị trí rotor
@@ -48,4 +49,8 @@ def plot_current(data_processor, horizontal_axis = "mechanical_position"):
         ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
         
         plt.tight_layout()
-        plt.show()
+        
+        if plot:
+            plt.show()
+            
+    return fig

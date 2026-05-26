@@ -7,9 +7,6 @@ def plot_axial_force(data_processor,
                      plot = False, 
                      revert = True):
     
-    if not plot:
-        return
-        
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -35,9 +32,9 @@ def plot_axial_force(data_processor,
 
     if not has_mrn and not has_fem:
         print("\033[93mWarning: No axial force data found.\033[0m")
-        return
+        return None
 
-    plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
     
     x_label = ""
@@ -87,4 +84,8 @@ def plot_axial_force(data_processor,
         ax.set_ylim(y_min - padding, y_max + padding)
     
     plt.tight_layout()
-    plt.show()
+    
+    if plot:
+        plt.show()
+        
+    return fig_wave

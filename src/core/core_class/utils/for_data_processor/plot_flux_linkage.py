@@ -10,9 +10,6 @@ def plot_flux_linkage(data_processor,
                       show_harmonic = True, 
                       plot = False):
     
-    if not plot:
-        return
-        
     motor = data_processor.motor
     record = motor.record
     n_phase = motor.winding_data.phase
@@ -39,7 +36,7 @@ def plot_flux_linkage(data_processor,
 
     if not has_mrn and not has_fem:
         print("\033[93mWarning: No flux linkage data found.\033[0m")
-        return
+        return None, None
 
     phase_indices = range(n_phase) if show_all_phase else [0]
     max_h = 15
@@ -52,7 +49,7 @@ def plot_flux_linkage(data_processor,
     phase_colors_muted = [color_r, color_t, color_z]
 
     # --- FIGURE 1: WAVEFORM (DẠNG SÓNG) ---
-    plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax_wave = plt.gca()
     x_label = ""
 
@@ -107,11 +104,12 @@ def plot_flux_linkage(data_processor,
     plt.tight_layout()
 
     # --- FIGURE 2: HARMONIC (PHỔ SÓNG HÀI) ---
+    fig_harm = None
     if show_harmonic:
         color_harm_mbgrn = '#1F4E79' 
         color_harm_fem = '#B22222'   
 
-        plt.figure(figsize=(fig_width, fig_height))
+        fig_harm = plt.figure(figsize=(fig_width, fig_height))
         ax_harm = plt.gca()
         
         if has_mrn:
@@ -143,4 +141,7 @@ def plot_flux_linkage(data_processor,
         ax_harm.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
         plt.tight_layout()
 
-    plt.show()
+    if plot:
+        plt.show()
+        
+    return fig_wave, fig_harm

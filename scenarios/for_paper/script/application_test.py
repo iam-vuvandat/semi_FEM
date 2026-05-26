@@ -5,17 +5,32 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 pi = math.pi
 io = MotorIO()
 
+# Options
+
+reload_motor = True
+only_update_motor = False
+solve_under_no_load = True
+
 # Close Ansys Maxwell
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
-# Options
-reload_motor = True
-file_name = "motor_for_paper_2" 
+
+ 
+
+
+
+
+
+
+
+
+
+file_name = "motor_for_paper" 
 
 export_maxwell = True
-solve_semiFEM = False
-only_update_motor = False
+solve_semiFEM = True
+
 
 if reload_motor:
     export_maxwell = False
@@ -40,7 +55,7 @@ else:
     aft.just_changed('winding_data')
 
     # mechanical_data
-    aft.mechanical_data.shaft_speed = 1
+    aft.mechanical_data.shaft_speed = 3000
     aft.just_changed('mechanical_data')
 
     # geometry_data - stator
@@ -79,14 +94,15 @@ else:
 
     # calculation_data - convergence_settings
     aft.calculation_data.convergence_settings.max_iteration = 46
-    aft.calculation_data.convergence_settings.max_relative_residual = 0.1 * 1e-2
-    aft.calculation_data.convergence_settings.material_relax = 0.2
+    aft.calculation_data.convergence_settings.max_relative_residual = 0.5 * 1e-2
+    aft.calculation_data.convergence_settings.material_relax = 0.35
     aft.calculation_data.convergence_settings.damping_factor = 1.0
     aft.calculation_data.convergence_settings.relaxation_decay = 1.0
 
     # calculation_data - general_options
-    aft.calculation_data.general_options.n_point = 20
+    aft.calculation_data.general_options.n_point = 32
     aft.calculation_data.general_options.solve_cogging = True
+    aft.calculation_data.general_options.solve_standard = True
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.calculation_data.general_options.vectorized_optimization = True
@@ -101,21 +117,21 @@ else:
     aft.just_changed('calculation_data')
 
     # adaptive_mesh_data
-    aft.adaptive_mesh_data.n_r_in = 2
+    aft.adaptive_mesh_data.n_r_in = 1
     aft.adaptive_mesh_data.n_r_1 = 2
-    aft.adaptive_mesh_data.n_r_2 = 4
+    aft.adaptive_mesh_data.n_r_2 = 5
     aft.adaptive_mesh_data.n_r_3 = 2
-    aft.adaptive_mesh_data.n_r_out = 2
+    aft.adaptive_mesh_data.n_r_out = 1
     aft.adaptive_mesh_data.n_theta = 150
-    aft.adaptive_mesh_data.n_z_in_air = 2
+    aft.adaptive_mesh_data.n_z_in_air = 1
     aft.adaptive_mesh_data.n_z_rotor_yoke = 3
-    aft.adaptive_mesh_data.n_z_magnet = 2
-    aft.adaptive_mesh_data.n_z_airgap = 5
+    aft.adaptive_mesh_data.n_z_magnet = 3
+    aft.adaptive_mesh_data.n_z_airgap = 7
     aft.adaptive_mesh_data.n_z_tooth_tip_1 = 2
-    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 2
-    aft.adaptive_mesh_data.n_z_tooth_body = 4
-    aft.adaptive_mesh_data.n_z_stator_yoke = 2
-    aft.adaptive_mesh_data.n_z_out_air = 2
+    aft.adaptive_mesh_data.n_z_tooth_tip_2 = 3
+    aft.adaptive_mesh_data.n_z_tooth_body = 6
+    aft.adaptive_mesh_data.n_z_stator_yoke = 3
+    aft.adaptive_mesh_data.n_z_out_air = 1
     aft.adaptive_mesh_data.use_symmetry_factor = True
     aft.adaptive_mesh_data.periodic_boundary = True
     aft.just_changed('mesh')
@@ -140,7 +156,8 @@ else:
     aft.maxwell_export_option.custom_option.mesh_setting.airgap_element_layer = 6
     aft.maxwell_export_option.custom_option.mesh_setting.moving_side_layers = 2
     aft.maxwell_export_option.custom_option.mesh_setting.static_side_layers = 2
-    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = 1
+
+    aft.maxwell_export_option.custom_option.mesh_setting.length_band_element_length = 1.3
     aft.maxwell_export_option.custom_option.mesh_setting.length_coil_element_length = -1
     aft.maxwell_export_option.custom_option.mesh_setting.length_mag_element_length = -1
     aft.maxwell_export_option.custom_option.mesh_setting.length_main_element_length = -1
@@ -153,9 +170,14 @@ else:
     aft.maxwell_export_option.solver_option.alternetive_first_point = True
     aft.maxwell_export_option.solver_option.solve_immediately = True
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
-    aft.maxwell_export_option.solver_option.close_after_completed = True
+    aft.maxwell_export_option.solver_option.close_after_completed = False
 
-    aft.calculation_data.general_options.solve_standard = False
+
+
+if solve_under_no_load: 
+    aft.drive_data.i_rms = 0.0
+    aft.just_changed('drive')
+
 if export_maxwell and not only_update_motor:
     aft.export_to_rmxprt()
 
@@ -167,11 +189,15 @@ if not reload_motor:
 
 if not only_update_motor:
     dp = aft.data_processor
+
+
     dp.plot_airgap_flux_density()
-    dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= True, show_all_phase= True)
+    dp.plot_airgap_flux_density_no_load()
+    dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)
     dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
     dp.plot_torque(horizontal_axis="time", show_fem=True)
     dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-    dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False)
+    dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False, num_periods= 5)
     dp.plot_axial_force(horizontal_axis="time", show_fem=True)
+    dp.plot_current()
 

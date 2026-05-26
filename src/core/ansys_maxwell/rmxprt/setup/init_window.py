@@ -21,3 +21,5 @@ def init_window():
 
 if __name__ == "__main__":
     init_window()
+
+    

@@ -2,12 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-def plot_inductance_map(data_processor):
+def plot_inductance_map(data_processor, plot = False):
     record = data_processor.motor.record
     
     # Chủ động đọc các thông số từ SimpleNamespace
     s = data_processor.plot_style
     
+    fig = None
     if hasattr(record, "ld_map") and hasattr(record, "lq_map"):
         id_grid = record.id_grid
         iq_grid = record.iq_grid
@@ -65,4 +66,8 @@ def plot_inductance_map(data_processor):
         ax2.view_init(elev=30, azim=-135)
         
         plt.tight_layout()
-        plt.show()
+        
+        if plot:
+            plt.show()
+            
+    return fig

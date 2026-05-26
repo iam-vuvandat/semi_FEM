@@ -17,17 +17,17 @@ aft = io.load(path=file_name)
 
 # Option
 solve_MBGRN = True
-solve_FEM   = False
+solve_FEM   = True
 plot = True
 
-aft.drive_data.i_rms = 20.0
+aft.drive_data.i_rms = 10.0
 aft.just_changed('drive')
 
 aft.calculation_data.general_options.solve_cogging = False
 aft.calculation_data.general_options.solve_standard = True
-aft.calculation_data.general_options.n_point = 15
-aft.calculation_data.convergence_settings.material_relax = 0.5
-aft.calculation_data.convergence_settings.max_relative_residual = 0.001 * 1e-2
+aft.calculation_data.general_options.n_point = 32
+aft.calculation_data.convergence_settings.material_relax = 0.3
+aft.calculation_data.convergence_settings.max_relative_residual = 0.3 * 1e-2
 aft.just_changed('calculation_data')
 
 # Motor properties
