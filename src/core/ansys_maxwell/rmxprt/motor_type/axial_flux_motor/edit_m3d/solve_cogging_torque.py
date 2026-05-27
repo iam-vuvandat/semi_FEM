@@ -7,6 +7,12 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.airgap_f
 
 
 def solve_cogging_torque(m3d=None, motor=None):
+
+
+    print("\033[94mIn function solve_cogging_torque:\033[0m")
+    print("\033[94m{\033[0m")
+
+
     if motor.calculation_data.general_options.solve_cogging:
         setup_name = "Setup1"
         if setup_name in m3d.setup_names:
@@ -62,11 +68,13 @@ def solve_cogging_torque(m3d=None, motor=None):
             m3d.analyze_setup(setup_name)
             cogging_torque_export(motor=motor, m3d=m3d)
 
-            motor.record.airgap_flux_density_fem_no_load = airgap_flux_density_export(motor = motor, 
+            motor.record.airgap_flux_density_no_load_fem = airgap_flux_density_export(motor = motor, 
                                                                                       m3d = m3d,
                                                                                       name = "airgap_line_no_load").copy()
+            print(motor.record.airgap_flux_density_no_load_fem)
     
-        print(f"\033[92msolve_cogging_torque return: True\033[0m")
+        print("\033[94m}\033[0m")
+        print("\033[94m\033[0m")
         export_solution_data(m3d = m3d, motor = motor)
         return True
     else:

@@ -101,5 +101,14 @@ class Drive:
         current_phases = self.calculate_n_phase_currents()
         # Cau truc mang: [id, iq, i1, i2, ..., iN, current_position]
         debug_array = np.concatenate(([self.id, self.iq], current_phases, [self.mechanical.current_position]))
+        
+        
+        print("\033[94mIn function Drive.debug_Current:\033[0m")
+        print("\033[94m{\033[0m")
+
+        print(debug_array)
+        print("\033[94m}\033[0m")
+        print("\033[94m\033[0m")
+
         return debug_array
     

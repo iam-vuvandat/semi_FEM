@@ -1,3 +1,5 @@
+import os
+import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 from src.core.solver.utils.decompose_harmonics import decompose_harmonics
@@ -8,6 +10,11 @@ def plot_airgap_flux_density_no_load(data_processor,
                                      show_harmonic=True,
                                      plot=False):
     
+    root_dir = paths.configure_path()
+    figure_dir = os.path.join(root_dir, "data", "repo", "figures")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -29,10 +36,9 @@ def plot_airgap_flux_density_no_load(data_processor,
     ax = plt.gca()
     x_label = ""
 
-    # Đồng bộ bộ màu Muted Classic từ plot_flux_linkage
-    color_r = '#B22222'  # Firebrick Red
-    color_t = '#1F4E79'  # Navy Blue
-    color_z = '#595959'  # Dim Gray
+    color_r = '#B22222'  
+    color_t = '#1F4E79'  
+    color_z = '#595959'  
 
     if has_fem:
         data_fem = record.airgap_flux_density_no_load_fem
@@ -58,11 +64,13 @@ def plot_airgap_flux_density_no_load(data_processor,
     ax.margins(x=0)
     
     plt.tight_layout()
+    
+    wave_path = os.path.join(figure_dir, "airgap_flux_density_no_load_waveform.png")
+    fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
 
     fig_harm = None
     if show_harmonic:
         max_h = 15
-        # Đồng bộ màu sắc cột biểu đồ phổ hài (MBGRN: Navy Blue #1F4E79, FEM: Firebrick Red #B22222)
         color_harm_mbgrn = '#1F4E79' 
         color_harm_fem = '#B22222'   
 
@@ -113,6 +121,9 @@ def plot_airgap_flux_density_no_load(data_processor,
         
         plt.tight_layout()
         plt.subplots_adjust(hspace=0.3)
+        
+        harm_path = os.path.join(figure_dir, "airgap_flux_density_no_load_harmonics.png")
+        fig_harm.savefig(harm_path, bbox_inches='tight', dpi=300)
 
     if plot:
         plt.show()

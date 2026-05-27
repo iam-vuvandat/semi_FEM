@@ -115,11 +115,12 @@ class AxialFluxMotorType1:
             general_options = SimpleNamespace(
                 n_point                = 40,
                 solve_standard         = True,
+                solve_under_no_load    = False,
+                solve_on_load          = True,
                 solve_cogging          = False,
                 solve_smooth_torque    = False,
                 solve_only_1_step      = False,
                 vectorized_optimization = True,
-                
                 get_geometric_error    = False,
                 debug                  = True
             ),  
@@ -153,6 +154,7 @@ class AxialFluxMotorType1:
 
         self.drive_data = SimpleNamespace(
             i_rms = 5.0,
+            i_rms_draft = 0.0,
             phase_advanced = 0.0
         )
 

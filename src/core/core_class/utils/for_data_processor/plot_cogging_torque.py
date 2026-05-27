@@ -1,3 +1,5 @@
+import os
+import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 from src.core.solver.utils.duplicate_data import duplicate_data
@@ -9,6 +11,11 @@ def plot_cogging_torque(data_processor,
                         revert = True,
                         num_periods = 1):
     
+    root_dir = paths.configure_path()
+    figure_dir = os.path.join(root_dir, "data", "repo", "figures")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+
     motor = data_processor.motor
     if not hasattr(motor, "record"):
         return None
@@ -95,6 +102,9 @@ def plot_cogging_torque(data_processor,
         ax.set_ylim(y_min - padding, y_max + padding)
             
     plt.tight_layout()
+    
+    wave_path = os.path.join(figure_dir, "cogging_torque.png")
+    fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
     
     if plot:
         plt.show()

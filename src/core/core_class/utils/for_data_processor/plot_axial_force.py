@@ -1,3 +1,5 @@
+import os
+import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 
@@ -7,6 +9,11 @@ def plot_axial_force(data_processor,
                      plot = False, 
                      revert = True):
     
+    root_dir = paths.configure_path()
+    figure_dir = os.path.join(root_dir, "data", "repo", "figures")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -84,6 +91,9 @@ def plot_axial_force(data_processor,
         ax.set_ylim(y_min - padding, y_max + padding)
     
     plt.tight_layout()
+    
+    wave_path = os.path.join(figure_dir, "axial_force.png")
+    fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
     
     if plot:
         plt.show()

@@ -1,16 +1,15 @@
 import math
 
-from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.flux_linkage_export import flux_linkage_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.flux_linkage_export_no_load import flux_linkage_export_no_load
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.torque_export import torque_export
-from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.axial_force_export import axial_force_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.axial_force_export_no_load import axial_force_export_no_load
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.calculate_electrical_frequency import calculate_electrical_frequency
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.export_solution_data import export_solution_data
-from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.airgap_flux_density_export import airgap_flux_density_export
+from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.edit_excitation import edit_excitation
 
-
-def solve_standard_step(m3d, motor):
-    if motor.calculation_data.general_options.solve_standard is True and motor.calculation_data.general_options.solve_on_load is True :
-        
+def solve_standard_step_no_load(m3d, motor):
+    if motor.calculation_data.general_options.solve_standard is True and motor.calculation_data.general_options.solve_under_no_load is True :
+        edit_excitation(m3d=m3d, motor=motor, disable_excitation=True)
         setup_name = "Setup1"
         
         # 1. Kiem tra va xoa setup cu neu ton tai
@@ -88,19 +87,14 @@ def solve_standard_step(m3d, motor):
             print(f"Starting analysis for {setup_name}...")
             m3d.analyze_setup(setup_name)
             
-            print("Flux linkage export starting")
-            flux_linkage_export(motor=motor, m3d=m3d)
+            print("Flux linkage under no load export starting")
+            flux_linkage_export_no_load(motor=motor, m3d=m3d)
             
-            print("Torque export starting")
-            torque_export(motor=motor, m3d=m3d)
 
-            print("Axial force export starting")
-            axial_force_export(motor = motor, m3d = m3d)
+            print("Axial force no load export starting")
+            axial_force_export_no_load(motor = motor, m3d = m3d)
 
             print("Airgap flux density export starting")
-            motor.record.airgap_flux_density_fem = airgap_flux_density_export(motor = motor, 
-                                                                              m3d = m3d, 
-                                                                              name = "airgap_line_in_load" ).copy()
     
             print("\033[92mExport data successfully\033[0m")
 

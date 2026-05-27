@@ -3,6 +3,9 @@ import numpy as np
 import paths
 
 def airgap_flux_density_export(motor, m3d, name = "airgap_line_in_load"):
+    print("\033[94mIn function airgap_flux_density_export:\033[0m")
+    print("\033[94m{\033[0m")
+
     project_root = paths.configure_path()
     temp_dir = os.path.join(project_root, "data", "temp")
     os.makedirs(temp_dir, exist_ok=True)
@@ -102,5 +105,7 @@ def airgap_flux_density_export(motor, m3d, name = "airgap_line_in_load"):
 
     combined_data = np.vstack((b_radial, b_tangential, b_axial, b_magnitude, angular_positions))
     
-    print(f"\033[92mSuccess: Airgap flux density components exported\033[0m")
+    print(f"\033[92mSuccess: Airgap flux density components exported for {name}\033[0m")
+    print("\033[94m}\033[0m")
+    print("\033[94m\033[0m")
     return combined_data

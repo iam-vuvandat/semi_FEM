@@ -3,11 +3,11 @@ import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 
-def plot_torque(data_processor, 
-                horizontal_axis = "mechanical_position", 
-                show_fem = True, 
-                plot = False, 
-                revert = True):
+def plot_axial_force_no_load(data_processor, 
+                             horizontal_axis = "mechanical_position", 
+                             show_fem = True, 
+                             plot = False, 
+                             revert = True):
     
     root_dir = paths.configure_path()
     figure_dir = os.path.join(root_dir, "data", "repo", "figures")
@@ -18,6 +18,7 @@ def plot_torque(data_processor,
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
+    fem_mult = -1 if revert else 1
 
     fig_width = 14
     fig_height = fig_width / 1.618
@@ -33,63 +34,65 @@ def plot_torque(data_processor,
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
-    has_mrn = hasattr(record, "torque")
-    has_fem = hasattr(record, "torque_fem") and show_fem
-    fem_mult = -1 if revert else 1
+    has_mrn = hasattr(record, "axial_force_no_load")
+    has_fem = hasattr(record, "axial_force_no_load_fem") and show_fem
+
+    if not has_mrn and not has_fem:
+        print("\033[93mWarning: No no-load axial force data found.\033[0m")
+        return None
 
     fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
+    
     x_label = ""
-
     color_fem = '#7F7F7F'  
     color_mrn = '#B22222'  
 
     all_y_values = []
 
     if has_fem:
-        data_fem = record.torque_fem
+        data_fem = record.axial_force_no_load_fem
         x_fem, x_label = get_x_axis(data_fem[-1, :])
         val_fem = data_fem[0, :] * fem_mult
         all_y_values.extend(val_fem)
         
-        avg_fem = np.mean(val_fem)
-        label_fem = r'Torque (FEM, $T_{avg}$ = ' + f'{avg_fem:.2f} Nm)'
+        average_fem = np.mean(val_fem)
+        label_fem = r'Axial Force (FEM, $F_{avg}$ = ' + f'{average_fem:.2f} N)'
         
         ax.plot(x_fem, val_fem, color=color_fem, linestyle='-', linewidth=1.5, 
                 label=label_fem)
 
     if has_mrn:
-        data_mrn = record.torque
+        data_mrn = record.axial_force_no_load
         x_mrn, x_label = get_x_axis(data_mrn[-1, :])
         val_mrn = data_mrn[0, :]
         all_y_values.extend(val_mrn)
         
-        avg_mrn = np.mean(val_mrn)
-        label_mrn = r'Torque (MBGRN, $T_{avg}$ = ' + f'{avg_mrn:.2f} Nm)'
+        average_mrn = np.mean(val_mrn)
+        label_mrn = r'Axial Force (MRN, $F_{avg}$ = ' + f'{average_mrn:.2f} N)'
         
         ax.plot(x_mrn, val_mrn, color=color_mrn, linestyle='-', linewidth=3.0, 
                 label=label_mrn)
 
+    ax.set_xlabel(x_label, fontsize=s.label_size)
+    ax.set_ylabel('Axial Force (N)', fontsize=s.label_size)
+    ax.legend(frameon=True, loc='best', fontsize=s.legend_size)
+    ax.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
+    ax.margins(x=0)
+    
     if all_y_values:
         y_min = np.min(all_y_values)
         y_max = np.max(all_y_values)
         y_range = y_max - y_min
         if y_range == 0:
-            y_range = 1.0  
+            y_range = 1.0
             
         padding = 0.15 * y_range
         ax.set_ylim(y_min - padding, y_max + padding)
-
-    ax.set_xlabel(x_label, fontsize=s.label_size)
-    ax.set_ylabel('Torque (Nm)', fontsize=s.label_size)
-    
-    ax.legend(frameon=True, loc='best', fontsize=s.legend_size)
-    ax.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
-    ax.margins(x=0)
     
     plt.tight_layout()
     
-    wave_path = os.path.join(figure_dir, "torque.png")
+    wave_path = os.path.join(figure_dir, "axial_force_no_load.png")
     fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
     
     if plot:

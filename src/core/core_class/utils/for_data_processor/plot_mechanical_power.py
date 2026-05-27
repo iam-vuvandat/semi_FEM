@@ -1,3 +1,5 @@
+import os
+import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 
@@ -7,13 +9,17 @@ def plot_mechanical_power(data_processor,
                           plot = False, 
                           revert = True):
     
+    root_dir = paths.configure_path()
+    figure_dir = os.path.join(root_dir, "data", "repo", "figures")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
     fem_mult = -1 if revert else 1
 
-    # Tỉ lệ vàng (Golden Ratio 1.618:1)
     fig_width = 14
     fig_height = fig_width / 1.618
 
@@ -30,7 +36,6 @@ def plot_mechanical_power(data_processor,
     ax = plt.gca()
     x_label = ""
 
-    # Vẽ FEM trước: Màu đen, mảnh (linewidth=1.0), nét liền
     if has_fem:
         data_fem = record.mechanical_power_fem
         x_fem, x_label = get_x_axis(data_fem[-1, :])
@@ -38,7 +43,6 @@ def plot_mechanical_power(data_processor,
         ax.plot(x_fem, val_fem, color='black', linestyle='-', linewidth=1.0, 
                 label='Mechanical Power (FEM)')
 
-    # Vẽ MRN sau để nằm đè lên: Màu đỏ, đậm (linewidth=3.5), nét liền
     if has_mrn:
         data_mrn = record.mechanical_power
         x_mrn, x_label = get_x_axis(data_mrn[-1, :])
@@ -46,7 +50,6 @@ def plot_mechanical_power(data_processor,
         ax.plot(x_mrn, val_mrn, color='red', linestyle='-', linewidth=3.5, 
                 label='Mechanical Power (MRN)')
         
-        # Đường trung bình (nếu có) theo phong cách MRN
         if hasattr(record, "average_mechanical_power"):
             ax.axhline(y=record.average_mechanical_power, color='red', linestyle='--')
 
@@ -56,6 +59,9 @@ def plot_mechanical_power(data_processor,
     ax.grid(True, which='both', linestyle='-', linewidth=s.grid_linewidth)
     
     plt.tight_layout()
+    
+    wave_path = os.path.join(figure_dir, "mechanical_power.png")
+    fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
     
     if plot:
         plt.show()

@@ -1,3 +1,4 @@
+
 import paths
 import math
 from src.core.storage.core.MotorIO import MotorIO
@@ -5,39 +6,23 @@ from src.core.motor_type.models.axial_flux_motor_type_1 import AxialFluxMotorTyp
 pi = math.pi
 io = MotorIO()
 
-# Options
-
-reload_motor = True
-only_update_motor = False
-solve_under_no_load = True
-
 # Close Ansys Maxwell
 from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
-
- 
-
-
-
-
-
-
-
-
-
+# Options
+reload_motor = False
 file_name = "motor_for_paper" 
-
-export_maxwell = True
-solve_semiFEM = True
-
+solveFEM = True
+solveMBGRN = True
 
 if reload_motor:
-    export_maxwell = False
-    solve_semiFEM = False
     aft = io.load(path=file_name)
 else:
+    # reload record
+    aft1 = io.load(path=file_name)
     aft = AxialFluxMotorType1()
+    aft.record = aft1.record
 
     # material data
     aft.material_data.air = "default"
@@ -95,7 +80,7 @@ else:
     # calculation_data - convergence_settings
     aft.calculation_data.convergence_settings.max_iteration = 46
     aft.calculation_data.convergence_settings.max_relative_residual = 0.5 * 1e-2
-    aft.calculation_data.convergence_settings.material_relax = 0.35
+    aft.calculation_data.convergence_settings.material_relax = 0.3
     aft.calculation_data.convergence_settings.damping_factor = 1.0
     aft.calculation_data.convergence_settings.relaxation_decay = 1.0
 
@@ -103,6 +88,8 @@ else:
     aft.calculation_data.general_options.n_point = 32
     aft.calculation_data.general_options.solve_cogging = True
     aft.calculation_data.general_options.solve_standard = True
+    aft.calculation_data.general_options.solve_under_no_load = True
+    aft.calculation_data.general_options.solve_on_load = True
     aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
     aft.calculation_data.general_options.vectorized_optimization = True
@@ -172,32 +159,24 @@ else:
     aft.maxwell_export_option.solver_option.solve_only_1_step = False
     aft.maxwell_export_option.solver_option.close_after_completed = False
 
-
-
-if solve_under_no_load: 
-    aft.drive_data.i_rms = 0.0
-    aft.just_changed('drive')
-
-if export_maxwell and not only_update_motor:
-    aft.export_to_rmxprt()
-
-if solve_semiFEM and not only_update_motor:
-    aft.analysis_motor()
-
-if not reload_motor:
+    if solveFEM:
+        aft.export_to_rmxprt()
+    if solveMBGRN:
+        aft.analysis_motor()
     io.save(motor=aft, path=file_name)
 
-if not only_update_motor:
-    dp = aft.data_processor
 
-
-    dp.plot_airgap_flux_density()
-    dp.plot_airgap_flux_density_no_load()
-    dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)
-    dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
-    dp.plot_torque(horizontal_axis="time", show_fem=True)
-    dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-    dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False, num_periods= 5)
-    dp.plot_axial_force(horizontal_axis="time", show_fem=True)
-    dp.plot_current()
+dp = aft.data_processor
+dp.plot_airgap_flux_density()
+dp.plot_airgap_flux_density_no_load()
+dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)
+dp.plot_flux_linkage_no_load(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)
+dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
+dp.plot_back_emf_no_load(horizontal_axis="time", show_fem=True, show_all_phases= True)
+dp.plot_torque(horizontal_axis="time", show_fem=True)
+dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
+dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False, num_periods= 5)
+dp.plot_axial_force(horizontal_axis="time", show_fem=True)
+dp.plot_axial_force_no_load(horizontal_axis="time", show_fem=True)
+dp.plot_current()
 

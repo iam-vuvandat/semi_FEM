@@ -17,7 +17,7 @@ aft = io.load(path=file_name)
 
 # Option
 solve_MBGRN = True
-solve_FEM   = True
+solve_FEM   = False
 plot = True
 
 aft.drive_data.i_rms = 10.0

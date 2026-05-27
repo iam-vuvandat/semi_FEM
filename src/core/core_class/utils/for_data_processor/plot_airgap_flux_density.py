@@ -1,3 +1,5 @@
+import os
+import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 from src.core.solver.utils.decompose_harmonics import decompose_harmonics
@@ -8,6 +10,12 @@ def plot_airgap_flux_density(data_processor,
                              show_harmonic=True,
                              plot=False):
     
+    root_dir = paths.configure_path()
+    # destination figure folder : root_dir/data/repo/figures; if this folder did not exist, create it
+    figure_dir = os.path.join(root_dir, "data", "repo", "figures")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+
     motor = data_processor.motor
     record = motor.record
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
@@ -58,6 +66,10 @@ def plot_airgap_flux_density(data_processor,
     ax.margins(x=0)
     
     plt.tight_layout()
+    
+    # Overwrites the old figure file cleanly without any structural name modifications
+    wave_path = os.path.join(figure_dir, "airgap_flux_density_waveform.png")
+    fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
 
     fig_harm = None
     if show_harmonic:
@@ -113,6 +125,10 @@ def plot_airgap_flux_density(data_processor,
         
         plt.tight_layout()
         plt.subplots_adjust(hspace=0.3)
+        
+        # Overwrites the old harmonics spectrum figure file cleanly without modifications
+        harm_path = os.path.join(figure_dir, "airgap_flux_density_harmonics.png")
+        fig_harm.savefig(harm_path, bbox_inches='tight', dpi=300)
 
     if plot:
         plt.show()

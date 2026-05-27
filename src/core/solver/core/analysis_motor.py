@@ -12,17 +12,20 @@ from src.core.solver.utils.calculate_line_to_line_back_emf import calculate_line
 
 
 def analysis_motor(motor, callback = None):
+
     begin_time = time.perf_counter()
+
     # require calculation data
     motor.require("calculation_data")
-    calculation_data = motor.calculation_data
-    gen = calculation_data.general_options
-    
-    solve_cogging = gen.solve_cogging
-    solve_standard = gen.solve_standard
-    n_point = gen.n_point
-    debug = gen.debug
-    solve_only_1_step = gen.solve_only_1_step
+    calculation_data             = motor.calculation_data
+    gen                          = calculation_data.general_options
+    solve_cogging                = gen.solve_cogging
+    solve_under_no_load          = gen.solve_under_no_load
+    solve_on_load                = gen.solve_on_load
+    solve_standard               = gen.solve_standard
+    n_point                      = gen.n_point
+    debug                        = gen.debug
+    solve_only_1_step            = gen.solve_only_1_step
 
     phases = motor.winding_data.phase 
     epsilon = 1e-12
@@ -44,15 +47,24 @@ def analysis_motor(motor, callback = None):
         periodic_factor = symmetry_factor
 
     phase_number = motor.winding_data.phase
-    flux_linkage = np.zeros((phase_number + 3, n_point))
+
+    # initial output variable
+    # load_condition
     airgap_flux_density = None
-    airgap_flux_density_no_load = None
-    cogging = np.zeros((2, n_point))
-    mst_data = np.zeros((5, n_point))
+    flux_linkage = np.zeros((phase_number + 3, n_point))
     current = np.zeros((3 + phases, n_point))
-
     mechanical_power = np.zeros((2,n_point))
+    mst_data = np.zeros((5, n_point))
 
+    
+    # no_load condition
+    airgap_flux_density_no_load = None
+    flux_linkage_no_load = np.zeros((phase_number + 3, n_point))
+    mst_data_no_load = np.zeros((5, n_point))
+
+    cogging = np.zeros((2, n_point))
+    
+    
     if solve_only_1_step is True:
         n_point = 1
         print("\033[93mNotice: Solve only first step\033[0m")
@@ -71,21 +83,41 @@ def analysis_motor(motor, callback = None):
         motor.mechanical.reset_motor_position()
 
     if solve_standard:
-        for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
-            
-            motor.drive.apply_winding_excitation(excitation = True)
-            motor.reluctance_network.solver.solve()
-            motor.reluctance_network.add_elements_lite()
-            flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
-            mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
-            current[:, i] = motor.drive.debug_current()[:]   
+        if solve_on_load:
+            for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
+                
+                motor.drive.apply_winding_excitation(excitation = True)
+                motor.reluctance_network.solver.solve()
+                motor.reluctance_network.add_elements_lite()
+                flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
+                mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
+                current[:, i] = motor.drive.debug_current()[:]   
+                print("\033[94mIn function analysis_motor:\033[0m")
+                print("\033[94m{\033[0m")
 
-            if i == 0: 
-                airgap_flux_density = motor.export_airgap_flux_density()
+                print(current)
+                print("\033[94m}\033[0m")
+                print("\033[94m\033[0m")
 
-            motor.rotate_rotor(n_step = angle_factor)
+                if i == 0: 
+                    airgap_flux_density = motor.export_airgap_flux_density()
 
-    
+                motor.rotate_rotor(n_step = angle_factor)
+            motor.mechanical.reset_motor_position()
+
+        if solve_under_no_load:
+            for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
+                motor.drive.apply_winding_excitation(excitation = False)
+                motor.reluctance_network.solver.solve()
+                flux_linkage_no_load[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
+                mst_data_no_load[:, i] = motor.maxwell_stress_tensor().mst_result[:]
+                  
+                if i == 0 and not solve_cogging: 
+                    airgap_flux_density_no_load = motor.export_airgap_flux_density()
+
+                motor.rotate_rotor(n_step = angle_factor)
+            motor.mechanical.reset_motor_position()
+
     total_time = time.perf_counter() - begin_time
 
     # Export inductance map:
@@ -137,25 +169,31 @@ def analysis_motor(motor, callback = None):
         motor.record.airgap_flux_density_no_load = airgap_flux_density_no_load.copy()
 
     if not solve_only_1_step:
-
         shaft_speed = motor.mechanical.shaft_speed * (pi/30)
 
         flux_linkage[:-1] *= periodic_factor
+        flux_linkage_no_load[:-1] *= periodic_factor
+
         mst_data[:-1] *= periodic_factor
+        mst_data_no_load[:-1] *= periodic_factor
+
         mechanical_power = mst_data[[3,-1],:]
         mechanical_power[0,:] *= shaft_speed
         cogging[:-1] *= periodic_factor
 
         
         back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
-        
+        back_emf_no_load = periodic_derivative(data=flux_linkage_no_load[2:], half_open_interval=True).derivative * shaft_speed 
         
         motor.record.flux_linkage = flux_linkage.copy()
+        motor.record.flux_linkage_no_load = flux_linkage_no_load.copy()
         motor.record.back_emf = back_emf.copy()
+        motor.record.back_emf_no_load = back_emf_no_load.copy()
     
         motor.record.mechanical_power = mechanical_power.copy()
         motor.record.torque = mst_data[[3,4],:].copy()
         motor.record.axial_force = mst_data[[2,4],:].copy()
+        motor.record.axial_force_no_load = mst_data_no_load[[2,4],:].copy()
         motor.record.cogging = cogging.copy()
         motor.record.currents = current.copy()
         motor.record.average_mechanical_power =   mechanical_power[0,:].mean()

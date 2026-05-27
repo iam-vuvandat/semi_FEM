@@ -1,3 +1,5 @@
+import os
+import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 from src.core.solver.utils.decompose_harmonics import decompose_harmonics
@@ -10,13 +12,17 @@ def plot_flux_linkage(data_processor,
                       show_harmonic = True, 
                       plot = False):
     
+    root_dir = paths.configure_path()
+    figure_dir = os.path.join(root_dir, "data", "repo", "figures")
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
+
     motor = data_processor.motor
     record = motor.record
     n_phase = motor.winding_data.phase
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60
     s = data_processor.plot_style
 
-    # Cấu hình kích thước theo tỉ lệ vàng
     fig_width = 14
     fig_height = fig_width / 1.618
 
@@ -41,14 +47,12 @@ def plot_flux_linkage(data_processor,
     phase_indices = range(n_phase) if show_all_phase else [0]
     max_h = 15
 
-    # Cấu hình bộ màu Muted Classic theo yêu cầu
-    color_r = '#B22222'  # Firebrick Red
-    color_t = '#1F4E79'  # Navy Blue
-    color_z = '#595959'  # Dim Gray
+    color_r = '#B22222'  
+    color_t = '#1F4E79'  
+    color_z = '#595959'  
     
     phase_colors_muted = [color_r, color_t, color_z]
 
-    # --- FIGURE 1: WAVEFORM (DẠNG SÓNG) ---
     fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax_wave = plt.gca()
     x_label = ""
@@ -97,13 +101,14 @@ def plot_flux_linkage(data_processor,
 
     ax_wave.set_xlabel(x_label, fontsize=s.label_size)
     ax_wave.set_ylabel(r'Flux Linkage ($Wb$)', fontsize=s.label_size)
-    
     ax_wave.legend(frameon=True, loc='lower right', ncol=3, fontsize=s.legend_size)
     ax_wave.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
     ax_wave.margins(x=0)
     plt.tight_layout()
+    
+    wave_path = os.path.join(figure_dir, "flux_linkage_waveform.png")
+    fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
 
-    # --- FIGURE 2: HARMONIC (PHỔ SÓNG HÀI) ---
     fig_harm = None
     if show_harmonic:
         color_harm_mbgrn = '#1F4E79' 
@@ -140,6 +145,9 @@ def plot_flux_linkage(data_processor,
         ax_harm.legend(frameon=True, loc='upper right', fontsize=s.legend_size)
         ax_harm.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
         plt.tight_layout()
+        
+        harm_path = os.path.join(figure_dir, "flux_linkage_harmonics.png")
+        fig_harm.savefig(harm_path, bbox_inches='tight', dpi=300)
 
     if plot:
         plt.show()
