@@ -18,10 +18,12 @@ from src.core.motor_type.utils.for_axial_flux_motor_type_1.maxwell_stress_tensor
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.airgap_flux_density_export import airgap_flux_density_export
 
 from src.core.motor_type.utils.for_axial_flux_motor_type_1.export_to_maxwell import export_to_maxwell
+
 from src.core.motor_type.utils.for_export_maxwell.update_maxwell_settings import update_maxwell_settings
 from src.core.motor_type.utils.for_save_load.prepare_to_save import prepare_to_save
 
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.export_to_rmxprt import export_to_rmxprt
+from src.core.motor_type.utils.for_sweep_parameter.sweep_stator_current import sweep_stator_current
 
 pi = math.pi
 class AxialFluxMotorType1:
@@ -129,6 +131,14 @@ class AxialFluxMotorType1:
                 current_min       = 1.0,
                 current_max       = 15.0,
                 current_resolution = 10
+            ),
+            sweep_stator_current = SimpleNamespace(
+                clear_history = False,
+                current_min = 0.0,
+                current_max = 25.0,
+                delta_current = 1.5,
+                solve_FEM   = True,
+                solve_MBGRN = True
             )  
         )
 
@@ -256,6 +266,9 @@ class AxialFluxMotorType1:
     
     def export_to_rmxprt(self):
         return export_to_rmxprt(motor = self )
+
+    def sweep_stator_current(self):
+        return sweep_stator_current(motor = self)
 
     def just_changed(self, component_name):
         return self.motor_state_manager.just_changed(component_name)

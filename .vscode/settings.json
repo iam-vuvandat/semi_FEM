@@ -18,5 +18,8 @@
     "python.languageServer":  "Pylance",
     "python.analysis.autoImportCompletions":  true,
     "explorer.compactFolders": false,
-    "python-envs.defaultEnvManager": "ms-python.python:venv"
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
+    "python.terminal.activateEnvironment": true,
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe"
 }
+

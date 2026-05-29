@@ -20,7 +20,7 @@ solve_MBGRN = True
 solve_FEM   = False
 plot = True
 
-aft.drive_data.i_rms = 10.0
+aft.drive_data.i_rms = 20.0
 aft.just_changed('drive')
 
 aft.calculation_data.general_options.solve_cogging = False

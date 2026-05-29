@@ -211,3 +211,4 @@ def analysis_motor(motor, callback = None):
           f"Matrix Size: {motor.record.matrix_size}\033[0m")
         
     return None
+      

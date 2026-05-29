@@ -11,7 +11,7 @@ from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
 # Options
-reload_motor = False
+reload_motor = True
 file_name = "motor_for_paper" 
 solveFEM = True
 solveMBGRN = True
@@ -165,18 +165,20 @@ else:
         aft.analysis_motor()
     io.save(motor=aft, path=file_name)
 
-
 dp = aft.data_processor
-dp.plot_airgap_flux_density()
-dp.plot_airgap_flux_density_no_load()
-dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)
-dp.plot_flux_linkage_no_load(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)
-dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases= True)
-dp.plot_back_emf_no_load(horizontal_axis="time", show_fem=True, show_all_phases= True)
-dp.plot_torque(horizontal_axis="time", show_fem=True)
-dp.plot_mechanical_power(horizontal_axis="time", show_fem=True)
-dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert = False, num_periods= 5)
-dp.plot_axial_force(horizontal_axis="time", show_fem=True)
-dp.plot_axial_force_no_load(horizontal_axis="time", show_fem=True)
-dp.plot_current()
+"""
+dp.plot_airgap_flux_density(plot=False)
+dp.plot_airgap_flux_density_no_load(plot=False)
+dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq=False, show_all_phase=True, plot=False)
+dp.plot_flux_linkage_no_load(horizontal_axis="time", show_fem=True, show_dq=False, show_all_phase=True, plot=False)
+dp.plot_back_emf(horizontal_axis="time", show_fem=True, show_all_phases=True, plot=False)
+dp.plot_back_emf_no_load(horizontal_axis="time", show_fem=True, show_all_phases=True, plot=False)
+dp.plot_torque(horizontal_axis="time", show_fem=True, plot=False)
+dp.plot_mechanical_power(horizontal_axis="time", show_fem=True, plot=False)
+dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert=False, num_periods=5, plot=False)
+dp.plot_axial_force(horizontal_axis="time", show_fem=True, plot=False)
+dp.plot_axial_force_no_load(horizontal_axis="time", show_fem=True, plot=False)
+dp.plot_current(plot=False)
+"""
+dp.create_report()
 

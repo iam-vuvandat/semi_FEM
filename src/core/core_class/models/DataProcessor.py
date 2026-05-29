@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scienceplots
 
+from src.core.core_class.utils.for_data_processor.update_record import update_record
 from src.core.core_class.utils.for_data_processor.apply_jounal_style import apply_journal_style
 from src.core.core_class.utils.for_data_processor.plot_flux_linkage import plot_flux_linkage
 from src.core.core_class.utils.for_data_processor.plot_flux_linkage_no_load import plot_flux_linkage_no_load
@@ -18,13 +19,16 @@ from src.core.core_class.utils.for_data_processor.plot_inductance_map import plo
 from src.core.core_class.utils.for_data_processor.plot_airgap_flux_density import plot_airgap_flux_density
 from src.core.core_class.utils.for_data_processor.plot_airgap_flux_density_no_load import plot_airgap_flux_density_no_load
 from src.core.core_class.utils.for_data_processor.create_report import create_report
-
+from src.core.core_class.utils.for_data_processor.plot_power_at_varying_current import plot_power_at_varying_current
 from mpl_toolkits.mplot3d import Axes3D
 
 class DataProcessor:
     def __init__(self, motor):
         self.motor = motor
         self.plot_style = apply_journal_style()
+
+    def update_record(self):
+        return update_record(data_processor= self)
 
     def plot_airgap_flux_density(self, horizontal_axis="mechanical_position", show_fem=True, show_harmonic=True, plot=True):
         return plot_airgap_flux_density(data_processor=self, horizontal_axis=horizontal_axis, 
@@ -82,5 +86,8 @@ class DataProcessor:
     def plot_inductance_map(self, plot=True):
         return plot_inductance_map(data_processor=self, plot=plot)
     
+    def plot_power_at_varying_current(self, plot= True):
+        return plot_power_at_varying_current(data_processor=self, plot=plot)
+
     def create_report(self):
         return create_report(data_processor= self)
