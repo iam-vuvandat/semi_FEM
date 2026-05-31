@@ -3,7 +3,6 @@ import glob
 import time
 
 def init_window():
-    print("\033[94m\033[0m")
     print("\033[94mIn function init_window.\033[0m")
     print("\033[94m{\033[0m")
 

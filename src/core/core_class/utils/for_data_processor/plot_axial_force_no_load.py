@@ -2,6 +2,7 @@ import os
 import paths
 import numpy as np 
 import matplotlib.pyplot as plt
+from src.core.solver.utils.decompose_harmonics import decompose_harmonics
 
 def plot_axial_force_no_load(data_processor, 
                              horizontal_axis = "mechanical_position", 
@@ -19,6 +20,7 @@ def plot_axial_force_no_load(data_processor,
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
     fem_mult = -1 if revert else 1
+    max_h = 15
 
     fig_width = 14
     fig_height = fig_width / 1.618
@@ -34,8 +36,8 @@ def plot_axial_force_no_load(data_processor,
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
-    has_mrn = hasattr(record, "axial_force_no_load")
-    has_fem = hasattr(record, "axial_force_no_load_fem") and show_fem
+    has_mrn = hasattr(record, "axial_force_no_load") and record.axial_force_no_load is not None
+    has_fem = hasattr(record, "axial_force_no_load_fem") and record.axial_force_no_load_fem is not None and show_fem
 
     if not has_mrn and not has_fem:
         print("\033[93mWarning: No no-load axial force data found.\033[0m")
@@ -61,6 +63,10 @@ def plot_axial_force_no_load(data_processor,
         
         ax.plot(x_fem, val_fem, color=color_fem, linestyle='-', linewidth=1.5, 
                 label=label_fem)
+        
+        amps_fem, _ = decompose_harmonics(val_fem, n_harmonics=max_h)
+        h_orders = np.arange(len(amps_fem))
+        record.axial_force_no_load_harmonic_fem = np.vstack((amps_fem, h_orders))
 
     if has_mrn:
         data_mrn = record.axial_force_no_load
@@ -73,6 +79,10 @@ def plot_axial_force_no_load(data_processor,
         
         ax.plot(x_mrn, val_mrn, color=color_mrn, linestyle='-', linewidth=3.0, 
                 label=label_mrn)
+        
+        amps_mrn, _ = decompose_harmonics(val_mrn, n_harmonics=max_h)
+        h_orders = np.arange(len(amps_mrn))
+        record.axial_force_no_load_harmonic = np.vstack((amps_mrn, h_orders))
 
     ax.set_xlabel(x_label, fontsize=s.label_size)
     ax.set_ylabel('Axial Force (N)', fontsize=s.label_size)

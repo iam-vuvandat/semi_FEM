@@ -59,20 +59,10 @@ def export_solution_data(m3d,motor):
     print(f"\033[92mSolution Data Extracted - Elements: {max_elements} | Matrix: {max_matrix} | Memory: {max_memory_mb:.2f} MB\033[0m")
 
     
-    if hasattr(motor.record,"total_elements_fem"):
-        pass
-    else:
-        motor.record.total_elements_fem = max_elements
 
-    if hasattr(motor.record,"matrix_size_fem"):
-        pass
-    else:
-        motor.record.matrix_size_fem = max_matrix
-
-    if hasattr(motor.record,"memory_used_fem"):
-        pass
-    else:
-        motor.record.memory_used_fem = max_memory_mb
+    motor.record.total_elements_fem = max_elements
+    motor.record.matrix_size_fem = max_matrix
+    motor.record.memory_used_fem = max_memory_mb
     return {
         "max_elements": max_elements,
         "max_matrix": max_matrix,

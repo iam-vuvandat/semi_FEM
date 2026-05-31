@@ -166,7 +166,10 @@ else:
     io.save(motor=aft, path=file_name)
 
 dp = aft.data_processor
-"""
+
+# debug
+
+
 dp.plot_airgap_flux_density(plot=False)
 dp.plot_airgap_flux_density_no_load(plot=False)
 dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq=False, show_all_phase=True, plot=False)
@@ -179,6 +182,7 @@ dp.plot_cogging_torque(horizontal_axis="time", show_fem=True, revert=False, num_
 dp.plot_axial_force(horizontal_axis="time", show_fem=True, plot=False)
 dp.plot_axial_force_no_load(horizontal_axis="time", show_fem=True, plot=False)
 dp.plot_current(plot=False)
-"""
 dp.create_report()
+
+
 

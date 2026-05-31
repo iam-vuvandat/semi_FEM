@@ -1,57 +1,78 @@
 from reportlab.platypus import Paragraph, Spacer, Table
 
-def _build_computational_performance(story, record, config):
+def _build_computational_performance(story, motor, config):
     """
     Generates Section 5: Computational Performance & Resource Utilization.
-    Directly extracts and displays solver execution times, hardware resource usage,
-    and discretization scales from the core record variables without modification.
+    Accepts the motor entity as a parameter and extracts metrics from motor.record.
+    Computes and displays the ratio comparison directly within the table matrix.
     """
     story.append(Paragraph("5. Computational Performance & Resource Utilization", config.h1_style))
     story.append(Paragraph("Quantitative comparison of solver execution speed, numerical scale, and computational resource efficiency:", config.body_style))
     
-    # 1. Trích xuất trực tiếp các thông số hiệu năng thời gian và bộ nhớ phần cứng
-    mbgrn_time = f"{record.time_solved:.3f} s" if hasattr(record, "time_solved") and record.time_solved is not None else "N/A"
-    fem_time = f"{record.total_time_fem:.1f} s" if hasattr(record, "total_time_fem") and record.total_time_fem is not None else "N/A"
+    # Trích xuất thực thể record từ đối tượng motor truyền vào
+    record = motor.record
+
+    # 1. Khởi tạo giá trị thô từ record
+    t_mbgrn = record.time_solved if hasattr(record, "time_solved") else None
+    t_fem = record.total_time_fem if hasattr(record, "total_time_fem") else None
     
-    mbgrn_mem = f"{record.memory_used:.1f} MB" if hasattr(record, "memory_used") and record.memory_used is not None else "N/A"
-    fem_mem = f"{record.memory_used_fem:.1f} MB" if hasattr(record, "memory_used_fem") and record.memory_used_fem is not None else "N/A"
+    m_mbgrn = record.memory_used if hasattr(record, "memory_used") else None
+    m_fem = record.memory_used_fem if hasattr(record, "memory_used_fem") else None
 
-    # 2. Trích xuất trực tiếp các thông số quy mô toán học (Lưới và Ma trận hệ phương trình)
-    mbgrn_elements = f"{record.elements:,}" if hasattr(record, "elements") and record.elements is not None else "N/A"
-    fem_elements = f"{record.total_elements_fem:,}" if hasattr(record, "total_elements_fem") and record.total_elements_fem is not None else "N/A"
+    e_mbgrn = record.elements if hasattr(record, "elements") else None
+    e_fem = record.total_elements_fem if hasattr(record, "total_elements_fem") else None
 
-    mbgrn_matrix = f"{record.matrix_size:,}" if hasattr(record, "matrix_size") and record.matrix_size is not None else "N/A"
-    fem_matrix = f"{record.matrix_size_fem:,}" if hasattr(record, "matrix_size_fem") and record.matrix_size_fem is not None else "N/A"
+    mat_mbgrn = record.matrix_size if hasattr(record, "matrix_size") else None
+    mat_fem = record.matrix_size_fem if hasattr(record, "matrix_size_fem") else None
 
-    # 3. Tổ chức cấu trúc ma trận bảng dữ liệu đối chiếu hiệu năng máy tính thuần túy
+    # 2. Định dạng chuỗi hiển thị giá trị thô cho các ô trong bảng
+    mbgrn_time_str = f"{t_mbgrn:.3f} s" if t_mbgrn is not None else "N/A"
+    fem_time_str = f"{t_fem:.1f} s" if t_fem is not None else "N/A"
+    
+    mbgrn_mem_str = f"{m_mbgrn:.1f} MB" if m_mbgrn is not None else "N/A"
+    fem_mem_str = f"{m_fem:.1f} MB" if m_fem is not None else "N/A"
+
+    mbgrn_elem_str = f"{e_mbgrn:,}" if e_mbgrn is not None else "N/A"
+    fem_elem_str = f"{e_fem:,}" if e_fem is not None else "N/A"
+
+    mbgrn_mat_str = f"{mat_mbgrn:,}" if mat_mbgrn is not None else "N/A"
+    fem_mat_str = f"{mat_fem:,}" if mat_fem is not None else "N/A"
+
+    # 3. Tính toán tỉ lệ so sánh số lần trực tiếp (Bảo vệ lỗi chia cho 0 hoặc None)
+    ratio_time = f"{t_fem / t_mbgrn:.1f}x faster" if t_fem and t_mbgrn else "N/A"
+    ratio_mem  = f"{m_fem / m_mbgrn:.1f}x lower" if m_fem and m_mbgrn else "N/A"
+    ratio_elem = f"{e_fem / e_mbgrn:.1f}x fewer" if e_fem and e_mbgrn else "N/A"
+    ratio_mat  = f"{mat_fem / mat_mbgrn:.1f}x smaller" if mat_fem and mat_mbgrn else "N/A"
+
+    # 4. Tổ chức cấu trúc ma trận bảng dữ liệu đối chiếu hiệu năng với cột tỉ lệ mới
     performance_rows = [
         [Paragraph("<b>Performance Metric Summary</b>", config.table_header), 
          Paragraph("<b>MBGRN Solver</b>", config.table_header), 
          Paragraph("<b>FEM Reference</b>", config.table_header),
-         Paragraph("<b>Computational Note</b>", config.table_header)],
+         Paragraph("<b>Comparison Ratio</b>", config.table_header)],
         
         [Paragraph("Total Computation Execution Time", config.table_text), 
-         Paragraph(mbgrn_time, config.table_text), 
-         Paragraph(fem_time, config.table_text), 
-         Paragraph("Transient Solver Steps", config.table_text)],
+         Paragraph(mbgrn_time_str, config.table_text), 
+         Paragraph(fem_time_str, config.table_text), 
+         Paragraph(ratio_time, config.table_text)],
         
-        [Paragraph("Peak Memory Footprint (RAM)", config.table_text), 
-         Paragraph(mbgrn_mem, config.table_text), 
-         Paragraph(fem_mem, config.table_text), 
-         Paragraph("Optimized Dynamic Memory", config.table_text)],
+        [Paragraph("Memory used", config.table_text), 
+         Paragraph(mbgrn_mem_str, config.table_text), 
+         Paragraph(fem_mem_str, config.table_text), 
+         Paragraph(ratio_mem, config.table_text)],
         
-        [Paragraph("Total Mesh / Discretized Elements", config.table_text), 
-         Paragraph(mbgrn_elements, config.table_text), 
-         Paragraph(fem_elements, config.table_text), 
-         Paragraph("Domain Discretization", config.table_text)],
+        [Paragraph("Total Elements", config.table_text), 
+         Paragraph(mbgrn_elem_str, config.table_text), 
+         Paragraph(fem_elem_str, config.table_text), 
+         Paragraph(ratio_elem, config.table_text)],
         
-        [Paragraph("Max Linear System Matrix Size", config.table_text), 
-         Paragraph(mbgrn_matrix, config.table_text), 
-         Paragraph(fem_matrix, config.table_text), 
-         Paragraph("Degrees of Freedom", config.table_text)]
+        [Paragraph("System matrix size", config.table_text), 
+         Paragraph(mbgrn_mat_str, config.table_text), 
+         Paragraph(fem_mat_str, config.table_text), 
+         Paragraph(ratio_mat, config.table_text)]
     ]
     
-    # 4. Khởi tạo đối tượng Table tuân thủ colWidths tiêu chuẩn vừa khít biên lề
+    # 5. Khởi tạo đối tượng Table tuân thủ colWidths tiêu chuẩn vừa khít biên lề 504 pt
     t_perf = Table(performance_rows, colWidths=[184, 110, 110, 100])
     t_perf.setStyle(config.base_table_style)
     

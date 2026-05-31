@@ -30,8 +30,8 @@ def plot_airgap_flux_density(data_processor,
         else:
             return theta_data, r'Angular Position ($rad$)'
     
-    has_mrn = hasattr(record, "airgap_flux_density")
-    has_fem = hasattr(record, "airgap_flux_density_fem") and show_fem
+    has_mrn = hasattr(record, "airgap_flux_density") and record.airgap_flux_density is not None
+    has_fem = hasattr(record, "airgap_flux_density_fem") and record.airgap_flux_density_fem is not None and show_fem
 
     fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
@@ -74,7 +74,6 @@ def plot_airgap_flux_density(data_processor,
     fig_harm = None
     if show_harmonic:
         max_h = 15
-        # Đồng bộ màu sắc cột biểu đồ phổ hài (MBGRN: Navy Blue #1F4E79, FEM: Firebrick Red #B22222)
         color_harm_mbgrn = '#1F4E79' 
         color_harm_fem = '#B22222'   
 
@@ -86,6 +85,12 @@ def plot_airgap_flux_density(data_processor,
 
         fig_harm, axs = plt.subplots(3, 1, figsize=(fig_width, fig_height * 2.2), sharex=True)
         
+        # Đóng gói cấu trúc ma trận phẳng phẳng 4 hàng tĩnh vào trong record
+        if has_mrn:
+            record.airgap_flux_density_harmonic = np.zeros((4, max_h + 1))
+        if has_fem:
+            record.airgap_flux_density_harmonic_fem = np.zeros((4, max_h + 1))
+        
         for i, comp in enumerate(components):
             ax_harm = axs[i]
             idx = comp["idx"]
@@ -95,6 +100,10 @@ def plot_airgap_flux_density(data_processor,
                 signal_mrn = record.airgap_flux_density[idx, :]
                 amps_mrn, _ = decompose_harmonics(signal_mrn, n_harmonics=max_h)
                 h_orders = np.arange(len(amps_mrn))
+                
+                # Nạp biên độ hài (T) vào các hàng tương ứng 0, 1, 2 và trục bậc hài vào hàng 3
+                record.airgap_flux_density_harmonic[idx, :] = amps_mrn
+                record.airgap_flux_density_harmonic[3, :] = h_orders
                 
                 bar_offset = -0.15 if has_fem else 0
                 bar_width = 0.3 if has_fem else 0.6
@@ -106,6 +115,10 @@ def plot_airgap_flux_density(data_processor,
                 signal_fem = record.airgap_flux_density_fem[idx, :]
                 amps_fem, _ = decompose_harmonics(signal_fem, n_harmonics=max_h)
                 h_orders = np.arange(len(amps_fem))
+                
+                # Nạp biên độ hài (T) vào các hàng tương ứng 0, 1, 2 và trục bậc hài vào hàng 3
+                record.airgap_flux_density_harmonic_fem[idx, :] = amps_fem
+                record.airgap_flux_density_harmonic_fem[3, :] = h_orders
                 
                 bar_offset = 0.15 if has_mrn else 0
                 bar_width = 0.3 if has_mrn else 0.6

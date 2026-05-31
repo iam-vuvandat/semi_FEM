@@ -18,6 +18,9 @@ def create_report(data_processor):
     motor specifications, geometric data, winding layouts, and analysis graphs.
     """
 
+    print("\033[94mIn function create_report:\033[0m")
+    print("\033[94m{\033[0m")
+
     # update_record
     data_processor.update_record()
     root_dir = paths.configure_path()
@@ -46,9 +49,12 @@ def create_report(data_processor):
     _build_section_1(story, motor, config)
     _build_section_2(story, motor, config)
     _build_section_3(story, motor, config)
-    _build_section_4(story, record, config)
-    _build_section_5(story, data_processor, config)
-    _build_computational_performance(story, data_processor, config)
+    _build_section_4(story, motor, config)
+    _build_section_5(story, motor, config)
+    _build_computational_performance(story, motor, config)
 
     doc.build(story)
+
+    print("\033[94m}\033[0m")
+    print("\033[94m\033[0m")
     return filename

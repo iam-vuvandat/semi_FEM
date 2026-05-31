@@ -29,8 +29,8 @@ def plot_airgap_flux_density_no_load(data_processor,
         else:
             return theta_data, r'Angular Position ($rad$)'
     
-    has_mrn = hasattr(record, "airgap_flux_density_no_load")
-    has_fem = hasattr(record, "airgap_flux_density_no_load_fem") and show_fem
+    has_mrn = hasattr(record, "airgap_flux_density_no_load") and record.airgap_flux_density_no_load is not None
+    has_fem = hasattr(record, "airgap_flux_density_no_load_fem") and record.airgap_flux_density_no_load_fem is not None and show_fem
 
     fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
@@ -82,6 +82,11 @@ def plot_airgap_flux_density_no_load(data_processor,
 
         fig_harm, axs = plt.subplots(3, 1, figsize=(fig_width, fig_height * 2.2), sharex=True)
         
+        if has_mrn:
+            record.airgap_flux_density_no_load_harmonic = np.zeros((4, max_h + 1))
+        if has_fem:
+            record.airgap_flux_density_no_load_harmonic_fem = np.zeros((4, max_h + 1))
+        
         for i, comp in enumerate(components):
             ax_harm = axs[i]
             idx = comp["idx"]
@@ -91,6 +96,9 @@ def plot_airgap_flux_density_no_load(data_processor,
                 signal_mrn = record.airgap_flux_density_no_load[idx, :]
                 amps_mrn, _ = decompose_harmonics(signal_mrn, n_harmonics=max_h)
                 h_orders = np.arange(len(amps_mrn))
+                
+                record.airgap_flux_density_no_load_harmonic[idx, :] = amps_mrn
+                record.airgap_flux_density_no_load_harmonic[3, :] = h_orders
                 
                 bar_offset = -0.15 if has_fem else 0
                 bar_width = 0.3 if has_fem else 0.6
@@ -102,6 +110,9 @@ def plot_airgap_flux_density_no_load(data_processor,
                 signal_fem = record.airgap_flux_density_no_load_fem[idx, :]
                 amps_fem, _ = decompose_harmonics(signal_fem, n_harmonics=max_h)
                 h_orders = np.arange(len(amps_fem))
+                
+                record.airgap_flux_density_no_load_harmonic_fem[idx, :] = amps_fem
+                record.airgap_flux_density_no_load_harmonic_fem[3, :] = h_orders
                 
                 bar_offset = 0.15 if has_mrn else 0
                 bar_width = 0.3 if has_fem else 0.6

@@ -37,8 +37,8 @@ def plot_flux_linkage_no_load(data_processor,
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
-    has_mrn = hasattr(record, "flux_linkage_no_load")
-    has_fem = hasattr(record, "flux_linkage_no_load_fem") and show_fem
+    has_mrn = hasattr(record, "flux_linkage_no_load") and record.flux_linkage_no_load is not None
+    has_fem = hasattr(record, "flux_linkage_no_load_fem") and record.flux_linkage_no_load_fem is not None and show_fem
 
     if not has_mrn and not has_fem:
         print("\033[93mWarning: No flux linkage data found.\033[0m")
@@ -122,6 +122,8 @@ def plot_flux_linkage_no_load(data_processor,
             amps_mrn, _ = decompose_harmonics(signal_mrn_a, n_harmonics=max_h)
             h_orders = np.arange(len(amps_mrn))
             
+            record.flux_linkage_no_load_harmonic = np.vstack((amps_mrn, h_orders))
+            
             bar_offset = -0.15 if has_fem else 0
             bar_width = 0.3 if has_fem else 0.6
             
@@ -132,6 +134,8 @@ def plot_flux_linkage_no_load(data_processor,
             signal_fem_a = record.flux_linkage_no_load_fem[2, :]
             amps_fem, _ = decompose_harmonics(signal_fem_a, n_harmonics=max_h)
             h_orders = np.arange(len(amps_fem))
+            
+            record.flux_linkage_no_load_harmonic_fem = np.vstack((amps_fem, h_orders))
             
             bar_offset = 0.15 if has_mrn else 0
             bar_width = 0.3 if has_mrn else 0.6

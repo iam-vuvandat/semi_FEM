@@ -2,6 +2,7 @@ import os
 import paths
 import numpy as np 
 import matplotlib.pyplot as plt
+from src.core.solver.utils.decompose_harmonics import decompose_harmonics
 
 def plot_torque(data_processor, 
                 horizontal_axis = "mechanical_position", 
@@ -33,9 +34,10 @@ def plot_torque(data_processor,
         else:
             return theta_data, r'Rotor Position ($rad$)'
     
-    has_mrn = hasattr(record, "torque")
-    has_fem = hasattr(record, "torque_fem") and show_fem
+    has_mrn = hasattr(record, "torque") and record.torque is not None
+    has_fem = hasattr(record, "torque_fem") and record.torque_fem is not None and show_fem
     fem_mult = -1 if revert else 1
+    max_h = 15
 
     fig_wave = plt.figure(figsize=(fig_width, fig_height))
     ax = plt.gca()
@@ -57,6 +59,10 @@ def plot_torque(data_processor,
         
         ax.plot(x_fem, val_fem, color=color_fem, linestyle='-', linewidth=1.5, 
                 label=label_fem)
+        
+        amps_fem, _ = decompose_harmonics(val_fem, n_harmonics=max_h)
+        h_orders = np.arange(len(amps_fem))
+        record.torque_harmonic_fem = np.vstack((amps_fem, h_orders))
 
     if has_mrn:
         data_mrn = record.torque
@@ -69,6 +75,10 @@ def plot_torque(data_processor,
         
         ax.plot(x_mrn, val_mrn, color=color_mrn, linestyle='-', linewidth=3.0, 
                 label=label_mrn)
+        
+        amps_mrn, _ = decompose_harmonics(val_mrn, n_harmonics=max_h)
+        h_orders = np.arange(len(amps_mrn))
+        record.torque_harmonic = np.vstack((amps_mrn, h_orders))
 
     if all_y_values:
         y_min = np.min(all_y_values)

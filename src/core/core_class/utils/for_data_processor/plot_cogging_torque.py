@@ -3,6 +3,7 @@ import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 from src.core.solver.utils.duplicate_data import duplicate_data
+from src.core.solver.utils.decompose_harmonics import decompose_harmonics
 
 def plot_cogging_torque(data_processor, 
                         horizontal_axis = "mechanical_position", 
@@ -24,6 +25,7 @@ def plot_cogging_torque(data_processor,
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60
     s = data_processor.plot_style
     fem_mult = -1 if revert else 1
+    max_h = 15
 
     fig_width = 14
     fig_height = fig_width / 1.618
@@ -39,8 +41,8 @@ def plot_cogging_torque(data_processor,
         else:
             return theta_data, r'Rotor Position ($rad$)'
         
-    has_mrn = hasattr(record, "cogging")
-    has_fem = hasattr(record, "cogging_fem") and show_fem
+    has_mrn = hasattr(record, "cogging") and record.cogging is not None
+    has_fem = hasattr(record, "cogging_fem") and record.cogging_fem is not None and show_fem
 
     if not has_mrn and not has_fem:
         print("\033[93mWarning: No cogging torque data found in record.\033[0m")
@@ -56,7 +58,13 @@ def plot_cogging_torque(data_processor,
     all_y_values = []
 
     if has_fem:
-        data_fem = record.cogging_fem
+        base_fem = record.cogging_fem
+        base_val_fem = base_fem[0, :] * fem_mult
+        amps_fem, _ = decompose_harmonics(base_val_fem, n_harmonics=max_h)
+        h_orders = np.arange(len(amps_fem))
+        record.cogging_harmonic_fem = np.vstack((amps_fem, h_orders))
+
+        data_fem = base_fem
         if num_periods > 1:
             data_fem = duplicate_data(data_fem, half_open_interval=True, num_periods=num_periods).duplicated_data
             
@@ -70,7 +78,13 @@ def plot_cogging_torque(data_processor,
         ax.plot(x_fem, cogging_fem_val, color=color_fem, linestyle='-', linewidth=1.5, label=label_fem)
 
     if has_mrn:
-        data_mrn = record.cogging
+        base_mrn = record.cogging
+        base_val_mrn = base_mrn[0, :]
+        amps_mrn, _ = decompose_harmonics(base_val_mrn, n_harmonics=max_h)
+        h_orders = np.arange(len(amps_mrn))
+        record.cogging_harmonic = np.vstack((amps_mrn, h_orders))
+
+        data_mrn = base_mrn
         if num_periods > 1:
             data_mrn = duplicate_data(data_mrn, half_open_interval=True, num_periods=num_periods).duplicated_data
             
