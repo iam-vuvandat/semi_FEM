@@ -11,7 +11,7 @@ from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
 init_window()
 
 # Options
-reload_motor = True
+reload_motor = False
 file_name = "motor_for_paper" 
 solveFEM = True
 solveMBGRN = True
@@ -82,7 +82,7 @@ else:
     aft.calculation_data.convergence_settings.max_relative_residual = 0.5 * 1e-2
     aft.calculation_data.convergence_settings.material_relax = 0.3
     aft.calculation_data.convergence_settings.damping_factor = 1.0
-    aft.calculation_data.convergence_settings.relaxation_decay = 1.0
+    aft.calculation_data.convergence_settings.relaxation_decay = 0.5
 
     # calculation_data - general_options
     aft.calculation_data.general_options.n_point = 32

@@ -79,14 +79,19 @@ def solve(solver):
             best_residual = true_residual
             best_potential_data = reluctance_network.magnetic_potential.data.copy()
 
+            # Khi sai số giảm tốt: GIỮ NGUYÊN material_relax và tịnh tiến hệ thống
+            permeance_matrix_current = permeance_matrix_next
+            magnetic_potential_current = magnetic_potential_next
+            residual_current = residual_next
+        else:
+            # Khi sai số TĂNG: GIẢM material_relax và khôi phục về trạng thái tốt nhất
+            material_relax *= relaxation_decay
+            
+            magnetic_potential_current = best_potential_data.flatten(order='F')[:-1]
+            residual_current, permeance_matrix_current, current_source_current = _compute_system(reluctance_network, magnetic_potential_current, material_relax, magnetic_potential_shape)
+
         if is_break:
             break
-
-        material_relax *= relaxation_decay
-        
-        permeance_matrix_current = permeance_matrix_next
-        magnetic_potential_current = magnetic_potential_next
-        residual_current = residual_next
 
     _update_history_settings(convergence_settings, relaxation_decay, total_iteration, best_residual_history)
 

@@ -5,10 +5,13 @@ def sweep_stator_current(motor):
     print("\033[94m{\033[0m")
 
     sweep_config = motor.calculation_data.sweep_stator_current
-    current_range = (sweep_config.current_min, sweep_config.current_max)
-    number_of_division = sweep_config.n_point
+    current_min = sweep_config.current_min
+    current_max = sweep_config.current_max
+    delta_current = sweep_config.delta_current
     
-    target_stator_currents = np.linspace(current_range[0], current_range[1], number_of_division)
+    # Tự động tính toán dải dòng điện dựa trên current_min, current_max và delta_current
+    target_stator_currents = np.arange(current_min, current_max + delta_current / 2.0, delta_current)
+    number_of_division = len(target_stator_currents)
 
     print("\033[94mIn function sweep_stator_current: Initializing a new simulation array from scratch.\033[0m")
     power_placeholders = np.full((2, number_of_division), -999.0)
@@ -33,16 +36,24 @@ def sweep_stator_current(motor):
         motor.drive_data.i_rms = stator_current
         motor.just_changed('drive')
 
-        motor.analysis_motor()
-        motor.export_to_rmxprt()
+        # Khởi tạo giá trị mặc định cho vòng lặp hiện tại
+        mbgrn_power = -999.0
+        fem_power = -999.0
 
-        mbgrn_power = motor.record.average_mechanical_power
+        # 1. LUÔN GIẢI FEM TRƯỚC
+        motor.export_to_rmxprt()
+        
+        # 2. GIẢI MBGRN SAU
+        motor.analysis_motor()
+            
+        # 3. ĐỌC DỮ LIỆU KẾT QUẢ ĐÃ GIẢI
         fem_power = motor.record.average_mechanical_power_fem
+        mbgrn_power = motor.record.average_mechanical_power
 
         current_array[0, col_idx] = mbgrn_power
         current_array[1, col_idx] = fem_power
 
-        motor.record.power_at_varying_current = current_array
+        motor.record.power_at_varying_current = current_array.copy()
 
     motor.drive_data.i_rms = motor.drive_data.i_rms_draft
     motor.just_changed('drive')

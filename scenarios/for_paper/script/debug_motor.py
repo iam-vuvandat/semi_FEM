@@ -25,9 +25,10 @@ aft.just_changed('drive')
 
 aft.calculation_data.general_options.solve_cogging = False
 aft.calculation_data.general_options.solve_standard = True
-aft.calculation_data.general_options.n_point = 32
-aft.calculation_data.convergence_settings.material_relax = 0.3
-aft.calculation_data.convergence_settings.max_relative_residual = 0.3 * 1e-2
+aft.calculation_data.general_options.n_point = 20
+aft.calculation_data.convergence_settings.material_relax = 0.4
+aft.calculation_data.convergence_settings.relaxation_decay = 0.5
+aft.calculation_data.convergence_settings.max_relative_residual = 0.03 * 1e-2
 aft.just_changed('calculation_data')
 
 # Motor properties

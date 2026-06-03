@@ -95,7 +95,6 @@ def analysis_motor(motor, callback = None):
                 print("\033[94mIn function analysis_motor:\033[0m")
                 print("\033[94m{\033[0m")
 
-                print(current)
                 print("\033[94m}\033[0m")
                 print("\033[94m\033[0m")
 
