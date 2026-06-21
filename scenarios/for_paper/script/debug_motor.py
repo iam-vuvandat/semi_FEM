@@ -20,15 +20,16 @@ solve_MBGRN = True
 solve_FEM   = False
 plot = True
 
-aft.drive_data.i_rms = 20.0
+aft.drive_data.i_rms = 10
 aft.just_changed('drive')
 
 aft.calculation_data.general_options.solve_cogging = False
 aft.calculation_data.general_options.solve_standard = True
+aft.calculation_data.general_options.solve_under_no_load = False
 aft.calculation_data.general_options.n_point = 20
 aft.calculation_data.convergence_settings.material_relax = 0.4
 aft.calculation_data.convergence_settings.relaxation_decay = 0.5
-aft.calculation_data.convergence_settings.max_relative_residual = 0.03 * 1e-2
+aft.calculation_data.convergence_settings.max_relative_residual = 0.01 * 1e-2
 aft.just_changed('calculation_data')
 
 # Motor properties
@@ -44,6 +45,7 @@ if solve_MBGRN:
     
 if plot: 
     dp = aft.data_processor
+    dp.plot_solver_history(plot_relaxation_decay = False, step_index = [0,1,2])
     dp.plot_airgap_flux_density()
     dp.plot_airgap_flux_density_no_load()
     dp.plot_flux_linkage(horizontal_axis="time", show_fem=True, show_dq= False, show_all_phase= True)

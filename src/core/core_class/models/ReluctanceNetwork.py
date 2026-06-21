@@ -32,7 +32,7 @@ class ReluctanceNetwork:
                  magnetic_potential = None,
                  winding_current = None,
                  callback = None):
-        
+        self.motor = motor
         self.geometry_data = motor.geometry_data
         self.mechanical = motor.mechanical
         self.symmetry_factor = motor.mechanical.symmetry_factor

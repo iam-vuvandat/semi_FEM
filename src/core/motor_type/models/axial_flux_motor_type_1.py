@@ -105,7 +105,9 @@ class AxialFluxMotorType1:
 
         self.calculation_data = SimpleNamespace(
             convergence_settings = SimpleNamespace(
+                enable_potential_tracking = False,
                 max_iteration          = 50,
+                force_use_full_iteration = False, 
                 exact_residual_error   = False,
                 minimum_iteration_required = -1,
                 max_relative_residual  = 0.1 * 1e-2,

@@ -36,9 +36,15 @@ def analysis_motor(motor, callback = None):
     delta_theta  = cogging_angle / (n_point)
     minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))
 
-    if (motor.adaptive_mesh_data.n_theta != minimum_theta_cell) and not solve_only_1_step:
+    if (motor.adaptive_mesh_data.n_theta != minimum_theta_cell):
+        print("\033[94mIn function analysis_motor: \033[0m")
+        print("\033[94m{\033[0m")
+
         motor.adaptive_mesh_data.n_theta = minimum_theta_cell 
         motor.just_changed("mesh")
+        print(f"\033[94mn theta cell has been updated to [{minimum_theta_cell}]\033[0m")
+        print("\033[94m}\033[0m")
+        print("\033[94m\033[0m")
 
     motor.require("drive")
 
@@ -70,6 +76,7 @@ def analysis_motor(motor, callback = None):
         print("\033[93mNotice: Solve only first step\033[0m")
 
     if solve_cogging:
+        print("Analysis cogging torque")
         motor.mechanical.reset_motor_position()
         for i in tqdm(range(n_point), desc="Solving Cogging", disable=not debug):
             motor.drive.apply_winding_excitation(excitation = False)
@@ -84,6 +91,7 @@ def analysis_motor(motor, callback = None):
 
     if solve_standard:
         if solve_on_load:
+            print("Analysis standard step on load")
             for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
                 
                 motor.drive.apply_winding_excitation(excitation = True)
@@ -91,20 +99,18 @@ def analysis_motor(motor, callback = None):
                 motor.reluctance_network.add_elements_lite()
                 flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
                 mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
-                current[:, i] = motor.drive.debug_current()[:]   
+                current[:, i] = motor.drive.debug_current()[:]
+                motor.rotate_rotor(n_step = angle_factor)   
                 print("\033[94mIn function analysis_motor:\033[0m")
                 print("\033[94m{\033[0m")
 
                 print("\033[94m}\033[0m")
                 print("\033[94m\033[0m")
 
-                if i == 0: 
-                    airgap_flux_density = motor.export_airgap_flux_density()
-
-                motor.rotate_rotor(n_step = angle_factor)
             motor.mechanical.reset_motor_position()
 
         if solve_under_no_load:
+            print("Analysis standard step under no load")
             for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
                 motor.drive.apply_winding_excitation(excitation = False)
                 motor.reluctance_network.solver.solve()
@@ -136,14 +142,13 @@ def analysis_motor(motor, callback = None):
         lq_map = np.zeros((current_resolution, current_resolution))
 
         # 1. Giai diem khong tai (id=0, iq=0) de lay Psi_pm
-        motor.drive.apply_manual_winding_excitation(id=0.0, iq=0.0) # Su dung method moi
+        motor.drive.apply_manual_winding_excitation(id=0.0, iq=0.0)
         motor.reluctance_network.solver.solve()
             
         psi_pm = motor.reluctance_network.get_flux_linkage().flux_linkage[0, 0] * periodic_factor
         
         for i, id_val in enumerate(tqdm(id_vector, desc="Exporting Ld Map", disable=not debug)):
             for j, iq_val in enumerate(iq_vector):
-                # Su dung dung method: apply_manual_winding_excitation
                 motor.drive.apply_manual_winding_excitation(id=id_val, iq=iq_val)
                 
                 motor.reluctance_network.solver.solve()
@@ -170,44 +175,43 @@ def analysis_motor(motor, callback = None):
     if not solve_only_1_step:
         shaft_speed = motor.mechanical.shaft_speed * (pi/30)
 
-        flux_linkage[:-1] *= periodic_factor
-        flux_linkage_no_load[:-1] *= periodic_factor
-
-        mst_data[:-1] *= periodic_factor
-        mst_data_no_load[:-1] *= periodic_factor
-
-        mechanical_power = mst_data[[3,-1],:]
-        mechanical_power[0,:] *= shaft_speed
         cogging[:-1] *= periodic_factor
-
-        
-        back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
-        back_emf_no_load = periodic_derivative(data=flux_linkage_no_load[2:], half_open_interval=True).derivative * shaft_speed 
-        
-        motor.record.flux_linkage = flux_linkage.copy()
-        motor.record.flux_linkage_no_load = flux_linkage_no_load.copy()
-        motor.record.back_emf = back_emf.copy()
-        motor.record.back_emf_no_load = back_emf_no_load.copy()
-    
-        motor.record.mechanical_power = mechanical_power.copy()
-        motor.record.torque = mst_data[[3,4],:].copy()
-        motor.record.axial_force = mst_data[[2,4],:].copy()
-        motor.record.axial_force_no_load = mst_data_no_load[[2,4],:].copy()
         motor.record.cogging = cogging.copy()
-        motor.record.currents = current.copy()
-        motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
-        
+
+        if solve_on_load:
+            flux_linkage[:-1] *= periodic_factor
+            mst_data[:-1] *= periodic_factor
+            mechanical_power = mst_data[[3,-1],:]
+            mechanical_power[0,:] *= shaft_speed
+            
+            back_emf = periodic_derivative(data=flux_linkage[2:], half_open_interval=True).derivative * shaft_speed 
+            
+            motor.record.flux_linkage = flux_linkage.copy()
+            motor.record.back_emf = back_emf.copy()
+            motor.record.mechanical_power = mechanical_power.copy()
+            motor.record.torque = mst_data[[3,4],:].copy()
+            motor.record.axial_force = mst_data[[2,4],:].copy()
+            motor.record.currents = current.copy()
+            motor.record.average_mechanical_power =   mechanical_power[0,:].mean()
+
+        if solve_under_no_load:
+            flux_linkage_no_load[:-1] *= periodic_factor
+            mst_data_no_load[:-1] *= periodic_factor
+            
+            back_emf_no_load = periodic_derivative(data=flux_linkage_no_load[2:], half_open_interval=True).derivative * shaft_speed 
+            
+            motor.record.flux_linkage_no_load = flux_linkage_no_load.copy()
+            motor.record.back_emf_no_load = back_emf_no_load.copy()
+            motor.record.axial_force_no_load = mst_data_no_load[[2,4],:].copy()
 
     motor.record.time_solved = total_time
     motor.record.memory_used = memory_used
     motor.record.elements = motor.mesh.total_cells
     motor.record.matrix_size = motor.mesh.total_cells - 1 
 
-    # In thông tin thu được (màu lục)
     print(f"\033[92mSimulation Summary - Time: {motor.record.time_solved}s | "
           f"Memory: {motor.record.memory_used:.2f} MB | "
           f"Elements: {motor.record.elements} | "
           f"Matrix Size: {motor.record.matrix_size}\033[0m")
         
     return None
-      

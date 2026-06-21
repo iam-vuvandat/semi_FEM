@@ -1,3 +1,4 @@
+import os
 import paths
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ from src.core.core_class.utils.for_data_processor.plot_airgap_flux_density impor
 from src.core.core_class.utils.for_data_processor.plot_airgap_flux_density_no_load import plot_airgap_flux_density_no_load
 from src.core.core_class.utils.for_data_processor.create_report import create_report
 from src.core.core_class.utils.for_data_processor.plot_power_at_varying_current import plot_power_at_varying_current
+from src.core.core_class.utils.for_data_processor.plot_solver_history import plot_solver_history
 from mpl_toolkits.mplot3d import Axes3D
 
 class DataProcessor:
@@ -91,3 +93,14 @@ class DataProcessor:
 
     def create_report(self):
         return create_report(data_processor= self)
+
+    def plot_solver_history(self, step_index=0, plot_residual=True, plot_relaxation_factor=True, plot_relaxation_decay=False, plot=False, plot_convergence_threshold=True):
+        return plot_solver_history(
+            data_processor=self, 
+            step_index=step_index, 
+            plot_residual=plot_residual, 
+            plot_relaxation_factor=plot_relaxation_factor, 
+            plot_relaxation_decay=plot_relaxation_decay,
+            plot = plot,
+            plot_convergence_threshold=plot_convergence_threshold
+        )
