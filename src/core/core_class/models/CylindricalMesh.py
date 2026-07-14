@@ -93,6 +93,8 @@ class CylindricalMesh:
             pl.show()
             
         return pl
+    
+    
 
 if __name__ == "__main__":
     # Test hiển thị lưới ở chế độ Đặc - Xám - Nét Đen

@@ -24,19 +24,9 @@ else:
     aft = AxialFluxMotorType1()
     aft.record = aft1.record
 
-    # material data
-    aft.material_data.air = "default"
-    aft.material_data.magnet_type = "NdFe30"
-    aft.material_data.iron_type = "steel_1008"
-    aft.just_changed('material_data')
-
     # winding_data
-    aft.winding_data.phase = 3
     aft.winding_data.turns = 20
     aft.winding_data.throw = 1
-    aft.winding_data.parallel_path = 1
-    aft.winding_data.winding_layer = 2
-    aft.winding_data.mmf_offset = 0.0
     aft.just_changed('winding_data')
 
     # mechanical_data
@@ -57,7 +47,6 @@ else:
     aft.geometry_data.stator.tooth_tip_angle = 30
     aft.geometry_data.stator.stator_length = 25 * 1e-3
     
-
     # geometry_data - rotor
     aft.geometry_data.rotor.pole_number = 20
     aft.geometry_data.rotor.rotor_lam_dia = 150 * 1e-3
@@ -72,9 +61,6 @@ else:
     aft.geometry_data.rotor.magnet_length = 3 * 1e-3
     aft.geometry_data.rotor.rotor_length = 6 * 1e-3
 
-    # geometry_data - geometry_option
-    aft.geometry_data.geometry_option.synchronize_with_rmxprt = True
-    aft.geometry_data.geometry_option.rotor_mechanical_synchronized = 0.0
     aft.just_changed('geometry_data')
 
     # calculation_data - convergence_settings
@@ -90,12 +76,8 @@ else:
     aft.calculation_data.general_options.solve_standard = True
     aft.calculation_data.general_options.solve_under_no_load = True
     aft.calculation_data.general_options.solve_on_load = True
-    aft.calculation_data.general_options.solve_smooth_torque = False
     aft.calculation_data.general_options.solve_only_1_step = False
-    aft.calculation_data.general_options.vectorized_optimization = True
-    aft.calculation_data.general_options.get_geometric_error = False
-    aft.calculation_data.general_options.debug = True
-
+    
     # calculation_data - export_inductance_options
     aft.calculation_data.export_inductance_options.export_inductance = False
     aft.calculation_data.export_inductance_options.current_min = 1.0
@@ -119,8 +101,6 @@ else:
     aft.adaptive_mesh_data.n_z_tooth_body = 6
     aft.adaptive_mesh_data.n_z_stator_yoke = 3
     aft.adaptive_mesh_data.n_z_out_air = 1
-    aft.adaptive_mesh_data.use_symmetry_factor = True
-    aft.adaptive_mesh_data.periodic_boundary = True
     aft.just_changed('mesh')
 
     # drive_data

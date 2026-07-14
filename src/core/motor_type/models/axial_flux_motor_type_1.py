@@ -25,6 +25,8 @@ from src.core.motor_type.utils.for_save_load.prepare_to_save import prepare_to_s
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.export_to_rmxprt import export_to_rmxprt
 from src.core.motor_type.utils.for_sweep_parameter.sweep_stator_current import sweep_stator_current
 
+from src.core.solver.utils.update_theta_by_point import update_theta_by_point
+
 pi = math.pi
 class AxialFluxMotorType1:
     def __init__(self):
@@ -251,6 +253,9 @@ class AxialFluxMotorType1:
     def rotate_rotor(self, n_step):
         rotate_rotor(motor=self, n_step=n_step)
     
+    def update_mesh_by_calculation_data(self):
+        return update_theta_by_point(motor = self)
+
     def analysis_motor(self,callback = None):
         return analysis_motor(motor = self, callback = callback)
 

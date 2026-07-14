@@ -15,6 +15,7 @@ def analysis_motor(motor, callback = None):
 
     begin_time = time.perf_counter()
 
+    # require calculation data
     motor.require("calculation_data")
     calculation_data             = motor.calculation_data
     gen                          = calculation_data.general_options
@@ -27,9 +28,23 @@ def analysis_motor(motor, callback = None):
     solve_only_1_step            = gen.solve_only_1_step
 
     phases = motor.winding_data.phase 
+    epsilon = 1e-12
     symmetry_factor = motor.mechanical.symmetry_factor
+    symmetry_angle = 2*pi / symmetry_factor
+    cogging_angle = motor.mechanical.cogging_period_mech
+    angle_factor = int(symmetry_angle // cogging_angle) 
+    delta_theta  = cogging_angle / (n_point)
+    minimum_theta_cell = int(math.ceil((symmetry_angle / delta_theta) - epsilon))
 
-    motor.update_mesh_by_calculation_data()
+    if (motor.adaptive_mesh_data.n_theta != minimum_theta_cell):
+        print("\033[94mIn function analysis_motor: \033[0m")
+        print("\033[94m{\033[0m")
+
+        motor.adaptive_mesh_data.n_theta = minimum_theta_cell 
+        motor.just_changed("mesh")
+        print(f"\033[94mn theta cell has been updated to [{minimum_theta_cell}]\033[0m")
+        print("\033[94m}\033[0m")
+        print("\033[94m\033[0m")
 
     motor.require("drive")
 
@@ -39,17 +54,22 @@ def analysis_motor(motor, callback = None):
 
     phase_number = motor.winding_data.phase
 
+    # initial output variable
+    # load_condition
     airgap_flux_density = None
     flux_linkage = np.zeros((phase_number + 3, n_point))
     current = np.zeros((3 + phases, n_point))
     mechanical_power = np.zeros((2,n_point))
     mst_data = np.zeros((5, n_point))
 
+    
+    # no_load condition
     airgap_flux_density_no_load = None
     flux_linkage_no_load = np.zeros((phase_number + 3, n_point))
     mst_data_no_load = np.zeros((5, n_point))
 
     cogging = np.zeros((2, n_point))
+    
     
     if solve_only_1_step is True:
         n_point = 1
@@ -70,12 +90,6 @@ def analysis_motor(motor, callback = None):
         motor.mechanical.reset_motor_position()
 
     if solve_standard:
-        p = motor.geometry_data.rotor.pole_number // 2
-        Q = motor.geometry_data.stator.slot_number
-        cogging_angle = motor.mechanical.cogging_period_mech
-        symmetry_angle = 2*pi / symmetry_factor
-        angle_factor = int(symmetry_angle // cogging_angle) 
-
         if solve_on_load:
             print("Analysis standard step on load")
             for i in tqdm(range(n_point), desc="Solving Standard", disable=not debug):
@@ -111,6 +125,7 @@ def analysis_motor(motor, callback = None):
 
     total_time = time.perf_counter() - begin_time
 
+    # Export inductance map:
     motor.mechanical.reset_motor_position()
     export_inductance_options = motor.calculation_data.export_inductance_options
     export_inductance = export_inductance_options.export_inductance
@@ -126,6 +141,7 @@ def analysis_motor(motor, callback = None):
         ld_map = np.zeros((current_resolution, current_resolution))
         lq_map = np.zeros((current_resolution, current_resolution))
 
+        # 1. Giai diem khong tai (id=0, iq=0) de lay Psi_pm
         motor.drive.apply_manual_winding_excitation(id=0.0, iq=0.0)
         motor.reluctance_network.solver.solve()
             
