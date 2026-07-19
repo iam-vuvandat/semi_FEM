@@ -86,6 +86,10 @@ def analysis_motor(motor, callback = None):
                 flux_linkage[:, i] = motor.reluctance_network.get_flux_linkage().flux_linkage[:, 0]
                 mst_data[:, i] = motor.maxwell_stress_tensor().mst_result[:]
                 current[:, i] = motor.drive.debug_current()[:]
+                
+                if i == 0:
+                    airgap_flux_density = motor.export_airgap_flux_density()
+                    
                 motor.rotate_rotor(n_step = angle_factor)   
                 print("\033[94mIn function analysis_motor:\033[0m")
                 print("\033[94m{\033[0m")
