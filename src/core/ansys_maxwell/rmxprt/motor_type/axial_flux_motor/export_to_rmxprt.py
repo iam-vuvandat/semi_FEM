@@ -29,6 +29,7 @@ from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.solve_st
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.solve_cogging_torque import solve_cogging_torque
 from src.core.ansys_maxwell.rmxprt.motor_type.axial_flux_motor.edit_m3d.export_solution_data import export_solution_data
 
+
 def export_to_rmxprt(motor = None):
     begin_time = time.perf_counter()
     # require property

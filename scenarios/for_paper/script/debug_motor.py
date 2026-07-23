@@ -16,8 +16,8 @@ file_name = "motor_for_paper"
 aft = io.load(path=file_name)
 
 # Option
-solve_MBGRN = True
-solve_FEM   = False
+solve_MBGRN = False
+solve_FEM   = True
 plot = True
 
 aft.drive_data.i_rms = 10
@@ -26,12 +26,14 @@ aft.just_changed('drive')
 aft.calculation_data.general_options.solve_cogging = False
 aft.calculation_data.general_options.solve_standard = True
 aft.calculation_data.general_options.solve_under_no_load = False
+aft.maxwell_export_option.solver_option.solve_only_1_step =True
 aft.calculation_data.general_options.n_point = 20
 aft.calculation_data.convergence_settings.material_relax = 0.4
 aft.calculation_data.convergence_settings.relaxation_decay = 0.5
 aft.calculation_data.convergence_settings.max_relative_residual = 0.01 * 1e-2
 aft.just_changed('calculation_data')
 
+aft.maxwell_export_option.custom_option.mesh_setting.maximum_element_length = -1
 # Motor properties
 if plot: 
     aft.maxwell_export_option.solver_option.close_after_completed = False
@@ -43,6 +45,8 @@ if solve_FEM:
 if solve_MBGRN: 
     aft.analysis_motor()
     
+print(aft.record.mesh_data_fem)
+
 if plot: 
     dp = aft.data_processor
     dp.plot_solver_history(plot_relaxation_decay = False, step_index = [0,1,2])
