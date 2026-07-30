@@ -1,25 +1,11 @@
-import os
 import paths
 import numpy as np
 import gc
 
 from src.core.storage.core.MotorIO import MotorIO
-
 from plot_mesh_elements_vs_config import plot_mesh_elements_vs_config
-from plot_fem_torque import plot_fem_torque
-from plot_fem_flux_linkage import plot_fem_flux_linkage
-from plot_fem_airgap_flux_density_bz import plot_fem_airgap_flux_density_bz
-from plot_fem_self_convergence import plot_fem_self_convergence
-from plot_mbgrn_torque import plot_mbgrn_torque
-from plot_mbgrn_flux_linkage import plot_mbgrn_flux_linkage
-from plot_mbgrn_airgap_flux_density import plot_mbgrn_airgap_flux_density
-from plot_mbgrn_self_convergence import plot_mbgrn_self_convergence
 
 io = MotorIO()
-
-current_script_dir = os.path.dirname(os.path.abspath(__file__))
-figures_dir = os.path.join(current_script_dir, "figures")
-os.makedirs(figures_dir, exist_ok=True)
 
 re_create_motor = True
 re_solve_3d_mbgrn = True
@@ -29,7 +15,7 @@ re_plot = True
 number_of_configuation = 7
 original_file_name = "motor_for_paper"
 
-file_name_array = [f"variable_mesh{i}" for i in range(number_of_configuation)]
+file_name_array = [f"test_mesh{i}" for i in range(number_of_configuation)]
 fem_element_lengths_mm = [5.50, 4.37, 3.81, 3.46, 3.22, 3.03, 2.88]
 
 if isinstance(re_solve_index, int):
@@ -45,7 +31,6 @@ if re_create_motor:
             continue
 
         aft = io.load(path=original_file_name)
-
         aft.calculation_data.convergence_settings.max_iteration = 100
         aft.calculation_data.convergence_settings.max_relative_residual = 0.3 * 1e-2
         aft.calculation_data.convergence_settings.material_relax = 1.0
@@ -55,8 +40,10 @@ if re_create_motor:
         aft.calculation_data.general_options.solve_standard = True
         aft.calculation_data.general_options.solve_under_no_load = False
         aft.calculation_data.general_options.solve_on_load = True
-        aft.calculation_data.general_options.solve_only_1_step = False
-        aft.maxwell_export_option.solver_option.solve_only_1_step = False
+        
+        aft.calculation_data.general_options.solve_only_1_step = True
+        aft.maxwell_export_option.solver_option.solve_only_1_step = True
+        
         aft.calculation_data.general_options.n_point = 30
         aft.just_changed('calculation_data')
 
@@ -96,7 +83,7 @@ if re_solve_3d_mbgrn:
     for i, file_name in enumerate(file_name_array):
         if target_indices and i not in target_indices:
             continue
-
+            
         aft = io.load(path=file_name)
         aft.analysis_motor()
         io.save(motor=aft, path=file_name)
@@ -107,7 +94,7 @@ if re_solve_fem:
     for i, file_name in enumerate(file_name_array):
         if target_indices and i not in target_indices:
             continue
-
+            
         aft = io.load(path=file_name)
         
         target_len = fem_element_lengths_mm[i]
@@ -127,14 +114,4 @@ if re_solve_fem:
         gc.collect()
 
 if re_plot:
-    print("\n\033[92m---> Running Post-Processing Plot Functions...\033[0m")
-    plot_mesh_elements_vs_config(file_name_array, io, figures_dir=figures_dir)
-    plot_fem_torque(file_name_array, io, figures_dir=figures_dir)
-    plot_fem_flux_linkage(file_name_array, io, figures_dir=figures_dir)
-    plot_fem_airgap_flux_density_bz(file_name_array, io, figures_dir=figures_dir)
-    plot_fem_self_convergence(file_name_array, io, figures_dir=figures_dir)
-    plot_mbgrn_torque(file_name_array, io, figures_dir=figures_dir)
-    plot_mbgrn_flux_linkage(file_name_array, io, figures_dir=figures_dir)
-    plot_mbgrn_airgap_flux_density(file_name_array, io, figures_dir=figures_dir)
-    plot_mbgrn_self_convergence(file_name_array, io, figures_dir=figures_dir)
-    print(f"\033[92m---> All plots generated successfully and saved to: {figures_dir}\033[0m\n")
+    plot_mesh_elements_vs_config(file_name_array, io)
