@@ -3,6 +3,8 @@ import paths
 import numpy as np
 import gc
 
+from src.core.ansys_maxwell.rmxprt.setup.init_window import init_window
+init_window()
 from src.core.storage.core.MotorIO import MotorIO
 
 from plot_mesh_elements_vs_config import plot_mesh_elements_vs_config
@@ -21,16 +23,17 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 figures_dir = os.path.join(current_script_dir, "figures")
 os.makedirs(figures_dir, exist_ok=True)
 
-re_create_motor = True
-re_solve_3d_mbgrn = True
-re_solve_fem = True
-re_solve_index = []
+re_create_motor = False
+re_solve_3d_mbgrn = False
+re_solve_fem = False
+re_solve_index = [6]
 re_plot = True
 number_of_configuation = 7
 original_file_name = "motor_for_paper"
 
 file_name_array = [f"variable_mesh{i}" for i in range(number_of_configuation)]
-fem_element_lengths_mm = [5.50, 4.37, 3.81, 3.46, 3.22, 3.03, 2.88]
+# Giảm mạnh kích thước phần tử ở các mesh cuối (kéo từ 2.88mm xuống 2.00mm)
+fem_element_lengths_mm = [5.50, 4.20, 3.40, 2.80, 2.70, 2.6, 2.5]
 
 if isinstance(re_solve_index, int):
     target_indices = [re_solve_index]
