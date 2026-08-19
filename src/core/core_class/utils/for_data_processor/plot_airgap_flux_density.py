@@ -8,10 +8,10 @@ def plot_airgap_flux_density(data_processor,
                              horizontal_axis="mechanical_position", 
                              show_fem=True, 
                              show_harmonic=True,
-                             plot=False):
+                             plot=False,
+                             figsize=None):
     
     root_dir = paths.configure_path()
-    # destination figure folder : root_dir/data/repo/figures; if this folder did not exist, create it
     figure_dir = os.path.join(root_dir, "data", "repo", "figures")
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)
@@ -21,8 +21,14 @@ def plot_airgap_flux_density(data_processor,
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
 
-    fig_width = 14
-    fig_height = fig_width / 1.618
+    if figsize is None:
+        fig_width = 14
+        fig_height = fig_width / 1.618
+        wave_figsize = (fig_width, fig_height)
+        harm_figsize = (fig_width, fig_height * 2.2)
+    else:
+        wave_figsize = figsize
+        harm_figsize = (figsize[0], figsize[1] * 2.2)
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
@@ -33,14 +39,13 @@ def plot_airgap_flux_density(data_processor,
     has_mrn = hasattr(record, "airgap_flux_density") and record.airgap_flux_density is not None
     has_fem = hasattr(record, "airgap_flux_density_fem") and record.airgap_flux_density_fem is not None and show_fem
 
-    fig_wave = plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=wave_figsize)
     ax = plt.gca()
     x_label = ""
 
-    # Đồng bộ bộ màu Muted Classic từ plot_flux_linkage
-    color_r = '#B22222'  # Firebrick Red
-    color_t = '#1F4E79'  # Navy Blue
-    color_z = '#595959'  # Dim Gray
+    color_r = '#B22222'  
+    color_t = '#1F4E79'  
+    color_z = '#595959'  
 
     if has_fem:
         data_fem = record.airgap_flux_density_fem
@@ -54,9 +59,22 @@ def plot_airgap_flux_density(data_processor,
         data_mrn = record.airgap_flux_density
         x_mrn, x_label = get_x_axis(data_mrn[4, :])
         
-        ax.plot(x_mrn, data_mrn[0, :], color=color_r, linestyle='None', marker='o', markersize=4, markevery=1, label=r'$B_r$ (MBGRN)')
-        ax.plot(x_mrn, data_mrn[1, :], color=color_t, linestyle='None', marker='s', markersize=4, markevery=1, label=r'$B_t$ (MBGRN)')
-        ax.plot(x_mrn, data_mrn[2, :], color=color_z, linestyle='None', marker='^', markersize=4, markevery=1, label=r'$B_z$ (MBGRN)')
+        mrn_linestyle = 'None' if has_fem else '-'
+        mrn_linewidth = 0 if has_fem else 1.8
+        mrn_markersize = 4 if has_fem else 0
+        
+        ax.plot(x_mrn, data_mrn[0, :], color=color_r, 
+                linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                marker='o' if has_fem else None, markersize=mrn_markersize, markevery=1, 
+                label=r'$B_r$ (MBGRN)')
+        ax.plot(x_mrn, data_mrn[1, :], color=color_t, 
+                linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                marker='s' if has_fem else None, markersize=mrn_markersize, markevery=1, 
+                label=r'$B_t$ (MBGRN)')
+        ax.plot(x_mrn, data_mrn[2, :], color=color_z, 
+                linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                marker='^' if has_fem else None, markersize=mrn_markersize, markevery=1, 
+                label=r'$B_z$ (MBGRN)')
 
     ax.set_xlabel(x_label, fontsize=s.label_size)
     ax.set_ylabel('Airgap Flux Density (T)', fontsize=s.label_size)
@@ -67,7 +85,6 @@ def plot_airgap_flux_density(data_processor,
     
     plt.tight_layout()
     
-    # Overwrites the old figure file cleanly without any structural name modifications
     wave_path = os.path.join(figure_dir, "airgap_flux_density_waveform.png")
     fig_wave.savefig(wave_path, bbox_inches='tight', dpi=300)
 
@@ -83,9 +100,8 @@ def plot_airgap_flux_density(data_processor,
             {"idx": 2, "label_mrn": r'$B_z$ (MBGRN)', "label_fem": r'$B_z$ (FEM)', "title": "Axial Component ($B_z$)", "unit": "T", "scale": 1.0}
         ]
 
-        fig_harm, axs = plt.subplots(3, 1, figsize=(fig_width, fig_height * 2.2), sharex=True)
+        fig_harm, axs = plt.subplots(3, 1, figsize=harm_figsize, sharex=True)
         
-        # Đóng gói cấu trúc ma trận phẳng phẳng 4 hàng tĩnh vào trong record
         if has_mrn:
             record.airgap_flux_density_harmonic = np.zeros((4, max_h + 1))
         if has_fem:
@@ -101,7 +117,6 @@ def plot_airgap_flux_density(data_processor,
                 amps_mrn, _ = decompose_harmonics(signal_mrn, n_harmonics=max_h)
                 h_orders = np.arange(len(amps_mrn))
                 
-                # Nạp biên độ hài (T) vào các hàng tương ứng 0, 1, 2 và trục bậc hài vào hàng 3
                 record.airgap_flux_density_harmonic[idx, :] = amps_mrn
                 record.airgap_flux_density_harmonic[3, :] = h_orders
                 
@@ -116,7 +131,6 @@ def plot_airgap_flux_density(data_processor,
                 amps_fem, _ = decompose_harmonics(signal_fem, n_harmonics=max_h)
                 h_orders = np.arange(len(amps_fem))
                 
-                # Nạp biên độ hài (T) vào các hàng tương ứng 0, 1, 2 và trục bậc hài vào hàng 3
                 record.airgap_flux_density_harmonic_fem[idx, :] = amps_fem
                 record.airgap_flux_density_harmonic_fem[3, :] = h_orders
                 
@@ -139,7 +153,6 @@ def plot_airgap_flux_density(data_processor,
         plt.tight_layout()
         plt.subplots_adjust(hspace=0.3)
         
-        # Overwrites the old harmonics spectrum figure file cleanly without modifications
         harm_path = os.path.join(figure_dir, "airgap_flux_density_harmonics.png")
         fig_harm.savefig(harm_path, bbox_inches='tight', dpi=300)
 

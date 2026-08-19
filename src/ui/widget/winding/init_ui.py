@@ -1,5 +1,4 @@
-import sys
-import matplotlib.pyplot as plt
+import paths
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
                              QFrame, QLabel, QScrollArea, QGroupBox, QComboBox, 
@@ -10,18 +9,18 @@ from PyQt5.QtGui import QColor
 from src.ui.widget.widget.utils.bind_input import bind_input
 
 def init_ui(winding_tab=None):
-    if winding_tab is None: return None
+    if winding_tab is None:
+        return None
 
     main_win = winding_tab.main_window
     motor = main_win.motor
     winding_data = motor.winding_data 
     
-    # --- 1. ĐỊNH NGHĨA CÁC HÀM LOGIC TRƯỚC (TRÁNH LỖI REFERENCE) ---
-
     def clear_layout(layout):
         while layout.count():
             child = layout.takeAt(0)
-            if child.widget(): child.widget().deleteLater()
+            if child.widget():
+                child.widget().deleteLater()
 
     def create_matrix_widget(matrix):
         table = QTableWidget()
@@ -37,8 +36,10 @@ def init_ui(winding_tab=None):
                     val = matrix[i, j]
                     item = QTableWidgetItem(f"{val:g}")
                     item.setTextAlignment(Qt.AlignCenter)
-                    if val > 0: item.setBackground(QColor("#FFF59D"))
-                    elif val < 0: item.setBackground(QColor("#81D4FA"))
+                    if val > 0:
+                        item.setBackground(QColor("#FFF59D"))
+                    elif val < 0:
+                        item.setBackground(QColor("#81D4FA"))
                     table.setItem(i, j, item)
             table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         return table
@@ -53,7 +54,8 @@ def init_ui(winding_tab=None):
         return canvas
 
     def update_right_panel_content():
-        if not hasattr(winding_tab, 'view_selector'): return
+        if not hasattr(winding_tab, 'view_selector'):
+            return
         mode = winding_tab.view_selector.currentText()
         clear_layout(winding_tab.right_content_layout)
         
@@ -78,10 +80,9 @@ def init_ui(winding_tab=None):
             winding_tab.right_content_layout.addWidget(widget)
 
     def handle_refresh():
-        """Smart Refresh: Chỉ nạp lại nếu dữ liệu lỗi thời."""
-        if motor is None: return
-        # Nếu dữ liệu đã tươi, thoát sớm để tránh lag UI
-        if motor.ready_state.winding_data:
+        if motor is None:
+            return
+        if motor.motor_state_manager.ready_state.winding_data:
             update_right_panel_content()
             return
             
@@ -89,22 +90,20 @@ def init_ui(winding_tab=None):
         update_right_panel_content()
 
     def global_update():
-        if motor is None: return
+        if motor is None:
+            return
         motor.just_changed("winding_data")
         handle_refresh()
         QApplication.processEvents()
 
-    # --- 2. GÁN THAM CHIẾU VÀO TAB ---
     winding_tab.refresh = handle_refresh
     winding_tab.refresh_content = update_right_panel_content
 
-    # --- 3. XÂY DỰNG GIAO DIỆN ---
     main_layout = QHBoxLayout(winding_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
     
     splitter = QSplitter(Qt.Horizontal)
 
-    # PANEL TRÁI: Nhập liệu (2 phần)
     left_panel = QWidget()
     left_layout = QVBoxLayout(left_panel)
     left_layout.setContentsMargins(0, 0, 5, 0)
@@ -112,7 +111,6 @@ def init_ui(winding_tab=None):
     scroll = QScrollArea()
     scroll.setWidgetResizable(True)
     scroll.setFrameShape(QFrame.NoFrame)
-    scroll.setStyleSheet("QScrollArea { background-color: transparent; }")
     
     content_widget = QWidget()
     content_vbox = QVBoxLayout(content_widget) 
@@ -120,18 +118,10 @@ def init_ui(winding_tab=None):
 
     def create_group(title, attrs):
         grp = QGroupBox(title)
-        grp.setStyleSheet("""
-            QGroupBox { 
-                font-weight: bold; border: 1px solid #ccd1d1; 
-                border-radius: 6px; margin-top: 15px; background-color: #fcfcfc;
-            }
-            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #333; }
-        """)
         layout = QFormLayout(grp)
         layout.setVerticalSpacing(10)
         for attr, lbl in attrs:
             if hasattr(winding_data, attr):
-                # Sử dụng bind_input với hệ số 1.0 cho các thông số dây quấn
                 input_w = bind_input(winding_data, attr, 1.0, global_update)
                 input_w.setFixedWidth(80)
                 layout.addRow(f"{lbl}:", input_w)
@@ -151,13 +141,12 @@ def init_ui(winding_tab=None):
     scroll.setWidget(content_widget)
     left_layout.addWidget(scroll)
 
-    # PANEL PHẢI: Hiển thị (3 phần)
     right_panel = QFrame()
     right_layout = QVBoxLayout(right_panel)
     right_layout.setContentsMargins(5, 0, 0, 0)
 
     header_layout = QHBoxLayout()
-    header_lbl = QLabel("<b>Display Mode:</b>")
+    header_lbl = QLabel("Display Mode:")
     
     winding_tab.view_selector = QComboBox()
     winding_tab.view_selector.addItems([
@@ -180,8 +169,7 @@ def init_ui(winding_tab=None):
     splitter.addWidget(left_panel)
     splitter.addWidget(right_panel)
     
-    # --- THIẾT LẬP TỈ LỆ 2:3 ---
-    splitter.setSizes([400, 600]) # 400/(400+600) = 2/5 = 40%
+    splitter.setSizes([400, 600])
     splitter.setStretchFactor(0, 2)
     splitter.setStretchFactor(1, 3) 
     

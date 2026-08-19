@@ -15,6 +15,7 @@ from src.core.core_class.utils.for_reluctance_network.access_elements import acc
 from src.core.core_class.utils.for_reluctance_network.display_reluctance_network import display_reluctance_network
 from src.core.core_class.utils.for_reluctance_network.get_geometric_error import get_geometric_error
 from src.core.core_class.utils.for_reluctance_network.display_elements import display_elements
+from src.core.core_class.utils.for_reluctance_network.show_material import show_material
 from src.core.core_class.utils.for_reluctance_network.create_vectorized_elements import init_vectorized_elements
 from src.core.core_class.utils.for_reluctance_network.update_elements_from_vectorized import update_elements_from_vectorized
 from src.core.core_class.utils.for_reluctance_network.get_airgap_flux_density import get_airgap_flux_density
@@ -123,6 +124,9 @@ class ReluctanceNetwork:
     
     def show_elements(self):
         return display_elements(reluctance_network=self)
+
+    def show_material(self, plotter=None):
+        return show_material(reluctance_network=self, plotter=plotter)
     
     def refresh_elements(self):
         update_elements_from_vectorized(reluctance_network= self)

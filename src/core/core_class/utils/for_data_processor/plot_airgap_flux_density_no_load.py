@@ -8,7 +8,8 @@ def plot_airgap_flux_density_no_load(data_processor,
                                      horizontal_axis="mechanical_position", 
                                      show_fem=True, 
                                      show_harmonic=True,
-                                     plot=False):
+                                     plot=False,
+                                     figsize=None):
     
     root_dir = paths.configure_path()
     figure_dir = os.path.join(root_dir, "data", "repo", "figures")
@@ -20,8 +21,14 @@ def plot_airgap_flux_density_no_load(data_processor,
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
 
-    fig_width = 14
-    fig_height = fig_width / 1.618
+    if figsize is None:
+        fig_width = 14
+        fig_height = fig_width / 1.618
+        wave_figsize = (fig_width, fig_height)
+        harm_figsize = (fig_width, fig_height * 2.2)
+    else:
+        wave_figsize = figsize
+        harm_figsize = (figsize[0], figsize[1] * 2.2)
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
@@ -32,7 +39,7 @@ def plot_airgap_flux_density_no_load(data_processor,
     has_mrn = hasattr(record, "airgap_flux_density_no_load") and record.airgap_flux_density_no_load is not None
     has_fem = hasattr(record, "airgap_flux_density_no_load_fem") and record.airgap_flux_density_no_load_fem is not None and show_fem
 
-    fig_wave = plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=wave_figsize)
     ax = plt.gca()
     x_label = ""
 
@@ -52,9 +59,22 @@ def plot_airgap_flux_density_no_load(data_processor,
         data_mrn = record.airgap_flux_density_no_load
         x_mrn, x_label = get_x_axis(data_mrn[4, :])
         
-        ax.plot(x_mrn, data_mrn[0, :], color=color_r, linestyle='None', marker='o', markersize=4, markevery=1, label=r'$B_r$ (MBGRN)')
-        ax.plot(x_mrn, data_mrn[1, :], color=color_t, linestyle='None', marker='s', markersize=4, markevery=1, label=r'$B_t$ (MBGRN)')
-        ax.plot(x_mrn, data_mrn[2, :], color=color_z, linestyle='None', marker='^', markersize=4, markevery=1, label=r'$B_z$ (MBGRN)')
+        mrn_linestyle = 'None' if has_fem else '-'
+        mrn_linewidth = 0 if has_fem else 1.8
+        mrn_markersize = 4 if has_fem else 0
+        
+        ax.plot(x_mrn, data_mrn[0, :], color=color_r, 
+                linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                marker='o' if has_fem else None, markersize=mrn_markersize, markevery=1, 
+                label=r'$B_r$ (MBGRN)')
+        ax.plot(x_mrn, data_mrn[1, :], color=color_t, 
+                linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                marker='s' if has_fem else None, markersize=mrn_markersize, markevery=1, 
+                label=r'$B_t$ (MBGRN)')
+        ax.plot(x_mrn, data_mrn[2, :], color=color_z, 
+                linestyle=mrn_linestyle, linewidth=mrn_linewidth,
+                marker='^' if has_fem else None, markersize=mrn_markersize, markevery=1, 
+                label=r'$B_z$ (MBGRN)')
 
     ax.set_xlabel(x_label, fontsize=s.label_size)
     ax.set_ylabel('Airgap Flux Density (T)', fontsize=s.label_size)
@@ -80,7 +100,7 @@ def plot_airgap_flux_density_no_load(data_processor,
             {"idx": 2, "label_mrn": r'$B_z$ (MBGRN)', "label_fem": r'$B_z$ (FEM)', "title": "Axial Component ($B_z$)", "unit": "T", "scale": 1.0}
         ]
 
-        fig_harm, axs = plt.subplots(3, 1, figsize=(fig_width, fig_height * 2.2), sharex=True)
+        fig_harm, axs = plt.subplots(3, 1, figsize=harm_figsize, sharex=True)
         
         if has_mrn:
             record.airgap_flux_density_no_load_harmonic = np.zeros((4, max_h + 1))

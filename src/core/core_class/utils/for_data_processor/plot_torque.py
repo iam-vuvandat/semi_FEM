@@ -8,7 +8,8 @@ def plot_torque(data_processor,
                 horizontal_axis = "mechanical_position", 
                 show_fem = True, 
                 plot = False, 
-                revert = True):
+                revert = True,
+                figsize = None):
     
     root_dir = paths.configure_path()
     figure_dir = os.path.join(root_dir, "data", "repo", "figures")
@@ -20,8 +21,12 @@ def plot_torque(data_processor,
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
 
-    fig_width = 14
-    fig_height = fig_width / 1.618
+    if figsize is None:
+        fig_width = 14
+        fig_height = fig_width / 1.618
+        current_figsize = (fig_width, fig_height)
+    else:
+        current_figsize = figsize
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
@@ -39,7 +44,7 @@ def plot_torque(data_processor,
     fem_mult = -1 if revert else 1
     max_h = 15
 
-    fig_wave = plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=current_figsize)
     ax = plt.gca()
     x_label = ""
 

@@ -38,7 +38,7 @@ original_file_name_base = "motor_for_paper"
 original_file_path = os.path.join(data_dir, original_file_name_base)
 file_path_array = [os.path.join(data_dir, f"variable_mesh{i}") for i in range(number_of_configuation)]
 fem_element_lengths_mm = [5.50, 4.30, 3.60, 3.10, 2.95, 2.8, 2.5, 2.4, 2.3]
-selected_mesh_indices = [0, 3, 5, 8]
+selected_mesh_indices = [0,1,2,3,4,5,6,7,8]
 
 if isinstance(re_solve_index, int):
     target_indices = [re_solve_index]

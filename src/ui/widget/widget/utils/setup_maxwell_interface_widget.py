@@ -18,8 +18,8 @@ def setup_maxwell_interface_widget(widget):
     # 3. Khoi tao lai widget MaxwellInterface moi
     widget.maxwell_interface = MaxwellInterface(parent_widget=widget)
     
-    # 4. Chen vao vi tri thu 6 (index 5)
+    # 4. Chen vao vi tri thu 7 (index 6)
     if widget.maxwell_interface is not None:
-        widget.insertTab(5, widget.maxwell_interface, "Maxwell Export")
+        widget.insertTab(6, widget.maxwell_interface, "Maxwell Export")
     
     return widget.maxwell_interface

@@ -24,7 +24,9 @@ def plot_fem_cogging_torque(file_name_array, io, figures_dir=None, mesh_indices=
         aft = io.load(path=file_name)
         record = aft.record
         
-        data_fem = getattr(record, 'cogging_fem', None) or getattr(record, 'cogging_torque_fem', None) or getattr(record, 'torque_fem_cogging', None)
+        data_fem = next((val for attr in ['cogging_fem', 'cogging_torque_fem', 'torque_fem_cogging'] 
+                         if (val := getattr(record, attr, None)) is not None), None)
+        
         if data_fem is not None:
             val_fem = data_fem[0, :]
             x_fem = data_fem[-1, :]

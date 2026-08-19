@@ -10,7 +10,8 @@ def plot_flux_linkage_no_load(data_processor,
                               show_dq = False, 
                               show_all_phase = False,
                               show_harmonic = True, 
-                              plot = False):
+                              plot = False,
+                              figsize = None):
     
     root_dir = paths.configure_path()
     figure_dir = os.path.join(root_dir, "data", "repo", "figures")
@@ -23,8 +24,12 @@ def plot_flux_linkage_no_load(data_processor,
     shaft_speed = (motor.mechanical_data.shaft_speed * np.pi * 2) / 60
     s = data_processor.plot_style
 
-    fig_width = 14
-    fig_height = fig_width / 1.618
+    if figsize is None:
+        fig_width = 14
+        fig_height = fig_width / 1.618
+        current_figsize = (fig_width, fig_height)
+    else:
+        current_figsize = figsize
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
@@ -53,7 +58,7 @@ def plot_flux_linkage_no_load(data_processor,
     
     phase_colors_muted = [color_r, color_t, color_z]
 
-    fig_wave = plt.figure(figsize=(fig_width, fig_height))
+    fig_wave = plt.figure(figsize=current_figsize)
     ax_wave = plt.gca()
     x_label = ""
 
@@ -114,7 +119,7 @@ def plot_flux_linkage_no_load(data_processor,
         color_harm_mbgrn = '#1F4E79' 
         color_harm_fem = '#B22222'   
 
-        fig_harm = plt.figure(figsize=(fig_width, fig_height))
+        fig_harm = plt.figure(figsize=current_figsize)
         ax_harm = plt.gca()
         
         if has_mrn:

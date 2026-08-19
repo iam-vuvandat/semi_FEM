@@ -72,13 +72,13 @@ class AxialFluxMotorType1:
 
         self.geometry_data = SimpleNamespace(
             stator = SimpleNamespace(
-                slot_number          = 15,
+                slot_number          = 30,
                 stator_lam_dia       = 150 * 1e-3,
                 stator_bore_dia      = 70 * 1e-3,
                 slot_opening         = 2 * 1e-3,
                 wdg_extension_inner  = 0,
                 wdg_extension_outer  = 0,
-                slot_width           = 7 * 1e-3,
+                slot_width           = 4 * 1e-3,
                 slot_depth           = 15 * 1e-3,
                 slot_corner_radius   = 0,
                 tooth_tip_depth      = 2 * 1e-3,
@@ -86,7 +86,7 @@ class AxialFluxMotorType1:
                 stator_length        = 25 * 1e-3
             ),
             rotor = SimpleNamespace(
-                pole_number          = 10,
+                pole_number          = 20,
                 rotor_lam_dia        = 150 * 1e-3,
                 magnet_arc           = 160,
                 magnet_embed_depth   = 5 * 1e-3,
@@ -112,18 +112,18 @@ class AxialFluxMotorType1:
                 force_use_full_iteration = False, 
                 exact_residual_error   = False,
                 minimum_iteration_required = -1,
-                max_relative_residual  = 0.1 * 1e-2,
-                material_relax         = 0.35,
+                max_relative_residual  = 1 * 1e-2,
+                material_relax         = 1.0,
                 damping_factor         = 1.0,
                 relaxation_history     = None,
                 relaxation_decay = 0.5
             ),
             general_options = SimpleNamespace(
-                n_point                = 40,
+                n_point                = 20,
                 solve_standard         = True,
-                solve_under_no_load    = False,
+                solve_under_no_load    = True,
                 solve_on_load          = True,
-                solve_cogging          = False,
+                solve_cogging          = True,
                 solve_smooth_torque    = False,
                 solve_only_1_step      = False,
                 vectorized_optimization = True,
@@ -148,18 +148,18 @@ class AxialFluxMotorType1:
 
         self.adaptive_mesh_data = SimpleNamespace(
             n_r_in          = 1,
-            n_r_1           = 4,
-            n_r_2           = 7,
-            n_r_3           = 4,
+            n_r_1           = 3,
+            n_r_2           = 5,
+            n_r_3           = 3,
             n_r_out         = 1,
             n_theta         = 120,
             n_z_in_air      = 1,
             n_z_rotor_yoke  = 3,
             n_z_magnet      = 3,
-            n_z_airgap      = 5,
+            n_z_airgap      = 3,
             n_z_tooth_tip_1 = 2,
-            n_z_tooth_tip_2 = 6,
-            n_z_tooth_body  = 6,
+            n_z_tooth_tip_2 = 3,
+            n_z_tooth_body  = 4,
             n_z_stator_yoke = 3,
             n_z_out_air     = 1,
             use_symmetry_factor = True,
@@ -167,7 +167,7 @@ class AxialFluxMotorType1:
         )
 
         self.drive_data = SimpleNamespace(
-            i_rms = 5.0,
+            i_rms = 10.0,
             i_rms_draft = 0.0,
             phase_advanced = 0.0
         )

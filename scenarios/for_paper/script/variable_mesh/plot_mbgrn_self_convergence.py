@@ -21,7 +21,8 @@ def plot_mbgrn_self_convergence(file_name_array, io, figures_dir=None):
     record_ref = aft_ref.record
     
     torque_true = record_ref.torque if hasattr(record_ref, 'torque') and record_ref.torque is not None else None
-    cogging_true = getattr(record_ref, 'cogging', None) or getattr(record_ref, 'cogging_torque', None)
+    cogging_true = next((val for attr in ['cogging', 'cogging_torque', 'torque_cogging'] 
+                         if (val := getattr(record_ref, attr, None)) is not None), None)
     flux_true = record_ref.flux_linkage if hasattr(record_ref, 'flux_linkage') and record_ref.flux_linkage is not None else None
     bgap_true = record_ref.airgap_flux_density if hasattr(record_ref, 'airgap_flux_density') and record_ref.airgap_flux_density is not None else None
     
@@ -47,7 +48,8 @@ def plot_mbgrn_self_convergence(file_name_array, io, figures_dir=None):
         else:
             torque_nrmse_list.append(0.0)
 
-        cogging_data = getattr(record, 'cogging', None) or getattr(record, 'cogging_torque', None)
+        cogging_data = next((val for attr in ['cogging', 'cogging_torque', 'torque_cogging'] 
+                            if (val := getattr(record, attr, None)) is not None), None)
         if cogging_true is not None and cogging_data is not None:
             nrmse_val = get_waveform_nrmse(cogging_true, cogging_data, num_points=100, row_index=0)
             cogging_nrmse_list.append(nrmse_val)

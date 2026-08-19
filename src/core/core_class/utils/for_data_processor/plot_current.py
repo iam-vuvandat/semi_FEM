@@ -3,7 +3,11 @@ import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 
-def plot_current(data_processor, horizontal_axis = "mechanical_position", show_fem = True, plot = False):
+def plot_current(data_processor, 
+                 horizontal_axis = "mechanical_position", 
+                 show_fem = True, 
+                 plot = False,
+                 figsize = None):
     root_dir = paths.configure_path()
     figure_dir = os.path.join(root_dir, "data", "repo", "figures")
     if not os.path.exists(figure_dir):
@@ -13,6 +17,11 @@ def plot_current(data_processor, horizontal_axis = "mechanical_position", show_f
     n_phase = data_processor.motor.winding_data.phase
     shaft_speed = (data_processor.motor.mechanical_data.shaft_speed * np.pi * 2) / 60 
     s = data_processor.plot_style
+
+    if figsize is None:
+        current_figsize = (16, 10)
+    else:
+        current_figsize = figsize
 
     def get_x_axis(theta_data):
         if horizontal_axis == "time":
@@ -25,7 +34,7 @@ def plot_current(data_processor, horizontal_axis = "mechanical_position", show_f
         data = record.currents
         x_data, x_label = get_x_axis(data[-1, :])
         
-        fig, ax = plt.subplots(figsize=(16, 10))
+        fig, ax = plt.subplots(figsize=current_figsize)
         
         ax.plot(x_data, data[0, :], color='black', linestyle=s.linestyles[1], 
                 label=r'$I_d$', linewidth=1.5)

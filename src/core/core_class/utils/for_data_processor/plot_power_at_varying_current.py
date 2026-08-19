@@ -3,7 +3,7 @@ import paths
 import numpy as np 
 import matplotlib.pyplot as plt
 
-def plot_power_at_varying_current(data_processor, plot = False):
+def plot_power_at_varying_current(data_processor, plot = False, figsize = None):
     
     # 1. Setup directories
     root_dir = paths.configure_path()
@@ -17,8 +17,12 @@ def plot_power_at_varying_current(data_processor, plot = False):
     s = data_processor.plot_style
 
     # Golden Ratio layout setup for individual figures
-    fig_width = 14
-    fig_height = fig_width / 1.618
+    if figsize is None:
+        fig_width = 14
+        fig_height = fig_width / 1.618
+        current_figsize = (fig_width, fig_height)
+    else:
+        current_figsize = figsize
 
     # 3. Data availability check
     has_data = hasattr(record, "power_at_varying_current") and record.power_at_varying_current is not None
@@ -42,7 +46,7 @@ def plot_power_at_varying_current(data_processor, plot = False):
     # -------------------------------------------------------------------------
     # FIGURE 1: Mechanical Power vs Stator Current
     # -------------------------------------------------------------------------
-    fig_power = plt.figure(figsize=(fig_width, fig_height))
+    fig_power = plt.figure(figsize=current_figsize)
     ax1 = plt.gca()
 
     label_fem_p = r'Mechanical Power (FEM)'
@@ -72,7 +76,7 @@ def plot_power_at_varying_current(data_processor, plot = False):
     # -------------------------------------------------------------------------
     # FIGURE 2: Derivative dP/dI vs Stator Current
     # -------------------------------------------------------------------------
-    fig_dp_di = plt.figure(figsize=(fig_width, fig_height))
+    fig_dp_di = plt.figure(figsize=current_figsize)
     ax2 = plt.gca()
 
     label_fem_dp = r'd(Power)/d(Current) (FEM)'
@@ -90,7 +94,7 @@ def plot_power_at_varying_current(data_processor, plot = False):
     ax2.set_ylim(dp_min - 0.15 * dp_range, dp_max + 0.15 * dp_range)
     
     ax2.set_xlabel('Stator Current ($A$)', fontsize=s.label_size)
-    ax2.set_ylabel('$\mathrm{d}P/\mathrm{d}I$ ($W/A$)', fontsize=s.label_size)
+    ax2.set_ylabel(r'$\mathrm{d}P/\mathrm{d}I$ ($W/A$)', fontsize=s.label_size)
     ax2.legend(frameon=True, loc='best', fontsize=s.legend_size)
     ax2.grid(True, which='major', linestyle='-', linewidth=s.grid_linewidth)
     ax2.margins(x=0)

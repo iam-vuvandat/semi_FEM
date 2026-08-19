@@ -24,7 +24,9 @@ def plot_mbgrn_cogging_torque(file_name_array, io, figures_dir=None, mesh_indice
         aft = io.load(path=file_name)
         record = aft.record
         
-        data_mrn = getattr(record, 'cogging', None) or getattr(record, 'cogging_torque', None) or getattr(record, 'torque_cogging', None)
+        data_mrn = next((val for attr in ['cogging', 'cogging_torque', 'torque_cogging'] 
+                         if (val := getattr(record, attr, None)) is not None), None)
+        
         if data_mrn is not None:
             val_mrn = data_mrn[0, :]
             x_mrn = data_mrn[-1, :]

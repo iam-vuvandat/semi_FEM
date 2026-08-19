@@ -2,7 +2,7 @@ import paths
 import numpy as np
 import time
 from PyQt5.QtWidgets import QWidget, QToolBar, QAction, QStyle, QApplication
-from PyQt5.QtCore import QThread, pyqtSignal, QObject, Qt
+from PyQt5.QtCore import QThread, pyqtSignal, QObject
 from pyvistaqt import QtInteractor
 from src.ui.widget.calculation.init_ui import init_ui
 
@@ -49,9 +49,11 @@ class Calculation(QWidget):
         self.btn_run = None
         self.btn_cancel = None
         self.status_label = None
+        self.viz_container = None
         self.viz_layout = None
         self.plotter = None
         self.viewer_state = None
+        self.toolbar = None
         
         self.thread = None
         self.worker = None
@@ -69,19 +71,18 @@ class Calculation(QWidget):
         self.btn_cancel.clicked.connect(self.cancel_solver)
 
     def refresh(self):
-        """Kiểm tra trạng thái lỗi thời của chuỗi dữ liệu trước khi giải."""
         if self.status_label:
             self.status_label.setText("Status: Checking dependencies...")
         
-        # Đảm bảo Mesh đã sẵn sàng (kéo theo Winding, Geometry, Material)
-        self.motor.require("mesh")
+        if self.motor:
+            if not self.motor.motor_state_manager.ready_state.mesh:
+                self.motor.require("mesh")
         
         if self.status_label:
             self.status_label.setText("Status: Ready")
 
     def init_toolbar(self):
         self.toolbar = QToolBar()
-        self.toolbar.setStyleSheet("background: #f0f0f0; border-bottom: 1px solid #dcdcdc;")
         self.viz_layout.insertWidget(0, self.toolbar)
 
         self.act_bmap = QAction("B-Map", self)
@@ -153,7 +154,6 @@ class Calculation(QWidget):
                 self.act_play.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
     def run_solver(self):
-        # Ép buộc kiểm tra dependencies trước khi chạy
         self.refresh()
         
         self.btn_run.setEnabled(False)
@@ -205,7 +205,6 @@ class Calculation(QWidget):
         if self.plotter:
             self.plotter.clear()
         
-        # Hiển thị kết quả B-Map lên Plotter thông qua đối tượng Reluctance Network
         self.viewer_state = self.motor.reluctance_network.display(plotter=self.plotter)
         self.cleanup_thread()
 

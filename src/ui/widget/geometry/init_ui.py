@@ -1,8 +1,6 @@
 import paths
-import sys
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QSplitter, QWidget, QFormLayout, 
-                             QFrame, QLabel, QScrollArea, QGroupBox, 
-                             QPushButton, QApplication, QTabWidget)
+                             QFrame, QScrollArea, QGroupBox, QApplication)
 from PyQt5.QtCore import Qt, QTimer
 from pyvistaqt import QtInteractor
 from src.ui.widget.widget.utils.bind_input import bind_input
@@ -14,15 +12,13 @@ def init_ui(geometry_tab=None):
     main_win = geometry_tab.main_window
     motor = main_win.motor
     stator_params = motor.geometry_data.stator
-    rotor_params  = motor.geometry_data.rotor
+    rotor_params = motor.geometry_data.rotor
     
     main_layout = QHBoxLayout(geometry_tab)
     main_layout.setContentsMargins(10, 10, 10, 10)
     
-    # 1. Khởi tạo Splitter
     splitter = QSplitter(Qt.Horizontal)
 
-    # --- PANEL PHẢI: HIỂN THỊ 3D ---
     geometry_tab.plotter = QtInteractor(geometry_tab)
     geometry_tab.plotter.set_background("white")
 
@@ -35,10 +31,11 @@ def init_ui(geometry_tab=None):
             geometry_tab.plotter.render()
 
     def handle_refresh():
-        if motor is None: return
-        if motor.ready_state.winding_data and motor.ready_state.geometry:
+        if motor is None:
+            return
+        if (motor.motor_state_manager.ready_state.winding_data and 
+            motor.motor_state_manager.ready_state.geometry):
             return 
-        motor.require("winding_data") 
         motor.require("geometry")
         refresh_plot()
         QApplication.processEvents()
@@ -48,8 +45,8 @@ def init_ui(geometry_tab=None):
         handle_refresh()
 
     geometry_tab.refresh = handle_refresh
+    geometry_tab.refresh_plot = refresh_plot
 
-    # --- PANEL TRÁI: NHẬP LIỆU (2 CỘT) ---
     left_panel = QWidget()
     left_layout = QVBoxLayout(left_panel)
     left_layout.setContentsMargins(0, 0, 0, 0)
@@ -65,18 +62,12 @@ def init_ui(geometry_tab=None):
 
     def create_dynamic_group(title, container):
         group = QGroupBox(title)
-        group.setStyleSheet("""
-            QGroupBox { 
-                font-weight: bold; border: 1px solid #ccd1d1; 
-                border-radius: 6px; margin-top: 15px; background-color: #fcfcfc;
-            }
-            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #333; }
-        """)
         layout = QFormLayout(group)
         layout.setVerticalSpacing(8)
         
         for key in vars(container):
-            if key.startswith('_'): continue
+            if key.startswith('_'):
+                continue
             
             display_label = key.replace('_', ' ').title()
             dim_keywords = ['dia', 'length', 'depth', 'width', 'opening', 'gap', 'radius', 'ext', 'embed']
@@ -89,17 +80,16 @@ def init_ui(geometry_tab=None):
                 display_label += " (mm)"
             
             input_widget = bind_input(
-                motor = container, 
-                attr_name = key, 
-                unit_factor = unit, 
-                callback = on_input_changed
+                motor=container, 
+                attr_name=key, 
+                unit_factor=unit, 
+                callback=on_input_changed
             )
             input_widget.setFixedWidth(70) 
             layout.addRow(f"{display_label}:", input_widget)
             
         return group
 
-    # Thêm cột Stator và Rotor
     content_layout.addWidget(create_dynamic_group("Stator Geometry", stator_params))
     content_layout.addWidget(create_dynamic_group("Rotor Geometry", rotor_params))
     content_layout.addStretch()
@@ -107,7 +97,6 @@ def init_ui(geometry_tab=None):
     scroll.setWidget(content_widget)
     left_layout.addWidget(scroll)
 
-    # Gộp vào Splitter
     right_panel = QFrame()
     right_layout = QVBoxLayout(right_panel)
     right_layout.setContentsMargins(0, 0, 0, 0)
@@ -116,8 +105,6 @@ def init_ui(geometry_tab=None):
     splitter.addWidget(left_panel)
     splitter.addWidget(right_panel)
     
-    # --- CƯỠNG BỨC TỈ LỆ 50/50 ---
-    # setSizes nhận vào list các giá trị pixel, đặt 2 giá trị bằng nhau sẽ chia đôi
     splitter.setSizes([500, 500])
     splitter.setStretchFactor(0, 1) 
     splitter.setStretchFactor(1, 1) 
