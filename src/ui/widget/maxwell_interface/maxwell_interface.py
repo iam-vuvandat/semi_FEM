@@ -21,8 +21,8 @@ class MaxwellWorker(QObject):
             
             # Goi ham export voi co che callback (neu ham export cua ban ho tro)
             # Neu motor.export_to_maxwell chua co callback, no van se chay ngam duoc
-            if hasattr(self.motor, 'export_to_maxwell'):
-                self.motor.export_to_maxwell(callback=thread_callback)
+            if hasattr(self.motor, 'export_to_rmxprt'):
+                self.motor.export_to_rmxprt(callback=thread_callback)
             
             self.finished.emit()
         except Exception as e:
