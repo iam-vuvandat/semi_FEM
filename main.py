@@ -22,4 +22,5 @@ if __name__ == "__main__":
 
 
 
-#pyinstaller --noconfirm --window --clean --name "semiFEM" --icon "src/ui/assets/logo.png" --add-data "src;src" --paths "src" --collect-submodules scipy --collect-all pyvista --collect-all vtk --collect-all pyvistaqt --hidden-import scipy.sparse.csgraph._validation --hidden-import scipy.special._cdflib --hidden-import PyQt5.sip --exclude-module PySide2 --exclude-module PySide6 main.py 
+#pyinstaller --noconfirm --window --clean --name "semiFEM" --icon "src/ui/assets/logo.png" --add-data "src;src" --paths "src" --add-binary ".venv\Lib\site-packages\mkl\mkl_rt.2.dll;." --collect-submodules scipy --collect-all pyvista --collect-all vtk --collect-all pyvistaqt --collect-all pypardiso --hidden-import scipy.sparse.csgraph._validation --hidden-import scipy.special._cdflib --hidden-import PyQt5.sip --exclude-module PySide2 --exclude-module PySide6 --exclude-module clr --exclude-module pythonnet main.py
+# pyinstaller --noconfirm --onedir --console main.py
